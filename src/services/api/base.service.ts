@@ -150,6 +150,24 @@ export class BaseApiService {
   }
 
   /**
+   * Método PATCH
+   */
+  protected async patch<T = any>(
+    endpoint: string,
+    body?: any,
+    authToken?: string
+  ): Promise<ApiResponse<T>> {
+    return this.makeRequest<T>(
+      endpoint,
+      {
+        method: "PATCH",
+        body: body ? JSON.stringify(body) : undefined,
+      },
+      authToken
+    );
+  }
+
+  /**
    * Método DELETE
    */
   protected async delete<T = any>(

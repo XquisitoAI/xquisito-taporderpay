@@ -28,28 +28,6 @@ export interface TableSummary {
   status: "not_paid" | "partial" | "paid";
 }
 
-export interface ActiveUser {
-  restaurant_id: number;
-  table_number: number;
-  user_id?: string;
-  guest_name: string;
-  total_paid_individual: number;
-  total_paid_amount: number;
-  total_paid_split: number;
-  is_in_split: boolean;
-  updated_at: string;
-}
-
-export interface SplitPayment {
-  user_id?: string;
-  guest_name: string;
-  expected_amount: number;
-  amount_paid: number;
-  status: "pending" | "paid";
-  remaining: number;
-  paid_at?: string;
-}
-
 export interface CreateDishOrderRequest {
   userId: string | null;
   guestName: string;

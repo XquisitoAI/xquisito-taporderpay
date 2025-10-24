@@ -558,7 +558,7 @@ export default function DishDetailPage() {
           ) : (
             <div className="absolute top-0 left-0 w-full h-full bg-gray-300 flex items-center justify-center">
               <img
-                src="/logo-short-green.webp"
+                src="/logos/logo-short-green.webp"
                 alt="Logo"
                 className="w-32 h-32 object-contain"
               />
@@ -588,7 +588,7 @@ export default function DishDetailPage() {
       <MenuHeaderDish />
 
       <main className="mt-72 relative z-10">
-        <div className="bg-white rounded-t-4xl flex flex-col px-6">
+        <div className="bg-white rounded-t-4xl flex flex-col px-6 pb-[100px]">
           <div className="mt-8">
             <div className="flex justify-between items-center text-black mb-6">
               {isLoadingReviews ? (
@@ -790,10 +790,10 @@ export default function DishDetailPage() {
               ></textarea>
             </div>
 
-            <div className="flex gap-3 mt-6">
+            <div className="fixed bottom-0 left-0 right-0 mx-4 px-6 p-6 z-10">
               <button
                 onClick={handleAddToCartAndReturn}
-                className="bg-black hover:bg-stone-950 w-full text-white py-3 rounded-full cursor-pointer transition-colors mb-6 flex items-center justify-center gap-2"
+                className="bg-gradient-to-r from-[#34808C] to-[#173E44] w-full text-white py-3 rounded-full cursor-pointer transition-colors flex items-center justify-center gap-2"
               >
                 <span>
                   Agregar al carrito • ${calculateTotalPrice().toFixed(2)} MXN
@@ -835,7 +835,7 @@ export default function DishDetailPage() {
                 ) : (
                   <div className="size-20 bg-gray-300 rounded-lg flex items-center justify-center">
                     <img
-                      src="/logo-short-green.webp"
+                      src="/logos/logo-short-green.webp"
                       alt="Logo"
                       className="size-16 object-contain"
                     />

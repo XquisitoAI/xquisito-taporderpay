@@ -116,12 +116,12 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
           "https://w0.peakpx.com/wallpaper/531/501/HD-wallpaper-coffee-espresso-latte-art-cup-food.jpg"
         }
         alt=""
-        className="absolute top-0 left-0 w-full h-96 object-cover z-0"
+        className="absolute top-0 left-0 w-full h-72 object-cover z-0"
       />
 
       <MenuHeader restaurant={restaurant} tableNumber={tableNumber} />
 
-      <main className="mt-72 relative z-10">
+      <main className="mt-48 relative z-10">
         <div className="bg-white rounded-t-4xl flex flex-col items-center px-6">
           <div className="mt-6 flex items-start justify-between w-full">
             {/* Settings Icon */}
@@ -148,9 +148,9 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
                 autoPlay
                 loop
                 muted
+                playsInline
                 className="w-full h-full object-cover rounded-full"
               />
-              {/*<img src="/logo-short-green.webp" alt="AI" className="size-6" />*/}
             </div>
           </div>
 
@@ -226,7 +226,7 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
         <div className="fixed bottom-6 left-0 right-0 z-50 flex justify-center">
           <div
             onClick={() => navigateWithTable("/cart")}
-            className="bg-black text-white rounded-full px-6 py-3 shadow-lg flex items-center gap-3 cursor-pointer hover:bg-stone-950 transition-all hover:scale-105 animate-bounce-in"
+            className="bg-gradient-to-r from-[#34808C] to-[#173E44] text-white rounded-full px-6 py-3 shadow-lg flex items-center gap-3 cursor-pointer hover:bg-stone-950 transition-all hover:scale-105 animate-bounce-in"
           >
             <ShoppingCart className="size-5" />
             <span>Ver el carrito • {totalItems}</span>

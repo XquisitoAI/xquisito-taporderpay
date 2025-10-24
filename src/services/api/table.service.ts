@@ -4,21 +4,8 @@
 
 import { BaseApiService } from "./base.service";
 import { ApiResponse } from "@/types/api.types";
-import { TableSummary, ActiveUser } from "@/types/table.types";
 
 class TableService extends BaseApiService {
-  /**
-   * Obtener resumen de una mesa
-   */
-  async getSummary(
-    restaurantId: string,
-    tableNumber: string
-  ): Promise<ApiResponse<any>> {
-    return this.get(
-      `/restaurants/${restaurantId}/tables/${tableNumber}/summary`
-    );
-  }
-
   /**
    * Obtener órdenes de una mesa
    */
@@ -28,18 +15,6 @@ class TableService extends BaseApiService {
   ): Promise<ApiResponse<any>> {
     return this.get(
       `/restaurants/${restaurantId}/tables/${tableNumber}/orders`
-    );
-  }
-
-  /**
-   * Obtener usuarios activos en una mesa
-   */
-  async getActiveUsers(
-    restaurantId: string,
-    tableNumber: string
-  ): Promise<ApiResponse<ActiveUser[]>> {
-    return this.get(
-      `/restaurants/${restaurantId}/tables/${tableNumber}/active-users`
     );
   }
 

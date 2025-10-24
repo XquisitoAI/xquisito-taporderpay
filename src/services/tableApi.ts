@@ -19,9 +19,6 @@
 // Se re-exportan aquí solo para compatibilidad con código legacy
 export type {
   DishOrder,
-  TableSummary,
-  ActiveUser,
-  SplitPayment,
   CreateDishOrderRequest,
 } from "@/types/table.types";
 
@@ -34,10 +31,8 @@ export type {
 
 /**
  * @deprecated Usar servicios modulares en su lugar:
- * - tableService.getSummary()
  * - tableService.getOrders()
  * - orderService.createDishOrder()
- * - splitBillService.initialize()
  */
 import { apiService } from "../utils/api";
 export { apiService as tableApi };
@@ -49,4 +44,3 @@ export { apiService as tableApi };
 // Exportar los nuevos servicios para facilitar la migración
 export { tableService } from "./api/table.service";
 export { orderService } from "./api/order.service";
-export { splitBillService } from "./api/split-bill.service";

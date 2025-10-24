@@ -31,8 +31,6 @@ export {
 import { paymentService } from "@/services/api/payment.service";
 import { tableService } from "@/services/api/table.service";
 import { orderService } from "@/services/api/order.service";
-import { splitBillService } from "@/services/api/split-bill.service";
-import { userService } from "@/services/api/user.service";
 import { guestStorageService } from "@/services/storage/guest-storage.service";
 import { BaseApiService } from "@/services/api/base.service";
 
@@ -110,16 +108,8 @@ class ApiService extends BaseApiService {
   // TABLE API - Redirige a tableService
   // ===============================================
 
-  async getTableSummary(restaurantId: string, tableNumber: string) {
-    return tableService.getSummary(restaurantId, tableNumber);
-  }
-
   async getTableOrders(restaurantId: string, tableNumber: string) {
     return tableService.getOrders(restaurantId, tableNumber);
-  }
-
-  async getActiveUsers(restaurantId: string, tableNumber: string) {
-    return tableService.getActiveUsers(restaurantId, tableNumber);
   }
 
   async getAllTables(restaurantId: string) {
@@ -171,80 +161,6 @@ class ApiService extends BaseApiService {
     restaurantId?: string
   ) {
     return orderService.linkGuestOrdersToUser(guestId, userId, tableNumber, restaurantId);
-  }
-
-  // ===============================================
-  // PAYMENT API - Redirige a paymentService
-  // ===============================================
-
-  async payDishOrder(dishId: string, paymentMethodId?: string | null) {
-    return paymentService.payDishOrder(dishId, paymentMethodId);
-  }
-
-  async payTableAmount(
-    restaurantId: string,
-    tableNumber: string,
-    amount: number,
-    userId?: string | null,
-    guestName?: string | null,
-    paymentMethodId?: string | null
-  ) {
-    return paymentService.payTableAmount(
-      restaurantId,
-      tableNumber,
-      amount,
-      userId,
-      guestName,
-      paymentMethodId
-    );
-  }
-
-  // ===============================================
-  // SPLIT BILL API - Redirige a splitBillService
-  // ===============================================
-
-  async initializeSplitBill(
-    restaurantId: string,
-    tableNumber: string,
-    numberOfPeople: number,
-    userIds?: string[] | null,
-    guestNames?: string[] | null
-  ) {
-    return splitBillService.initialize(
-      restaurantId,
-      tableNumber,
-      numberOfPeople,
-      userIds,
-      guestNames
-    );
-  }
-
-  async paySplitAmount(
-    restaurantId: string,
-    tableNumber: string,
-    userId?: string | null,
-    guestName?: string | null,
-    paymentMethodId?: string | null
-  ) {
-    return splitBillService.paySplit(
-      restaurantId,
-      tableNumber,
-      userId,
-      guestName,
-      paymentMethodId
-    );
-  }
-
-  async getSplitPaymentStatus(restaurantId: string, tableNumber: string) {
-    return splitBillService.getStatus(restaurantId, tableNumber);
-  }
-
-  // ===============================================
-  // USER API - Redirige a userService
-  // ===============================================
-
-  async getUsersInfo(userIds: string[]) {
-    return userService.getUsersInfo(userIds);
   }
 }
 

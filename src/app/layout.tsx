@@ -5,6 +5,8 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { RestaurantProvider } from "@/context/RestaurantContext";
 import { TableProvider } from "@/context/TableContext";
 import { UserDataProvider } from "@/context/userDataContext";
+import { GuestProvider } from "@/context/GuestContext";
+import { PaymentProvider } from "@/context/PaymentContext";
 
 const helveticaNeue = localFont({
   src: [
@@ -111,11 +113,15 @@ export default function RootLayout({
           className={`${helveticaNeue.variable} antialiased`}
           style={{ fontFamily: "var(--font-helvetica-neue)" }}
         >
-          <RestaurantProvider>
-            <TableProvider>
-              <UserDataProvider>{children}</UserDataProvider>
-            </TableProvider>
-          </RestaurantProvider>
+          <GuestProvider>
+            <PaymentProvider>
+              <RestaurantProvider>
+                <TableProvider>
+                  <UserDataProvider>{children}</UserDataProvider>
+                </TableProvider>
+              </RestaurantProvider>
+            </PaymentProvider>
+          </GuestProvider>
         </body>
       </html>
     </ClerkProvider>

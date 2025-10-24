@@ -1,11 +1,12 @@
 "use client";
 
-import { useRestaurant } from "@/context/RestaurantContext";
+import { useSearchParams, useRouter, useParams } from "next/navigation";
+import { useEffect } from "react";
 import { useTable } from "@/context/TableContext";
-import { useRouter, useParams, useSearchParams } from "next/navigation";
-import React, { useEffect } from "react";
+import { useRestaurant } from "@/context/RestaurantContext";
+import CartView from "@/components/CartView";
 
-const CartPage = () => {
+export default function CartPage() {
   const searchParams = useSearchParams();
   const params = useParams();
   const router = useRouter();
@@ -43,7 +44,5 @@ const CartPage = () => {
     );
   }
 
-  return <div>CartPage</div>;
-};
-
-export default CartPage;
+  return <CartView />;
+}

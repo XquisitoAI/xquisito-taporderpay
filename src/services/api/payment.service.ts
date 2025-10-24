@@ -63,35 +63,6 @@ class PaymentService extends BaseApiService {
   async getPaymentHistory(): Promise<ApiResponse<PaymentHistory[]>> {
     return this.get("/payments/history");
   }
-
-  /**
-   * Pagar por una orden de platillo específica
-   */
-  async payDishOrder(
-    dishId: string,
-    paymentMethodId?: string | null
-  ): Promise<ApiResponse<any>> {
-    return this.post(`/dishes/${dishId}/pay`, { paymentMethodId });
-  }
-
-  /**
-   * Pagar una cantidad específica para una mesa
-   */
-  async payTableAmount(
-    restaurantId: string,
-    tableNumber: string,
-    amount: number,
-    userId?: string | null,
-    guestName?: string | null,
-    paymentMethodId?: string | null
-  ): Promise<ApiResponse<any>> {
-    return this.post(`/restaurants/${restaurantId}/tables/${tableNumber}/pay`, {
-      amount,
-      userId,
-      guestName,
-      paymentMethodId,
-    });
-  }
 }
 
 export const paymentService = new PaymentService();
