@@ -30,17 +30,9 @@ export type {
 // Se re-exporta aquí solo para compatibilidad con código legacy
 
 /**
- * @deprecated Usar servicios modulares en su lugar:
- * - tableService.getOrders()
- * - orderService.createDishOrder()
+ * @deprecated Usar apiService desde api2 en su lugar:
+ * - apiService.getTableOrders()
+ * - apiService.createDishOrder()
  */
-import { apiService } from "../utils/api";
+import { apiService } from "../utils/api2";
 export { apiService as tableApi };
-
-// ===============================================
-// SERVICIOS MODULARES RECOMENDADOS
-// ===============================================
-
-// Exportar los nuevos servicios para facilitar la migración
-export { tableService } from "./api/table.service";
-export { orderService } from "./api/order.service";

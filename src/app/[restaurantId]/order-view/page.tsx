@@ -7,7 +7,7 @@ import { useTableNavigation } from "@/hooks/useTableNavigation";
 import { useRestaurant } from "@/context/RestaurantContext";
 import MenuHeaderBack from "@/components/headers/MenuHeaderBack";
 import { Loader2, RefreshCw } from "lucide-react";
-import { tapOrderService, TapOrder } from "@/services/api/tap-order.service";
+import { apiService, TapOrder } from "@/utils/api2";
 
 export default function OrderViewPage() {
   const params = useParams();
@@ -43,7 +43,7 @@ export default function OrderViewPage() {
     setError(null);
 
     try {
-      const result = await tapOrderService.getOrderById(orderId);
+      const result = await apiService.getOrderById(orderId);
 
       if (result.success && result.data) {
         const orderData = result.data?.data || result.data;

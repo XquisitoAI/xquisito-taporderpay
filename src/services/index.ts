@@ -11,5 +11,5 @@ export * from "./storage";
 // Validadores
 export * from "./validators";
 
-// Compatibilidad con código legacy
-export { apiService } from "../utils/api";
+// Compatibilidad con código legacy - ahora usando api2
+export { apiService } from "../utils/api2";

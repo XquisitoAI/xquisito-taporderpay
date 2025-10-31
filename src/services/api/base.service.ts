@@ -52,11 +52,13 @@ export class BaseApiService {
       if (tokenToUse) {
         // Para usuarios registrados, usar auth token y omitir headers de invitado
         headers["Authorization"] = `Bearer ${tokenToUse}`;
+        console.log("🔑 Using Authorization token for request to:", endpoint);
       } else {
         // Solo para invitados, añadir headers de identificación de invitado
         const guestId = guestStorageService.getGuestId();
         if (guestId) {
           headers["x-guest-id"] = guestId;
+          console.log("👥 Using x-guest-id for request to:", endpoint, "guestId:", guestId);
         }
 
         // Añadir número de mesa si está disponible

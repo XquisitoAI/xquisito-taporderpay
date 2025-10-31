@@ -9,7 +9,7 @@ import React, {
 import { MenuItemData } from "../interfaces/menuItemData";
 
 // Importar tipos
-import { TapOrder } from "@/services/api/tap-order.service";
+import { TapOrder } from "@/utils/api2";
 
 // Interfaz para un item del carrito (mantiene la misma funcionalidad)
 export interface CartItem extends MenuItemData {

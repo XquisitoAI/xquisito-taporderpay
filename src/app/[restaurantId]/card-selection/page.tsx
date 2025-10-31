@@ -12,8 +12,7 @@ import { Plus, Trash2, Loader2, CircleAlert } from "lucide-react";
 import { getCardTypeIcon } from "@/utils/cardIcons";
 import Loader from "@/components/UI/Loader";
 import OrderAnimation from "@/components/UI/OrderAnimation";
-import { paymentService } from "@/services/api/payment.service";
-import { tapOrderService } from "@/services/api/tap-order.service";
+import { apiService } from "@/utils/api2";
 
 export default function CardSelectionPage() {
   const params = useParams();
@@ -51,7 +50,9 @@ export default function CardSelectionPage() {
   // Estado para mostrar animación y guardar orderId e items
   const [showAnimation, setShowAnimation] = useState(false);
   const [completedOrderId, setCompletedOrderId] = useState<string | null>(null);
-  const [completedOrderItems, setCompletedOrderItems] = useState<typeof state.currentUserItems>([]);
+  const [completedOrderItems, setCompletedOrderItems] = useState<
+    typeof state.currentUserItems
+  >([]);
   const [completedUserName, setCompletedUserName] = useState<string>("");
 
   // Calcular propina
@@ -122,7 +123,7 @@ export default function CardSelectionPage() {
 
       console.log("💳 Processing payment:", paymentData);
 
-      const paymentResult = await paymentService.processPayment(paymentData);
+      const paymentResult = await apiService.processPayment(paymentData);
 
       if (!paymentResult.success) {
         throw new Error(
@@ -181,13 +182,14 @@ export default function CardSelectionPage() {
           customer_email: customerEmail,
           clerk_user_id: clerkUserId,
           custom_fields: item.customFields || null,
-          images: item.images && item.images.length > 0 ? [item.images[0]] : null,
+          images:
+            item.images && item.images.length > 0 ? [item.images[0]] : null,
           extra_price: item.extraPrice || 0,
         };
 
         console.log("Creating dish order:", dishOrderData);
 
-        const dishOrderResult = await tapOrderService.createDishOrder(
+        const dishOrderResult = await apiService.createDishOrder(
           restaurantId,
           state.tableNumber,
           dishOrderData
@@ -218,7 +220,7 @@ export default function CardSelectionPage() {
       // Paso 4: Actualizar el payment status y order status
       if (firstTapOrderId) {
         // Actualizar payment status a 'paid'
-        const paymentStatusResult = await tapOrderService.updatePaymentStatus(
+        const paymentStatusResult = await apiService.updatePaymentStatus(
           firstTapOrderId,
           "paid"
         );
@@ -233,7 +235,7 @@ export default function CardSelectionPage() {
         }
 
         // Actualizar order status a 'completed'
-        const orderStatusResult = await tapOrderService.updateOrderStatus(
+        const orderStatusResult = await apiService.updateOrderStatus(
           firstTapOrderId,
           "completed"
         );
@@ -251,7 +253,8 @@ export default function CardSelectionPage() {
       // Guardar datos antes de limpiar el carrito
       setCompletedOrderItems([...state.currentUserItems]);
       // Obtener nombre del usuario (de Clerk si está loggeado, o del estado si es guest)
-      const userName = user?.firstName || user?.fullName || state.currentUserName || "Usuario";
+      const userName =
+        user?.firstName || user?.fullName || state.currentUserName || "Usuario";
       setCompletedUserName(userName);
 
       // Limpiar el carrito después de completar la orden
@@ -548,7 +551,9 @@ export default function CardSelectionPage() {
           userName={completedUserName}
           orderedItems={completedOrderItems}
           onContinue={() => {
-            navigateWithTable(`/order-view?orderId=${completedOrderId}&success=true`);
+            navigateWithTable(
+              `/order-view?orderId=${completedOrderId}&success=true`
+            );
           }}
         />
       )}

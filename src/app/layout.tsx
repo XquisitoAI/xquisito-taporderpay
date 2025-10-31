@@ -113,15 +113,15 @@ export default function RootLayout({
           className={`${helveticaNeue.variable} antialiased`}
           style={{ fontFamily: "var(--font-helvetica-neue)" }}
         >
-          <GuestProvider>
-            <PaymentProvider>
-              <RestaurantProvider>
-                <TableProvider>
+          <RestaurantProvider>
+            <TableProvider>
+              <GuestProvider>
+                <PaymentProvider>
                   <UserDataProvider>{children}</UserDataProvider>
-                </TableProvider>
-              </RestaurantProvider>
-            </PaymentProvider>
-          </GuestProvider>
+                </PaymentProvider>
+              </GuestProvider>
+            </TableProvider>
+          </RestaurantProvider>
         </body>
       </html>
     </ClerkProvider>

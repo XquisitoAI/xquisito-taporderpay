@@ -167,12 +167,6 @@ export default function CardsTab() {
                   Agrega una tarjeta para pagar más rápido en tus próximos
                   pedidos
                 </p>
-                <button
-                  onClick={handleAddNewCard}
-                  className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-                >
-                  Agregar mi primera tarjeta
-                </button>
               </div>
             )}
           </>

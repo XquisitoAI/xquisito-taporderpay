@@ -11,7 +11,7 @@ import { useGuest, useIsGuest } from "@/context/GuestContext";
 import { usePayment } from "@/context/PaymentContext";
 import { useRestaurant } from "@/context/RestaurantContext";
 import { useEffect, useState } from "react";
-import { apiService } from "@/utils/api";
+import { apiService } from "@/utils/api2";
 import MenuHeaderBack from "@/components/headers/MenuHeaderBack";
 import CardScanner from "@/components/CardScanner";
 import Loader from "@/components/UI/Loader";

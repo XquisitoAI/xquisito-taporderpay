@@ -7,7 +7,7 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { apiService, PaymentMethod } from "../utils/api";
+import { apiService, PaymentMethod } from "../utils/api2";
 import { useGuest } from "./GuestContext";
 import { useUser, useAuth } from "@clerk/nextjs";
 
@@ -47,12 +47,30 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
     // For registered users - prioritize user over guest session
     if (user) {
       console.log("🔐 Fetching payment methods for registered user:", user.id);
+
+      // CRITICAL: Ensure guest session is cleared before making API calls
+      // This prevents the API from using x-guest-id header instead of Authorization token
+      const guestIdBefore = localStorage.getItem("xquisito-guest-id");
+      if (guestIdBefore) {
+        console.log(
+          "  ⚠️ Found lingering guest-id, clearing it:",
+          guestIdBefore
+        );
+        localStorage.removeItem("xquisito-guest-id");
+        localStorage.removeItem("xquisito-table-number");
+        localStorage.removeItem("xquisito-restaurant-id");
+        localStorage.removeItem("xquisito-guest-name");
+      }
+
+      console.log("  isGuest state:", isGuest);
       setIsLoading(true);
       try {
         // Get Clerk auth token
         const token = await getToken();
         if (token) {
           apiService.setAuthToken(token);
+        } else {
+          console.warn("  ⚠️ No Clerk token available!");
         }
 
         const response = await apiService.getPaymentMethods();

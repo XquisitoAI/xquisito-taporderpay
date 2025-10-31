@@ -8,7 +8,7 @@ import React, {
   ReactNode,
   Suspense,
 } from "react";
-import { apiService } from "../utils/api";
+import { apiService } from "../utils/api2";
 import { useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 

@@ -10,7 +10,7 @@ import React, {
 } from "react";
 import { Restaurant } from "../interfaces/restaurant";
 import { MenuSection } from "../interfaces/category";
-import { restaurantService } from "../services/restaurant.service";
+import { apiService } from "../utils/api2";
 import { isRestaurantOpen } from "../utils/restaurantHours";
 
 interface RestaurantContextValue {
@@ -62,7 +62,22 @@ export function RestaurantProvider({ children }: RestaurantProviderProps) {
       console.log("📡 Fetching restaurant data for ID:", id);
 
       // Obtener restaurante y menú en una sola petición
-      const data = await restaurantService.getRestaurantWithMenu(id);
+      const response = await apiService.getRestaurantWithMenu(id);
+
+      console.log("📦 API Response:", response);
+
+      if (!response.success || !response.data) {
+        throw new Error(response.error?.message || "Failed to load restaurant data");
+      }
+
+      // El backend puede devolver response.data directamente o response.data.data
+      const data = response.data.data || response.data;
+
+      console.log("📦 Processed data:", data);
+
+      if (!data.restaurant || !data.menu) {
+        throw new Error("Invalid response structure from API");
+      }
 
       console.log("✅ Restaurant data loaded:", data.restaurant.name);
       console.log("✅ Menu loaded with", data.menu.length, "sections");
