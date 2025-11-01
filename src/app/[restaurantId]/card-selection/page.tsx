@@ -6,13 +6,14 @@ import { useTableNavigation } from "@/hooks/useTableNavigation";
 import { usePayment } from "@/context/PaymentContext";
 import { useRestaurant } from "@/context/RestaurantContext";
 import { useEffect, useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useAuth } from "@clerk/nextjs";
 import MenuHeaderBack from "@/components/headers/MenuHeaderBack";
 import { Plus, Trash2, Loader2, CircleAlert } from "lucide-react";
 import { getCardTypeIcon } from "@/utils/cardIcons";
 import Loader from "@/components/UI/Loader";
 import OrderAnimation from "@/components/UI/OrderAnimation";
-import { apiService } from "@/utils/api2";
+import { apiService } from "@/utils/api";
+import { calculateCommissions } from "@/utils/commissionCalculator";
 
 export default function CardSelectionPage() {
   const params = useParams();
@@ -30,6 +31,7 @@ export default function CardSelectionPage() {
   const { hasPaymentMethods, paymentMethods, deletePaymentMethod } =
     usePayment();
   const { user } = useUser();
+  const { getToken } = useAuth();
 
   // Obtener monto base del carrito desde el contexto
   const baseAmount = state.currentUserTotalPrice;
@@ -64,10 +66,22 @@ export default function CardSelectionPage() {
   };
 
   const tipAmount = calculateTipAmount();
-  const subtotalEcartpay = baseAmount + tipAmount;
-  const ivaAmount = subtotalEcartpay * 0.16; // 16% de IVA
-  const commissionAmount = (subtotalEcartpay + ivaAmount) * 0.02; // 2% de comisión
-  const totalAmount = subtotalEcartpay + ivaAmount + commissionAmount;
+
+  // Usar el calculador de comisiones centralizado
+  const commissions = calculateCommissions(baseAmount, tipAmount);
+  const {
+    ivaTip,
+    subtotalForCommission,
+    xquisitoCommissionTotal,
+    xquisitoCommissionClient,
+    xquisitoCommissionRestaurant,
+    ivaXquisitoClient,
+    ivaXquisitoRestaurant,
+    xquisitoClientCharge,
+    xquisitoRestaurantCharge,
+    totalAmountCharged: totalAmount,
+    rates,
+  } = commissions;
 
   const handleTipPercentage = (percentage: number) => {
     setTipPercentage(percentage);
@@ -110,6 +124,23 @@ export default function CardSelectionPage() {
     setIsProcessing(true);
 
     try {
+      // Configurar token de autenticación si el usuario está logueado
+      if (user?.id) {
+        const token = await getToken();
+        if (token) {
+          apiService.setAuthToken(token);
+          console.log("🔑 Auth token configured for payment:", {
+            userId: user.id,
+            tokenLength: token.length,
+            tokenPreview: token.substring(0, 20) + '...'
+          });
+        } else {
+          console.warn("⚠️ User is logged in but no token available");
+        }
+      } else {
+        console.log("👥 No user logged in, will process as guest");
+      }
+
       // Paso 1: Procesar pago con endpoint existente
       const paymentData = {
         paymentMethodId: selectedPaymentMethodId!,
@@ -247,6 +278,40 @@ export default function CardSelectionPage() {
           );
         } else {
           console.log("✅ Order status updated to 'completed'");
+        }
+
+        // Paso 5: Registrar transacción para trazabilidad
+        if (selectedPaymentMethodId) {
+          try {
+            const xquisitoRateApplied = subtotalForCommission > 0
+              ? (xquisitoCommissionTotal / subtotalForCommission) * 100
+              : 0;
+
+            await apiService.recordPaymentTransaction({
+              payment_method_id: selectedPaymentMethodId,
+              restaurant_id: parseInt(restaurantId),
+              id_table_order: null,
+              id_tap_orders_and_pay: firstTapOrderId,
+              base_amount: baseAmount,
+              tip_amount: tipAmount,
+              iva_tip: ivaTip,
+              xquisito_commission_total: xquisitoCommissionTotal,
+              xquisito_commission_client: xquisitoCommissionClient,
+              xquisito_commission_restaurant: xquisitoCommissionRestaurant,
+              iva_xquisito_client: ivaXquisitoClient,
+              iva_xquisito_restaurant: ivaXquisitoRestaurant,
+              xquisito_client_charge: xquisitoClientCharge,
+              xquisito_restaurant_charge: xquisitoRestaurantCharge,
+              xquisito_rate_applied: xquisitoRateApplied,
+              total_amount_charged: totalAmount,
+              subtotal_for_commission: subtotalForCommission,
+              currency: "MXN",
+            });
+            console.log("✅ Payment transaction recorded successfully");
+          } catch (transactionError) {
+            console.error("❌ Error recording payment transaction:", transactionError);
+            // Don't throw - continue with payment flow even if transaction recording fails
+          }
         }
       }
 
@@ -407,7 +472,7 @@ export default function CardSelectionPage() {
                         onClick={() => setSelectedPaymentMethodId(method.id)}
                         className="flex items-center justify-center gap-3 mx-auto cursor-pointer"
                       >
-                        <div>{getCardTypeIcon(method.cardType)}</div>
+                        <div>{getCardTypeIcon(method.cardBrand)}</div>
                         <div>
                           <p className="text-black">
                             **** **** **** {method.lastFourDigits}
@@ -514,7 +579,7 @@ export default function CardSelectionPage() {
               </p>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-black font-medium">+ Subtotal</span>
+                  <span className="text-black font-medium">+ Consumo</span>
                   <span className="text-black font-medium">
                     ${baseAmount.toFixed(2)} MXN
                   </span>
@@ -527,18 +592,14 @@ export default function CardSelectionPage() {
                     </span>
                   </div>
                 )}
-                <div className="flex justify-between items-center">
-                  <span className="text-black font-medium">+ Comisión</span>
-                  <span className="text-black font-medium">
-                    ${commissionAmount.toFixed(2)} MXN
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-black font-medium">+ IVA (16%)</span>
-                  <span className="text-black font-medium">
-                    ${ivaAmount.toFixed(2)} MXN
-                  </span>
-                </div>
+                {xquisitoClientCharge > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-black font-medium">+ Comisión de servicio</span>
+                    <span className="text-black font-medium">
+                      ${xquisitoClientCharge.toFixed(2)} MXN
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

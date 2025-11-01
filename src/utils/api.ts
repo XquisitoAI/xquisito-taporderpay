@@ -52,6 +52,23 @@ import { BaseApiService } from "@/services/api/base.service";
  * ```
  */
 class ApiService extends BaseApiService {
+  // Sobrescribir setAuthToken para propagar a todos los servicios
+  setAuthToken(token: string): void {
+    super.setAuthToken(token);
+    // También configurar en los servicios modulares
+    paymentService.setAuthToken(token);
+    tableService.setAuthToken(token);
+    orderService.setAuthToken(token);
+  }
+
+  // Sobrescribir clearAuthToken para propagar a todos los servicios
+  clearAuthToken(): void {
+    super.clearAuthToken();
+    paymentService.clearAuthToken();
+    tableService.clearAuthToken();
+    orderService.clearAuthToken();
+  }
+
   // ===============================================
   // PAYMENT METHODS - Redirige a paymentService
   // ===============================================
@@ -78,6 +95,32 @@ class ApiService extends BaseApiService {
 
   async getPaymentHistory() {
     return paymentService.getPaymentHistory();
+  }
+
+  /**
+   * Registrar transacción de pago para trazabilidad máxima
+   */
+  async recordPaymentTransaction(transactionData: {
+    payment_method_id: string;
+    restaurant_id: number;
+    id_table_order?: string | null;
+    id_tap_orders_and_pay?: string | null;
+    base_amount: number;
+    tip_amount: number;
+    iva_tip: number;
+    xquisito_commission_total: number;
+    xquisito_commission_client: number;
+    xquisito_commission_restaurant: number;
+    iva_xquisito_client: number;
+    iva_xquisito_restaurant: number;
+    xquisito_client_charge: number;
+    xquisito_restaurant_charge: number;
+    xquisito_rate_applied: number;
+    total_amount_charged: number;
+    subtotal_for_commission: number;
+    currency?: string;
+  }) {
+    return this.post("/payment-transactions", transactionData);
   }
 
   // ===============================================
@@ -121,28 +164,39 @@ class ApiService extends BaseApiService {
   }
 
   // ===============================================
-  // ORDER API - Redirige a orderService
+  // ORDER API - Redirige a orderService y tap-orders
   // ===============================================
 
+  /**
+   * Crear dish order - acepta parámetros individuales (legacy) u objeto
+   */
   async createDishOrder(
     restaurantId: string,
     tableNumber: string,
-    userId: string | null,
-    guestName: string,
-    item: string,
-    quantity: number,
-    price: number,
+    dataOrUserId: any,
+    guestName?: string,
+    item?: string,
+    quantity?: number,
+    price?: number,
     guestId?: string | null,
     images: string[] = [],
     customFields?: any,
     extraPrice?: number
   ) {
+    // Si el tercer parámetro es un objeto, es el nuevo formato de tap-order-and-pay
+    if (typeof dataOrUserId === 'object' && dataOrUserId !== null) {
+      const dishOrderData = dataOrUserId;
+      // Usar el endpoint correcto de tap-orders para crear dish
+      return this.post(`/tap-orders/restaurant/${restaurantId}/table/${tableNumber}/dishes`, dishOrderData);
+    }
+
+    // Si no, es el formato legacy con parámetros individuales
     return orderService.createDishOrder(restaurantId, tableNumber, {
-      userId,
-      guestName,
-      item,
-      quantity,
-      price,
+      userId: dataOrUserId,
+      guestName: guestName!,
+      item: item!,
+      quantity: quantity!,
+      price: price!,
       guestId,
       images,
       customFields,
@@ -161,6 +215,34 @@ class ApiService extends BaseApiService {
     restaurantId?: string
   ) {
     return orderService.linkGuestOrdersToUser(guestId, userId, tableNumber, restaurantId);
+  }
+
+  // ===============================================
+  // TAP ORDERS API - Métodos específicos de tap-order-and-pay
+  // ===============================================
+
+  /**
+   * Actualizar el estado de pago de una orden tap
+   */
+  async updatePaymentStatus(
+    tapOrderId: string,
+    paymentStatus: "pending" | "paid" | "failed"
+  ) {
+    return this.patch(`/tap-orders/${tapOrderId}/payment-status`, {
+      payment_status: paymentStatus,
+    });
+  }
+
+  /**
+   * Actualizar el estado de una orden tap
+   */
+  async updateOrderStatus(
+    tapOrderId: string,
+    orderStatus: "pending" | "completed"
+  ) {
+    return this.patch(`/tap-orders/${tapOrderId}/status`, {
+      status: orderStatus,
+    });
   }
 }
 

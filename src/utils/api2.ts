@@ -7,6 +7,7 @@ export interface PaymentMethod {
   id: string;
   lastFourDigits: string;
   cardType: string;
+  cardBrand: string;
   expiryMonth: number;
   expiryYear: number;
   cardholderName: string;
@@ -243,6 +244,35 @@ class ApiService {
 
   async getPaymentHistory(): Promise<ApiResponse<any>> {
     return this.makeRequest("/payments/history");
+  }
+
+  /**
+   * Registrar transacción de pago para trazabilidad máxima
+   */
+  async recordPaymentTransaction(transactionData: {
+    payment_method_id: string;
+    restaurant_id: number;
+    id_table_order?: string | null;
+    id_tap_orders_and_pay?: string | null;
+    base_amount: number;
+    tip_amount: number;
+    iva_tip: number;
+    xquisito_commission_total: number;
+    xquisito_commission_client: number;
+    xquisito_commission_restaurant: number;
+    iva_xquisito_client: number;
+    iva_xquisito_restaurant: number;
+    xquisito_client_charge: number;
+    xquisito_restaurant_charge: number;
+    xquisito_rate_applied: number;
+    total_amount_charged: number;
+    subtotal_for_commission: number;
+    currency?: string;
+  }): Promise<ApiResponse<any>> {
+    return this.makeRequest("/payment-transactions", {
+      method: "POST",
+      body: JSON.stringify(transactionData),
+    });
   }
 
   // Helper methods for guest identification

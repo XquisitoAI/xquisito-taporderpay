@@ -93,7 +93,7 @@ export default function CardsTab() {
                       <div className="flex items-center gap-2 mx-auto">
                         <div>
                           <span className="text-2xl">
-                            {getCardTypeIcon(method.cardType, "medium")}
+                            {getCardTypeIcon(method.cardBrand, "medium")}
                           </span>
                         </div>
 

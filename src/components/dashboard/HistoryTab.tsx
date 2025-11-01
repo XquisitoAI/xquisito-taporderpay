@@ -7,12 +7,12 @@ import {
   ChevronRight,
   X,
   Calendar,
-  CreditCard,
   Utensils,
 } from "lucide-react";
 import { getCardTypeIcon } from "@/utils/cardIcons";
 
 interface OrderHistoryItem {
+  orderType?: "flex-bill" | "tap-order-and-pay"; // Tipo de orden
   dishOrderId: number;
   item: string;
   quantity: number;
@@ -35,6 +35,7 @@ interface OrderHistoryItem {
   paymentMethodId?: number | null;
   paymentCardLastFour?: string | null;
   paymentCardType?: string | null;
+  paymentCardBrand?: string | null;
 }
 
 export default function HistoryTab() {
@@ -42,7 +43,6 @@ export default function HistoryTab() {
   const [orders, setOrders] = useState<OrderHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const [selectedOrderDetails, setSelectedOrderDetails] = useState<any>(null);
 
   // Bloquear scroll cuando el modal está abierto
@@ -111,55 +111,24 @@ export default function HistoryTab() {
     );
   }
 
-  // Datos de orden por tableOrderId
-  const groupedOrders = Object.values(
-    orders.reduce(
-      (acc, order) => {
-        const key = order.tableOrderId;
-        if (!acc[key]) {
-          acc[key] = {
-            tableOrderId: order.tableOrderId,
-            tableNumber: order.tableNumber,
-            tableOrderDate: order.tableOrderDate,
-            tableOrderStatus: order.tableOrderStatus,
-            restaurantId: order.restaurantId,
-            restaurantName: order.restaurantName,
-            restaurantLogo: order.restaurantLogo,
-            orders: [],
-          };
-        }
-        acc[key].orders.push(order);
-        return acc;
-      },
-      {} as Record<number, any>
-    )
-  ).sort(
+  // Las órdenes ya vienen agrupadas por transacción desde el backend
+  // Cada orden tiene sus platillos en el array "dishes"
+  const groupedOrders = orders.sort(
     (a, b) =>
-      new Date(b.tableOrderDate).getTime() -
-      new Date(a.tableOrderDate).getTime()
+      new Date(b.createdAt).getTime() -
+      new Date(a.createdAt).getTime()
   );
 
   return (
     <>
       <h1 className="text-gray-700 text-xl mb-3">Ordenes previas</h1>
       <div className="space-y-3">
-        {groupedOrders.map((group: any) => {
-          const totalAmount = group.orders.reduce(
-            (sum: number, order: OrderHistoryItem) => sum + order.totalPrice,
-            0
-          );
-
-          const totalQuantity = group.orders.reduce(
-            (sum: number, order: OrderHistoryItem) => sum + order.quantity,
-            0
-          );
-
+        {groupedOrders.map((order: any) => {
           return (
             <div
-              key={group.tableOrderId}
+              key={order.transactionId}
               onClick={() => {
-                setSelectedOrderId(group.tableOrderId);
-                setSelectedOrderDetails(group);
+                setSelectedOrderDetails(order);
               }}
               className="border border-gray-200 rounded-lg p-4 cursor-pointer"
             >
@@ -167,10 +136,10 @@ export default function HistoryTab() {
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
                   {/* Logo */}
-                  {group.restaurantLogo ? (
+                  {order.restaurantLogo ? (
                     <img
-                      src={group.restaurantLogo}
-                      alt={group.restaurantName}
+                      src={order.restaurantLogo}
+                      alt={order.restaurantName}
                       className="size-16 object-cover rounded-lg"
                     />
                   ) : (
@@ -181,14 +150,14 @@ export default function HistoryTab() {
 
                   {/* Order Info */}
                   <div className="flex-1">
-                    <h3 className="text-black mb-1">{group.restaurantName}</h3>
+                    <h3 className="text-black mb-1">{order.restaurantName}</h3>
                     <p className="text-sm text-gray-600 mb-1">
-                      {totalQuantity}{" "}
-                      {totalQuantity === 1 ? "articulo" : "articulos"} - $
-                      {totalAmount.toFixed(2)}
+                      {order.totalQuantity}{" "}
+                      {order.totalQuantity === 1 ? "articulo" : "articulos"} - $
+                      {order.totalAmount.toFixed(2)}
                     </p>
                     <p className="text-xs text-gray-400">
-                      {new Date(group.tableOrderDate).toLocaleDateString(
+                      {new Date(order.tableOrderDate).toLocaleDateString(
                         "es-MX",
                         {
                           day: "numeric",
@@ -200,19 +169,19 @@ export default function HistoryTab() {
                   </div>
                 </div>
 
-                {/* Status */}
+                {/* Order Type Badge */}
                 <div className="flex items-center gap-3">
                   <div className="text-right">
                     <span
                       className={`text-xs px-2 py-1 rounded-full font-medium ${
-                        group.tableOrderStatus === "paid"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-yellow-100 text-yellow-700"
+                        order.orderType === "tap-order-and-pay"
+                          ? "bg-purple-100 text-purple-700"
+                          : "bg-blue-100 text-blue-700"
                       }`}
                     >
-                      {group.tableOrderStatus === "paid"
-                        ? "Pagado"
-                        : "Pendiente"}
+                      {order.orderType === "tap-order-and-pay"
+                        ? "Tap Order & Pay"
+                        : "Flex Bill"}
                     </span>
                   </div>
                   <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
@@ -228,7 +197,6 @@ export default function HistoryTab() {
         <div
           className="fixed inset-0 bg-black/25 backdrop-blur-xs bg-opacity-50 z-999 flex items-center justify-center"
           onClick={() => {
-            setSelectedOrderId(null);
             setSelectedOrderDetails(null);
           }}
         >
@@ -239,7 +207,6 @@ export default function HistoryTab() {
             <div className="w-full flex justify-end">
               <button
                 onClick={() => {
-                  setSelectedOrderId(null);
                   setSelectedOrderDetails(null);
                 }}
                 className="p-2 hover:bg-gray-100 rounded-full cursor-pointer transition-colors justify-end flex items-end mt-3 mr-3"
@@ -301,31 +268,17 @@ export default function HistoryTab() {
                       Mesa {selectedOrderDetails.tableNumber}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <CreditCard className="w-4 h-4 text-gray-700" />
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded-full ${
-                        selectedOrderDetails.tableOrderStatus === "paid"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
-                    >
-                      {selectedOrderDetails.tableOrderStatus === "paid"
-                        ? "Pagado"
-                        : "Pendiente"}
-                    </span>
-                  </div>
-                  {selectedOrderDetails.orders[0]?.paymentCardType && (
+                  {selectedOrderDetails.paymentCardBrand && (
                     <div className="flex items-center gap-2 text-gray-700">
                       {getCardTypeIcon(
-                        selectedOrderDetails.orders[0].paymentCardType,
+                        selectedOrderDetails.paymentCardBrand,
                         "small",
                         45,
                         28
                       )}
                       <span className="text-sm">
                         •••• •••• ••••{" "}
-                        {selectedOrderDetails.orders[0].paymentCardLastFour}
+                        {selectedOrderDetails.paymentCardLastFour}
                       </span>
                     </div>
                   )}
@@ -338,7 +291,7 @@ export default function HistoryTab() {
                   Platillos Ordenados:
                 </h3>
                 <div className="space-y-3 divide-y divide-[#8e8e8e]/50">
-                  {selectedOrderDetails.orders.map((dish: OrderHistoryItem) => (
+                  {selectedOrderDetails.dishes?.map((dish: any) => (
                     <div
                       key={dish.dishOrderId}
                       className="flex items-start gap-3 pt-3 first:pt-0 pb-3"
@@ -352,11 +305,11 @@ export default function HistoryTab() {
                           Cantidad: {dish.quantity}
                         </p>
                         <p className="text-xs text-gray-600">
-                          ${dish.price.toFixed(2)} MXN
+                          ${dish.price?.toFixed(2)} MXN
                         </p>
                         {dish.extraPrice > 0 && (
                           <p className="text-xs text-gray-600">
-                            + Extras: ${dish.extraPrice.toFixed(2)} MXN
+                            + Extras: ${dish.extraPrice?.toFixed(2)} MXN
                           </p>
                         )}
                       </div>
@@ -364,7 +317,7 @@ export default function HistoryTab() {
                       {/* Total Price */}
                       <div className="text-right">
                         <p className="font-semibold text-black">
-                          ${dish.totalPrice.toFixed(2)} MXN
+                          ${dish.totalPrice?.toFixed(2)} MXN
                         </p>
                       </div>
                     </div>
@@ -376,15 +329,7 @@ export default function HistoryTab() {
               <div className="flex justify-between items-center border-t border-[#8e8e8e] pt-4 mb-6">
                 <span className="text-xl font-medium text-black">Total</span>
                 <span className="text-xl font-medium text-black">
-                  $
-                  {selectedOrderDetails.orders
-                    .reduce(
-                      (sum: number, order: OrderHistoryItem) =>
-                        sum + order.totalPrice,
-                      0
-                    )
-                    .toFixed(2)}{" "}
-                  MXN
+                  ${selectedOrderDetails.totalAmount?.toFixed(2)} MXN
                 </span>
               </div>
             </div>
