@@ -4,7 +4,7 @@ import {
   MenuItem as MenuItemDB,
   MenuItemData,
 } from "../../interfaces/menuItemData";
-import { useTable } from "../../context/TableContext";
+import { useCart } from "../../context/CartContext";
 import { useTableNavigation } from "../../hooks/useTableNavigation";
 import { useFlyToCart } from "../../hooks/useFlyToCart";
 import { useRestaurant } from "../../context/RestaurantContext";
@@ -36,7 +36,7 @@ export default function MenuItem({ item }: MenuItemProps) {
       features: [], // Los custom_fields podrían mapearse aquí si es necesario
     };
   }, [item]);
-  const { state, dispatch } = useTable();
+  const { state: cartState, addItem, removeItem } = useCart();
   const { navigateWithTable } = useTableNavigation();
   const { flyToCart } = useFlyToCart();
   const { isOpen, restaurant } = useRestaurant();
@@ -100,14 +100,11 @@ export default function MenuItem({ item }: MenuItemProps) {
     setIsPulsing(true);
 
     if (plusButtonRef.current) {
-      flyToCart(plusButtonRef.current, () => {
-        dispatch({
-          type: "ADD_ITEM_TO_CURRENT_USER",
-          payload: itemWithDiscount,
-        });
+      flyToCart(plusButtonRef.current, async () => {
+        await addItem(itemWithDiscount);
       });
     } else {
-      dispatch({ type: "ADD_ITEM_TO_CURRENT_USER", payload: itemWithDiscount });
+      addItem(itemWithDiscount);
     }
   };
 
@@ -119,11 +116,11 @@ export default function MenuItem({ item }: MenuItemProps) {
     }
   }, [isPulsing]);
 
-  const handleRemoveFromCart = (e: React.MouseEvent) => {
+  const handleRemoveFromCart = async (e: React.MouseEvent) => {
     e.stopPropagation();
 
     // Si hay múltiples variaciones, navegar al carrito
-    const itemsWithSameId = state.currentUserItems.filter(
+    const itemsWithSameId = cartState.items.filter(
       (cartItem) => cartItem.id === adaptedItem.id
     );
     if (itemsWithSameId.length > 1) {
@@ -134,28 +131,16 @@ export default function MenuItem({ item }: MenuItemProps) {
     // Update local quantity
     setLocalQuantity((prev) => Math.max(0, prev - 1));
 
-    const cartItem = state.currentUserItems.find(
+    const cartItem = cartState.items.find(
       (cartItem) => cartItem.id === adaptedItem.id
     );
-    if (cartItem && cartItem.quantity > 1) {
-      dispatch({
-        type: "UPDATE_QUANTITY_CURRENT_USER",
-        payload: {
-          id: adaptedItem.id,
-          quantity: cartItem.quantity - 1,
-          customFields: cartItem.customFields,
-        },
-      });
-    } else if (cartItem && cartItem.quantity === 1) {
-      dispatch({
-        type: "REMOVE_ITEM_FROM_CURRENT_USER",
-        payload: adaptedItem.id,
-      });
+    if (cartItem) {
+      await removeItem(adaptedItem.id);
     }
   };
 
   // Sumar todas las cantidades de items con el mismo id (considerando diferentes custom fields)
-  const currentQuantity = state.currentUserItems
+  const currentQuantity = cartState.items
     .filter((cartItem) => cartItem.id === adaptedItem.id)
     .reduce((sum, item) => sum + item.quantity, 0);
 

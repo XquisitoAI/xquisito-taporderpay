@@ -2,6 +2,7 @@
 
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
+import { useCart } from "@/context/CartContext";
 import { useTable } from "@/context/TableContext";
 import { useTableNavigation } from "@/hooks/useTableNavigation";
 import { useRestaurant } from "@/context/RestaurantContext";
@@ -23,7 +24,8 @@ export default function DishDetailPage() {
   const router = useRouter();
   const dishId = parseInt(params.id as string);
   const restaurantId = params.restaurantId as string;
-  const { state, dispatch } = useTable();
+  const { state: cartState, addItem, updateQuantity } = useCart();
+  const { dispatch } = useTable();
   const { tableNumber, goBack, navigateWithTable } = useTableNavigation();
   const { restaurant, menu, loading, isOpen } = useRestaurant();
   const [localQuantity, setLocalQuantity] = useState(0);
@@ -334,7 +336,7 @@ export default function DishDetailPage() {
     return basePrice + extraPrice;
   };
 
-  const handleAddToCart = (e?: React.MouseEvent) => {
+  const handleAddToCart = async (e?: React.MouseEvent) => {
     e?.stopPropagation();
     if (!dishData) return;
 
@@ -381,18 +383,15 @@ export default function DishDetailPage() {
     setLocalQuantity((prev) => prev + 1);
     setIsPulsing(true);
 
-    dispatch({
-      type: "ADD_ITEM_TO_CURRENT_USER",
-      payload: {
-        ...dishData.dish,
-        price: basePrice,
-        customFields: customFieldsData,
-        extraPrice,
-      },
+    await addItem({
+      ...dishData.dish,
+      price: basePrice,
+      customFields: customFieldsData,
+      extraPrice,
     });
   };
 
-  const handleAddToCartAndReturn = () => {
+  const handleAddToCartAndReturn = async () => {
     if (!dishData) return;
 
     // Verificar si el restaurante está abierto
@@ -438,14 +437,11 @@ export default function DishDetailPage() {
     setLocalQuantity((prev) => prev + 1);
     setIsPulsing(true);
 
-    dispatch({
-      type: "ADD_ITEM_TO_CURRENT_USER",
-      payload: {
-        ...dishData.dish,
-        price: basePrice,
-        customFields: customFieldsData,
-        extraPrice,
-      },
+    await addItem({
+      ...dishData.dish,
+      price: basePrice,
+      customFields: customFieldsData,
+      extraPrice,
     });
 
     setTimeout(() => {
@@ -453,30 +449,22 @@ export default function DishDetailPage() {
     }, 200);
   };
 
-  const handleRemoveFromCart = (e: React.MouseEvent) => {
+  const handleRemoveFromCart = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!dishData) return;
 
     setLocalQuantity((prev) => Math.max(0, prev - 1));
 
-    const cartItem = state.currentUserItems.find(
+    const cartItem = cartState.items.find(
       (cartItem) => cartItem.id === dishData.dish.id
     );
-    if (cartItem && cartItem.quantity > 1) {
-      dispatch({
-        type: "UPDATE_QUANTITY_CURRENT_USER",
-        payload: { id: dishData.dish.id, quantity: cartItem.quantity - 1 },
-      });
-    } else if (cartItem && cartItem.quantity === 1) {
-      dispatch({
-        type: "REMOVE_ITEM_FROM_CURRENT_USER",
-        payload: dishData.dish.id,
-      });
+    if (cartItem) {
+      await updateQuantity(dishData.dish.id, cartItem.quantity - 1);
     }
   };
 
   const currentQuantity = dishData
-    ? state.currentUserItems.find(
+    ? cartState.items.find(
         (cartItem) => cartItem.id === dishData.dish.id
       )?.quantity || 0
     : 0;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useTable } from "@/context/TableContext";
+import { useCart } from "@/context/CartContext";
 import { useTableNavigation } from "@/hooks/useTableNavigation";
 import { usePayment } from "@/context/PaymentContext";
 import { useRestaurant } from "@/context/RestaurantContext";
@@ -26,15 +26,25 @@ export default function CardSelectionPage() {
     }
   }, [restaurantId, setRestaurantId]);
 
-  const { state, dispatch } = useTable();
-  const { navigateWithTable } = useTableNavigation();
+  const { state: cartState, clearCart } = useCart();
+  const { navigateWithTable, tableNumber } = useTableNavigation();
   const { hasPaymentMethods, paymentMethods, deletePaymentMethod } =
     usePayment();
   const { user } = useUser();
   const { getToken } = useAuth();
 
   // Obtener monto base del carrito desde el contexto
-  const baseAmount = state.currentUserTotalPrice;
+  const baseAmount = cartState.totalPrice;
+
+  // Debug: Log cart state
+  useEffect(() => {
+    console.log("🛒 Cart state in card-selection:", {
+      items: cartState.items,
+      totalItems: cartState.totalItems,
+      totalPrice: cartState.totalPrice,
+      isLoading: cartState.isLoading,
+    });
+  }, [cartState]);
 
   // Estados para propina
   const [tipPercentage, setTipPercentage] = useState(0);
@@ -53,7 +63,7 @@ export default function CardSelectionPage() {
   const [showAnimation, setShowAnimation] = useState(false);
   const [completedOrderId, setCompletedOrderId] = useState<string | null>(null);
   const [completedOrderItems, setCompletedOrderItems] = useState<
-    typeof state.currentUserItems
+    typeof cartState.items
   >([]);
   const [completedUserName, setCompletedUserName] = useState<string>("");
 
@@ -104,10 +114,18 @@ export default function CardSelectionPage() {
     } else {
       setSelectedPaymentMethodId(null);
     }
-    setIsLoadingInitial(false);
-  }, [hasPaymentMethods, paymentMethods, selectedPaymentMethodId]);
+    // Solo marcar como cargado cuando el carrito también esté listo
+    if (!cartState.isLoading) {
+      setIsLoadingInitial(false);
+    }
+  }, [hasPaymentMethods, paymentMethods, selectedPaymentMethodId, cartState.isLoading]);
 
   const handlePayment = async (): Promise<void> => {
+    if (!tableNumber) {
+      alert("No se encontró el número de mesa. Por favor escanea el código QR nuevamente.");
+      return;
+    }
+
     if (hasPaymentMethods && !selectedPaymentMethodId) {
       alert("Por favor selecciona una tarjeta de pago");
       return;
@@ -146,9 +164,9 @@ export default function CardSelectionPage() {
         paymentMethodId: selectedPaymentMethodId!,
         amount: totalAmount,
         currency: "MXN",
-        description: `Pago Mesa ${state.tableNumber} - ${user?.fullName || "Invitado"}`,
+        description: `Pago Mesa ${tableNumber} - ${user?.fullName || "Invitado"}`,
         orderId: `order-${Date.now()}`,
-        tableNumber: state.tableNumber,
+        tableNumber: tableNumber,
         restaurantId,
       };
 
@@ -187,7 +205,7 @@ export default function CardSelectionPage() {
       const customerName =
         user?.fullName ||
         user?.firstName ||
-        state.currentUserName ||
+        cartState.userName ||
         "Invitado";
       const customerEmail = user?.emailAddresses?.[0]?.emailAddress || null;
 
@@ -202,19 +220,35 @@ export default function CardSelectionPage() {
           ? localStorage.getItem("xquisito-guest-id")
           : null;
 
+      // Validar que hay items en el carrito
+      if (!cartState.items || cartState.items.length === 0) {
+        throw new Error("El carrito está vacío");
+      }
+
+      console.log("📦 Cart items to process:", cartState.items);
+
       // Crear un dish order por cada item del carrito
-      for (const item of state.currentUserItems) {
-        const dishOrderData = {
+      for (const item of cartState.items) {
+        // Preparar images - filtrar solo strings válidos
+        const images = item.images && Array.isArray(item.images) && item.images.length > 0
+          ? item.images.filter(img => img && typeof img === 'string')
+          : [];
+
+        // Preparar custom_fields
+        const customFields = item.customFields && Array.isArray(item.customFields) && item.customFields.length > 0
+          ? item.customFields
+          : null;
+
+        const dishOrderData: any = {
           item: item.name,
           price: item.price,
-          quantity: item.quantity,
+          quantity: item.quantity || 1,
           customer_name: customerName,
           customer_phone: customerPhone,
           customer_email: customerEmail,
           clerk_user_id: clerkUserId,
-          custom_fields: item.customFields || null,
-          images:
-            item.images && item.images.length > 0 ? [item.images[0]] : null,
+          images: images,  // Array de strings
+          custom_fields: customFields,  // JSONB o null
           extra_price: item.extraPrice || 0,
         };
 
@@ -222,11 +256,12 @@ export default function CardSelectionPage() {
 
         const dishOrderResult = await apiService.createDishOrder(
           restaurantId,
-          state.tableNumber,
+          tableNumber,
           dishOrderData
         );
 
         if (!dishOrderResult.success) {
+          console.error("❌ Failed to create dish order:", dishOrderResult);
           throw new Error(
             dishOrderResult.error?.message || "Error al crear el dish order"
           );
@@ -316,14 +351,14 @@ export default function CardSelectionPage() {
       }
 
       // Guardar datos antes de limpiar el carrito
-      setCompletedOrderItems([...state.currentUserItems]);
+      setCompletedOrderItems([...cartState.items]);
       // Obtener nombre del usuario (de Clerk si está loggeado, o del estado si es guest)
       const userName =
-        user?.firstName || user?.fullName || state.currentUserName || "Usuario";
+        user?.firstName || user?.fullName || cartState.userName || "Usuario";
       setCompletedUserName(userName);
 
       // Limpiar el carrito después de completar la orden
-      dispatch({ type: "CLEAR_CURRENT_USER_CART" });
+      await clearCart();
       console.log("🧹 Cart cleared after successful order");
 
       // Guardar orderId y mostrar animación

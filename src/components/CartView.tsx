@@ -2,16 +2,17 @@
 
 import { useState } from "react";
 import { Minus, Plus } from "lucide-react";
-import { useTable, CartItem } from "../context/TableContext";
+import { useTable } from "../context/TableContext";
+import { useCart } from "../context/CartContext";
 import { useTableNavigation } from "../hooks/useTableNavigation";
 import MenuHeaderBack from "./headers/MenuHeaderBack";
 import { useUser } from "@clerk/nextjs";
 
 export default function CartView() {
-  const { state, dispatch } = useTable();
+  const { state: tableState } = useTable();
+  const { state: cartState, updateQuantity } = useCart();
   const { navigateWithTable } = useTableNavigation();
   const { isLoaded, isSignedIn, user } = useUser();
-  const [orderedItems, setOrderedItems] = useState<CartItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleOrder = async () => {
@@ -19,8 +20,6 @@ export default function CartView() {
     if (isLoaded && isSignedIn && user) {
       setIsSubmitting(true);
       try {
-        // Guardar items antes de que se limpie el carrito
-        setOrderedItems([...state.currentUserItems]);
         navigateWithTable("/card-selection");
       } catch (error) {
         console.error("Error submitting order:", error);
@@ -39,10 +38,10 @@ export default function CartView() {
 
       <div className="px-4 w-full flex-1 flex flex-col">
         <div className="left-4 right-4 bg-gradient-to-tl from-[#0a8b9b] to-[#1d727e] rounded-t-4xl translate-y-7 z-0">
-          {state.currentUserItems.length === 0 ? (
+          {cartState.items.length === 0 ? (
             <div className="py-6 px-8 flex flex-col justify-center">
               <h1 className="text-[#e0e0e0] text-xl font-medium">
-                Mesa {state.tableNumber}
+                Mesa {tableState.tableNumber}
               </h1>
               <h2 className="font-medium text-white text-3xl leading-7 mt-2 mb-6">
                 El carrito está vacío, agrega items y disfruta
@@ -51,7 +50,7 @@ export default function CartView() {
           ) : (
             <div className="py-6 px-8 flex flex-col justify-center">
               <h1 className="text-[#e0e0e0] text-xl font-medium">
-                Mesa {state.tableNumber}
+                Mesa {tableState.tableNumber}
               </h1>
               <h2 className="font-medium text-white text-3xl leading-7 mt-2 mb-6">
                 Confirma tu pedido
@@ -71,7 +70,7 @@ export default function CartView() {
                 </h2>
               </div>
 
-              {state.currentUserItems.length === 0 ? (
+              {cartState.items.length === 0 ? (
                 <div className="flex-1 flex items-center justify-center py-8 text-center">
                   <div>
                     <div className="text-gray-400 text-6xl mb-4">🛒</div>
@@ -85,8 +84,8 @@ export default function CartView() {
                     <span>Precio</span>
                   </div>
                   <div className="divide-y divide-[#8e8e8e]/50">
-                    {state.currentUserItems.map((item, index) => (
-                      <div key={`${item.id}-${index}`} className="py-3">
+                    {cartState.items.map((item, index) => (
+                      <div key={`${item.id}-${item.cartItemId}-${index}`} className="py-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="flex-shrink-0">
@@ -133,14 +132,7 @@ export default function CartView() {
                             <div className="flex items-center gap-2">
                               <Minus
                                 onClick={() =>
-                                  dispatch({
-                                    type: "UPDATE_QUANTITY_CURRENT_USER",
-                                    payload: {
-                                      id: item.id,
-                                      quantity: item.quantity - 1,
-                                      customFields: item.customFields,
-                                    },
-                                  })
+                                  updateQuantity(item.id, item.quantity - 1)
                                 }
                                 className="size-4 flex items-center justify-center text-black cursor-pointer"
                               />
@@ -149,14 +141,7 @@ export default function CartView() {
                               </p>
                               <Plus
                                 onClick={() =>
-                                  dispatch({
-                                    type: "UPDATE_QUANTITY_CURRENT_USER",
-                                    payload: {
-                                      id: item.id,
-                                      quantity: item.quantity + 1,
-                                      customFields: item.customFields,
-                                    },
-                                  })
+                                  updateQuantity(item.id, item.quantity + 1)
                                 }
                                 className="size-4 flex items-center justify-center text-black cursor-pointer"
                               />
@@ -193,7 +178,7 @@ export default function CartView() {
             </div>
 
             {/* Fixed bottom section */}
-            {state.currentUserItems.length > 0 && (
+            {cartState.items.length > 0 && (
               <div
                 className="fixed bottom-0 left-0 bg-white right-0 mx-4 px-6 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]"
                 style={{
@@ -203,17 +188,18 @@ export default function CartView() {
                 <div className="w-full flex gap-3 mt-6 justify-between">
                   <div className="flex flex-col justify-center">
                     <span className="text-gray-600 text-sm">
-                      {state.currentUserTotalItems} artículos
+                      {cartState.totalItems} artículos
                     </span>
                     <div className="flex items-center justify-center w-fit text-2xl font-medium text-black text-center">
-                      ${state.currentUserTotalPrice.toFixed(2)}
+                      ${cartState.totalPrice.toFixed(2)}
                     </div>
                   </div>
                   <button
                     onClick={handleOrder}
-                    className="bg-gradient-to-r from-[#34808C] to-[#173E44] py-3 text-white px-20 rounded-full cursor-pointer transition-colors font-normal h-fit flex items-center justify-center"
+                    disabled={isSubmitting || cartState.isLoading}
+                    className="bg-gradient-to-r from-[#34808C] to-[#173E44] py-3 text-white px-20 rounded-full cursor-pointer transition-colors font-normal h-fit flex items-center justify-center disabled:opacity-50"
                   >
-                    Ordenar
+                    {isSubmitting || cartState.isLoading ? "Cargando..." : "Ordenar"}
                   </button>
                 </div>
               </div>

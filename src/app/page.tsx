@@ -6,8 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
 // Restaurant ID por defecto para testing
-const DEFAULT_RESTAURANT_ID = 3;
-const DEFAULT_TABLE = 12;
+const DEFAULT_RESTAURANT_ID = 5;
+const DEFAULT_TABLE = 20;
 
 export default function Home() {
   const router = useRouter();

@@ -13,7 +13,7 @@ export function getCardTypeIcon(
   customWidth?: number,
   customHeight?: number
 ): JSX.Element {
-  const type = cardType.toLowerCase();
+  const type = cardType.toLowerCase() || "unknown";
 
   // Define size presets
   const sizes = {

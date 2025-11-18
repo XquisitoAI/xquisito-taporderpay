@@ -1,7 +1,7 @@
 "use client";
 
 import { Restaurant } from "../../interfaces/restaurant";
-import { useTable } from "../../context/TableContext";
+import { useCart } from "../../context/CartContext";
 import { useTableNavigation } from "../../hooks/useTableNavigation";
 import { usePathname } from "next/navigation";
 import { ShoppingCart } from "lucide-react";
@@ -16,7 +16,7 @@ export default function MenuHeader({
   restaurant,
   tableNumber,
 }: MenuHeaderProps) {
-  const { state } = useTable();
+  const { state: cartState } = useCart();
   const { navigateWithTable } = useTableNavigation();
   const pathname = usePathname();
 
@@ -45,12 +45,12 @@ export default function MenuHeader({
                 </div>
               </GlassSurface>
             </div>
-            {state.currentUserTotalItems > 0 && (
+            {cartState.totalItems > 0 && (
               <div
                 id="cart-badge"
                 className="absolute -top-1 -right-1 bg-[#eab3f4] text-white rounded-full size-4 flex items-center justify-center text-xs font-normal"
               >
-                {state.currentUserTotalItems}
+                {cartState.totalItems}
               </div>
             )}
           </div>

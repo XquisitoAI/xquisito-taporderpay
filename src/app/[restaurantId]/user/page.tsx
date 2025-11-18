@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useTable, CartItem } from "@/context/TableContext";
+import { useTable } from "@/context/TableContext";
+import { useCart, CartItem } from "@/context/CartContext";
 import { useTableNavigation } from "@/hooks/useTableNavigation";
 import { useRestaurant } from "@/context/RestaurantContext";
 import MenuHeaderBack from "@/components/headers/MenuHeaderBack";
@@ -23,7 +24,8 @@ export default function UserPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderedItems, setOrderedItems] = useState<CartItem[]>([]);
   const [orderUserName, setOrderUserName] = useState("");
-  const { state, dispatch } = useTable();
+  const { dispatch } = useTable();
+  const { state: cartState, setUserName: setCartUserName } = useCart();
   const { tableNumber, navigateWithTable } = useTableNavigation();
   const router = useRouter();
 
@@ -59,10 +61,10 @@ export default function UserPage() {
       setIsSubmitting(true);
       try {
         // Guardar items antes de que se limpie el carrito
-        setOrderedItems([...state.currentUserItems]);
+        setOrderedItems([...cartState.items]);
         setOrderUserName(userName.trim());
-        // Guardar el nombre del usuario en el contexto
-        dispatch({ type: "SET_CURRENT_USER_NAME", payload: userName.trim() });
+        // Guardar el nombre del usuario en el contexto del carrito
+        setCartUserName(userName.trim());
         // Navegar a card-selection
         navigateWithTable("/card-selection");
       } catch (error) {

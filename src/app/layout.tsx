@@ -4,6 +4,7 @@ import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { RestaurantProvider } from "@/context/RestaurantContext";
 import { TableProvider } from "@/context/TableContext";
+import { CartProvider } from "@/context/CartContext";
 import { UserDataProvider } from "@/context/userDataContext";
 import { GuestProvider } from "@/context/GuestContext";
 import { PaymentProvider } from "@/context/PaymentContext";
@@ -114,13 +115,15 @@ export default function RootLayout({
           style={{ fontFamily: "var(--font-helvetica-neue)" }}
         >
           <RestaurantProvider>
-            <TableProvider>
-              <GuestProvider>
-                <PaymentProvider>
-                  <UserDataProvider>{children}</UserDataProvider>
-                </PaymentProvider>
-              </GuestProvider>
-            </TableProvider>
+            <CartProvider>
+              <TableProvider>
+                <GuestProvider>
+                  <PaymentProvider>
+                    <UserDataProvider>{children}</UserDataProvider>
+                  </PaymentProvider>
+                </GuestProvider>
+              </TableProvider>
+            </CartProvider>
           </RestaurantProvider>
         </body>
       </html>

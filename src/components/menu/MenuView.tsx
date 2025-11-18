@@ -7,7 +7,7 @@ import { useState, useMemo } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useUserData } from "../../context/userDataContext";
 import { useTableNavigation } from "../../hooks/useTableNavigation";
-import { useTable } from "../../context/TableContext";
+import { useCart } from "../../context/CartContext";
 import { useRestaurant } from "../../context/RestaurantContext";
 import Loader from "../UI/Loader";
 
@@ -21,7 +21,7 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
   const { user, isLoaded } = useUser();
   const { signUpData } = useUserData();
   const { navigateWithTable } = useTableNavigation();
-  const { state } = useTable();
+  const { state: cartState } = useCart();
   const { restaurant, menu, loading, error } = useRestaurant();
 
   // Obtener categorías únicas del menú de la BD
@@ -46,10 +46,10 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
     : "Bienvenido";
 
   // Total de items en el carrito
-  const totalItems = state.currentUserItems.reduce(
+  const totalItems = cartState.items?.reduce(
     (sum, item) => sum + item.quantity,
     0
-  );
+  ) || 0;
 
   // Filtrar menú según la categoría seleccionada y búsqueda
   const filteredMenu = useMemo(() => {
