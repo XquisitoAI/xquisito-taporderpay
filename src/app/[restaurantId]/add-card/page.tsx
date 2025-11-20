@@ -274,20 +274,20 @@ function AddCardContent() {
       <div className="min-h-screen bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">
         <MenuHeaderBack />
 
-        <div className="px-4 w-full flex-1 flex flex-col justify-end">
+        <div className="px-4 md:px-6 lg:px-8 w-full flex-1 flex flex-col justify-end">
           <div className="left-4 right-4 bg-gradient-to-tl from-[#0a8b9b] to-[#1d727e] rounded-t-4xl translate-y-7 z-0">
-            <div className="pt-6 pb-12 px-8 flex flex-col justify-center">
-              <h2 className="font-medium text-white text-3xl leading-7 mt-2 mb-2">
+            <div className="pt-6 md:pt-7 lg:pt-8 pb-12 md:pb-14 lg:pb-16 px-8 md:px-10 lg:px-12 flex flex-col justify-center">
+              <h2 className="font-medium text-white text-3xl md:text-4xl lg:text-5xl leading-7 mt-2 md:mt-3 lg:mt-4 mb-2 md:mb-3 lg:mb-4">
                 Agrega tu tarjeta para continuar
               </h2>
-              <p className="text-white/80 text-sm">
+              <p className="text-white/80 text-sm md:text-base lg:text-lg">
                 Tu tarjeta se guardará de forma segura para pagos futuros
               </p>
             </div>
           </div>
 
           <div className="flex-1 h-full flex flex-col">
-            <div className="min-h-full bg-white rounded-t-4xl flex-1 z-5 flex flex-col px-6 py-6">
+            <div className="min-h-full bg-white rounded-t-4xl flex-1 z-5 flex flex-col px-6 md:px-8 lg:px-10 py-6 md:py-8 lg:py-10">
               {/* Test Card Helper */}
               {process.env.NODE_ENV === "development" && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
@@ -310,19 +310,23 @@ function AddCardContent() {
                 </div>
               )}
               {/* Card Scanner */}
-              <button
-                type="button"
-                onClick={() => setShowScanner(true)}
-                className="bg-black hover:bg-stone-950 w-full text-white py-3 rounded-full font-normal cursor-pointer transition-colors disabled:bg-stone-900 disabled:cursor-not-allowed flex items-center justify-center gap-2 mb-6"
-              >
-                <Camera className="size-5" />
-                Escanear Tarjeta
-              </button>
+              <div className="mb-6">
+                <button
+                  type="button"
+                  onClick={() => setShowScanner(true)}
+                  className="w-full bg-black hover:bg-stone-950 text-white py-4 px-6 rounded-full font-medium cursor-pointer transition-colors flex items-center justify-center gap-3"
+                >
+                  <Camera className="size-6" />
+                  <span className="text-base md:text-lg lg:text-xl">
+                    Escanear Tarjeta
+                  </span>
+                </button>
+              </div>
 
               {/* Add Card Form */}
-              <div className="space-y-4">
+              <div className="space-y-4 md:space-y-5 text-sm md:text-base lg:text-lg">
                 <div>
-                  <label className="block text-sm text-gray-700 mb-2">
+                  <label className="block text-gray-700 mb-2">
                     Nombre Completo
                   </label>
                   <input
@@ -330,12 +334,12 @@ function AddCardContent() {
                     value={fullName}
                     onChange={handleFullNameChange}
                     placeholder="John Doe"
-                    className="w-full px-3 py-3 border text-black border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500 focus:border-transparent"
+                    className="w-full px-4 md:px-5 lg:px-6 py-3 md:py-4 lg:py-5 border text-black border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500 focus:border-transparent"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm text-gray-700 mb-2">
+                  <label className="block text-gray-700 mb-2">
                     Número de tarjeta
                   </label>
                   <input
@@ -344,13 +348,13 @@ function AddCardContent() {
                     onChange={handleCardNumberChange}
                     placeholder="**** 2098"
                     maxLength={19}
-                    className="w-full px-3 py-3 text-black bg-gray-100 border border-gray-200 rounded-lg focus:outline-none focus:ring focus:ring-teal-500 focus:border-transparent"
+                    className="w-full px-4 md:px-5 lg:px-6 py-3 md:py-4 lg:py-5 text-black bg-gray-100 border border-gray-200 rounded-lg focus:outline-none focus:ring focus:ring-teal-500 focus:border-transparent"
                   />
                 </div>
 
                 {/* Exp Date Field */}
                 <div>
-                  <label className="block text-sm text-gray-700 mb-2">
+                  <label className="block text-gray-700 mb-2">
                     Fecha de expiración
                   </label>
                   <input
@@ -359,13 +363,13 @@ function AddCardContent() {
                     onChange={handleExpDateChange}
                     placeholder="02/24"
                     maxLength={5}
-                    className="w-full px-3 py-3 bg-gray-100 border border-gray-200 rounded-lg focus:outline-none focus:ring focus:ring-teal-500 focus:border-transparent text-black"
+                    className="w-full px-4 md:px-5 lg:px-6 py-3 md:py-4 lg:py-5 bg-gray-100 border border-gray-200 rounded-lg focus:outline-none focus:ring focus:ring-teal-500 focus:border-transparent text-black"
                   />
                 </div>
 
                 {/* CVV Field */}
                 <div>
-                  <label className="block text-sm text-gray-700 mb-2">
+                  <label className="block text-gray-700 mb-2">
                     CVV
                   </label>
                   <input
@@ -374,12 +378,12 @@ function AddCardContent() {
                     onChange={handleCvvChange}
                     placeholder="123"
                     maxLength={4}
-                    className="w-full px-3 py-3 text-black border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500 focus:border-transparent"
+                    className="w-full px-4 md:px-5 lg:px-6 py-3 md:py-4 lg:py-5 text-black border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500 focus:border-transparent"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm text-gray-700 mb-2">
+                  <label className="block text-gray-700 mb-2">
                     Correo Electronico
                   </label>
                   <input
@@ -387,7 +391,7 @@ function AddCardContent() {
                     value={email}
                     onChange={handleEmailChange}
                     placeholder="john@example.com"
-                    className="w-full px-3 py-3 border text-black border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500 focus:border-transparent"
+                    className="w-full px-4 md:px-5 lg:px-6 py-3 md:py-4 lg:py-5 border text-black border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -396,7 +400,7 @@ function AddCardContent() {
               <button
                 onClick={handleSave}
                 disabled={isLoading}
-                className="bg-black hover:bg-stone-950 w-full text-white py-3 rounded-full cursor-pointer transition-colors mt-8 disabled:bg-stone-600 disabled:cursor-not-allowed"
+                className="bg-black hover:bg-stone-950 text-base md:text-lg lg:text-xl w-full text-white py-3 md:py-4 lg:py-5 rounded-full cursor-pointer transition-colors mt-8 disabled:bg-stone-600 disabled:cursor-not-allowed"
               >
                 {isLoading ? "Guardando..." : "Guardar"}
               </button>

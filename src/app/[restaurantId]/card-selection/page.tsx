@@ -118,11 +118,18 @@ export default function CardSelectionPage() {
     if (!cartState.isLoading) {
       setIsLoadingInitial(false);
     }
-  }, [hasPaymentMethods, paymentMethods, selectedPaymentMethodId, cartState.isLoading]);
+  }, [
+    hasPaymentMethods,
+    paymentMethods,
+    selectedPaymentMethodId,
+    cartState.isLoading,
+  ]);
 
   const handlePayment = async (): Promise<void> => {
     if (!tableNumber) {
-      alert("No se encontró el número de mesa. Por favor escanea el código QR nuevamente.");
+      alert(
+        "No se encontró el número de mesa. Por favor escanea el código QR nuevamente."
+      );
       return;
     }
 
@@ -150,7 +157,7 @@ export default function CardSelectionPage() {
           console.log("🔑 Auth token configured for payment:", {
             userId: user.id,
             tokenLength: token.length,
-            tokenPreview: token.substring(0, 20) + '...'
+            tokenPreview: token.substring(0, 20) + "...",
           });
         } else {
           console.warn("⚠️ User is logged in but no token available");
@@ -203,10 +210,7 @@ export default function CardSelectionPage() {
 
       // Paso 3: Crear dish orders individuales para cada item del carrito
       const customerName =
-        user?.fullName ||
-        user?.firstName ||
-        cartState.userName ||
-        "Invitado";
+        user?.fullName || user?.firstName || cartState.userName || "Invitado";
       const customerEmail = user?.emailAddresses?.[0]?.emailAddress || null;
 
       let firstTapOrderId: string | null = null;
@@ -230,14 +234,18 @@ export default function CardSelectionPage() {
       // Crear un dish order por cada item del carrito
       for (const item of cartState.items) {
         // Preparar images - filtrar solo strings válidos
-        const images = item.images && Array.isArray(item.images) && item.images.length > 0
-          ? item.images.filter(img => img && typeof img === 'string')
-          : [];
+        const images =
+          item.images && Array.isArray(item.images) && item.images.length > 0
+            ? item.images.filter((img) => img && typeof img === "string")
+            : [];
 
         // Preparar custom_fields
-        const customFields = item.customFields && Array.isArray(item.customFields) && item.customFields.length > 0
-          ? item.customFields
-          : null;
+        const customFields =
+          item.customFields &&
+          Array.isArray(item.customFields) &&
+          item.customFields.length > 0
+            ? item.customFields
+            : null;
 
         const dishOrderData: any = {
           item: item.name,
@@ -247,8 +255,8 @@ export default function CardSelectionPage() {
           customer_phone: customerPhone,
           customer_email: customerEmail,
           clerk_user_id: clerkUserId,
-          images: images,  // Array de strings
-          custom_fields: customFields,  // JSONB o null
+          images: images, // Array de strings
+          custom_fields: customFields, // JSONB o null
           extra_price: item.extraPrice || 0,
         };
 
@@ -318,9 +326,10 @@ export default function CardSelectionPage() {
         // Paso 5: Registrar transacción para trazabilidad
         if (selectedPaymentMethodId) {
           try {
-            const xquisitoRateApplied = subtotalForCommission > 0
-              ? (xquisitoCommissionTotal / subtotalForCommission) * 100
-              : 0;
+            const xquisitoRateApplied =
+              subtotalForCommission > 0
+                ? (xquisitoCommissionTotal / subtotalForCommission) * 100
+                : 0;
 
             await apiService.recordPaymentTransaction({
               payment_method_id: selectedPaymentMethodId,
@@ -344,7 +353,10 @@ export default function CardSelectionPage() {
             });
             console.log("✅ Payment transaction recorded successfully");
           } catch (transactionError) {
-            console.error("❌ Error recording payment transaction:", transactionError);
+            console.error(
+              "❌ Error recording payment transaction:",
+              transactionError
+            );
             // Don't throw - continue with payment flow even if transaction recording fails
           }
         }
@@ -403,22 +415,24 @@ export default function CardSelectionPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">
       <MenuHeaderBack />
 
-      <div className="px-4 w-full fixed bottom-0 left-0 right-0">
+      <div className="px-4 md:px-6 lg:px-8 w-full fixed bottom-0 left-0 right-0">
         <div className="flex-1 flex flex-col relative">
           <div className="left-4 right-4 bg-gradient-to-tl from-[#0a8b9b] to-[#1d727e] rounded-t-4xl translate-y-7 z-0">
-            <div className="py-6 px-8 flex flex-col justify-center">
-              <h1 className="font-medium text-white text-3xl leading-7 mt-2 mb-6">
+            <div className="py-6 md:py-8 lg:py-10 px-8 md:px-10 lg:px-12 flex flex-col justify-center">
+              <h1 className="font-medium text-white text-3xl md:text-4xl lg:text-5xl leading-7 md:leading-9 lg:leading-tight mt-2 md:mt-3 mb-6 md:mb-8">
                 Selecciona tu método de pago
               </h1>
             </div>
           </div>
 
-          <div className="bg-white rounded-t-4xl relative z-10 flex flex-col px-8 py-8">
+          <div className="bg-white rounded-t-4xl relative z-10 flex flex-col px-6 md:px-8 lg:px-10 py-8 md:py-10 lg:py-12">
             {/* Resumen del pedido */}
-            <div className="space-y-2 mb-4">
+            <div className="space-y-2 mb-6">
               <div className="flex justify-between items-center">
-                <span className="text-black font-medium">Subtotal</span>
-                <span className="text-black font-medium">
+                <span className="text-black font-medium text-base md:text-lg lg:text-xl">
+                  Subtotal
+                </span>
+                <span className="text-black font-medium text-base md:text-lg lg:text-xl">
                   ${baseAmount.toFixed(2)} MXN
                 </span>
               </div>
@@ -427,7 +441,9 @@ export default function CardSelectionPage() {
             {/* Selección de propina */}
             <div className="mb-4">
               <div className="flex items-center gap-4 mb-2">
-                <span className="text-black font-medium">Propina</span>
+                <span className="text-black font-medium text-base md:text-lg lg:text-xl">
+                  Propina
+                </span>
                 <div className="grid grid-cols-5 gap-2">
                   {[0, 10, 15, 20].map((percentage) => (
                     <button
@@ -474,7 +490,7 @@ export default function CardSelectionPage() {
             <div className="space-y-2 mb-4">
               <div className="flex justify-between items-center border-t pt-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-black font-medium text-lg">
+                  <span className="text-black font-medium text-base md:text-lg lg:text-xl">
                     Total a pagar
                   </span>
                   <CircleAlert
@@ -483,7 +499,7 @@ export default function CardSelectionPage() {
                     onClick={() => setShowTotalModal(true)}
                   />
                 </div>
-                <span className="font-medium text-black text-lg">
+                <span className="font-medium text-black text-base md:text-lg lg:text-xl">
                   ${totalAmount.toFixed(2)} MXN
                 </span>
               </div>
@@ -492,7 +508,9 @@ export default function CardSelectionPage() {
             {/* Métodos de pago guardados */}
             {hasPaymentMethods && paymentMethods.length > 0 && (
               <div className="mb-4">
-                <h3 className="text-black font-medium mb-3">Métodos de pago</h3>
+                <h3 className="text-black font-medium mb-3 text-base md:text-lg lg:text-xl">
+                  Métodos de pago
+                </h3>
                 <div className="space-y-2.5">
                   {paymentMethods.map((method) => (
                     <div
@@ -505,7 +523,7 @@ export default function CardSelectionPage() {
                     >
                       <div
                         onClick={() => setSelectedPaymentMethodId(method.id)}
-                        className="flex items-center justify-center gap-3 mx-auto cursor-pointer"
+                        className="flex items-center justify-center gap-3 mx-auto cursor-pointer text-base md:text-lg lg:text-xl"
                       >
                         <div>{getCardTypeIcon(method.cardBrand)}</div>
                         <div>
@@ -550,9 +568,9 @@ export default function CardSelectionPage() {
             <div className="mb-4">
               <button
                 onClick={handleAddCard}
-                className="border border-black/50 flex justify-center items-center gap-1 w-full text-black py-3 rounded-full cursor-pointer transition-colors bg-[#f9f9f9] hover:bg-gray-100"
+                className="border border-black/50 flex justify-center items-center gap-1 w-full text-black py-3 rounded-full cursor-pointer transition-colors bg-[#f9f9f9] hover:bg-gray-100 text-base md:text-lg lg:text-xl"
               >
-                <Plus className="size-5" />
+                <Plus className="size-5 md:size-6 lg:size-7" />
                 Agregar método de pago
               </button>
             </div>
@@ -563,7 +581,7 @@ export default function CardSelectionPage() {
               disabled={
                 isProcessing || (hasPaymentMethods && !selectedPaymentMethodId)
               }
-              className={`w-full text-white py-3 rounded-full cursor-pointer transition-colors ${
+              className={`w-full text-white py-3  rounded-full cursor-pointer transition-colors text-base md:text-lg lg:text-xl ${
                 isProcessing || (hasPaymentMethods && !selectedPaymentMethodId)
                   ? "bg-gradient-to-r from-[#34808C] to-[#173E44] opacity-50 cursor-not-allowed"
                   : "bg-gradient-to-r from-[#34808C] to-[#173E44]"
@@ -571,7 +589,7 @@ export default function CardSelectionPage() {
             >
               {isProcessing ? (
                 <div className="flex items-center justify-center gap-2">
-                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <Loader2 className="h-5 w-5 md:h-6 md:w-6 lg:h-7 lg:w-7 animate-spin" />
                   <span>Procesando pago...</span>
                 </div>
               ) : hasPaymentMethods && !selectedPaymentMethodId ? (
@@ -594,10 +612,10 @@ export default function CardSelectionPage() {
             className="absolute inset-0 bg-black/40"
             onClick={() => setShowTotalModal(false)}
           ></div>
-          <div className="relative bg-white rounded-t-4xl w-full mx-4">
-            <div className="px-6 pt-4">
+          <div className="relative bg-white rounded-t-4xl w-full mx-4 md:mx-6 lg:mx-8">
+            <div className="px-6 md:px-8 lg:px-10 pt-4 md:pt-5 lg:pt-6">
               <div className="flex items-center justify-between pb-4 border-b border-[#8e8e8e]">
-                <h3 className="text-lg font-semibold text-black">
+                <h3 className="text-lg md:text-xl lg:text-2xl font-semibold text-black">
                   Resumen del total
                 </h3>
                 <button
@@ -608,29 +626,35 @@ export default function CardSelectionPage() {
                 </button>
               </div>
             </div>
-            <div className="px-6 py-4">
-              <p className="text-black mb-4">
+            <div className="px-6 md:px-8 lg:px-10 py-4 md:py-5 lg:py-6">
+              <p className="text-black mb-4 text-base md:text-lg lg:text-xl">
                 El total se obtiene de la suma de:
               </p>
-              <div className="space-y-3">
+              <div className="space-y-3 md:space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-black font-medium">+ Consumo</span>
-                  <span className="text-black font-medium">
+                  <span className="text-black font-medium text-base md:text-lg lg:text-xl">
+                    + Consumo
+                  </span>
+                  <span className="text-black font-medium text-base md:text-lg lg:text-xl">
                     ${baseAmount.toFixed(2)} MXN
                   </span>
                 </div>
                 {tipAmount > 0 && (
                   <div className="flex justify-between items-center">
-                    <span className="text-black font-medium">+ Propina</span>
-                    <span className="text-black font-medium">
+                    <span className="text-black font-medium text-base md:text-lg lg:text-xl">
+                      + Propina
+                    </span>
+                    <span className="text-black font-medium text-base md:text-lg lg:text-xl">
                       ${tipAmount.toFixed(2)} MXN
                     </span>
                   </div>
                 )}
                 {xquisitoClientCharge > 0 && (
                   <div className="flex justify-between items-center">
-                    <span className="text-black font-medium">+ Comisión de servicio</span>
-                    <span className="text-black font-medium">
+                    <span className="text-black font-medium text-base md:text-lg lg:text-xl">
+                      + Comisión de servicio
+                    </span>
+                    <span className="text-black font-medium text-base md:text-lg lg:text-xl">
                       ${xquisitoClientCharge.toFixed(2)} MXN
                     </span>
                   </div>

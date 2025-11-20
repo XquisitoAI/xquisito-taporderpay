@@ -78,44 +78,48 @@ export default function UserPage() {
 
   if (!tableNumber || isNaN(parseInt(tableNumber))) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-meduim text-gray-800 mb-4">
+      <div className="h-[100dvh] bg-gray-50 flex items-center justify-center">
+        <div className="text-center px-4 md:px-6 lg:px-8">
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-meduim text-gray-800 mb-4 md:mb-6">
             Mesa Inválida
           </h1>
-          <p className="text-gray-600">Por favor escanee el código QR</p>
+          <p className="text-gray-600 text-base md:text-lg lg:text-xl">
+            Por favor escanee el código QR
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">
+    <div className="h-[100dvh] bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">
       <MenuHeaderBack />
 
-      <div className="px-4 w-full flex-1 flex flex-col">
+      <div className="px-4 md:px-6 lg:px-8 w-full flex-1 flex flex-col">
         <div className="left-4 right-4 bg-gradient-to-tl from-[#0a8b9b] to-[#1d727e] rounded-t-4xl translate-y-7 z-0">
-          <div className="py-6 px-8 flex flex-col justify-center">
-            <h2 className="font-medium text-white text-3xl leading-7 mt-2 mb-6">
+          <div className="py-6 md:py-8 lg:py-10 px-8 md:px-10 lg:px-12 flex flex-col justify-center">
+            <h2 className="font-medium text-white text-3xl md:text-4xl lg:text-5xl leading-7 md:leading-9 lg:leading-tight mt-2 md:mt-3 mb-6 md:mb-8">
               Ingresa tu nombre para continuar
             </h2>
           </div>
         </div>
 
-        <div className="flex-1 h-full flex flex-col ">
-          <div className="bg-white rounded-t-4xl flex-1 z-5 flex flex-col px-6">
-            <div className="flex-1 flex flex-col items-center w-full h-full">
-              <div className="pt-32 mb-6">
-                <h2 className="text-lg font-medium text-black">Tu nombre</h2>
+        <div className="flex-1 h-full flex flex-col">
+          <div className="bg-white rounded-t-4xl flex-1 z-5 flex flex-col px-6 md:px-8 lg:px-10">
+            <div className="flex-1 flex flex-col items-center w-full h-full pb-[120px] md:pb-[140px] lg:pb-[160px]">
+              <div className="pt-48 md:pt-56 lg:pt-64 mb-6 md:mb-8">
+                <h2 className="text-lg md:text-xl lg:text-2xl font-medium text-black">
+                  Tu nombre
+                </h2>
               </div>
 
-              <div className="w-full mb-24">
+              <div className="w-full">
                 <input
                   type="text"
                   placeholder="Nombre"
                   value={userName}
                   onChange={handleNameChange}
-                  className="w-full px-4 py-3 border-0 border-b border-black text-black text-2xl text-center font-medium focus:outline-none focus:border-teal-500"
+                  className="w-full px-4 md:px-5 lg:px-6 py-3 md:py-4 lg:py-5 border-0 border-b border-black text-black text-2xl md:text-3xl lg:text-4xl text-center font-medium focus:outline-none focus:border-teal-500"
                 />
               </div>
             </div>
@@ -123,25 +127,27 @@ export default function UserPage() {
         </div>
       </div>
 
-      {/* Botón flotante en la parte inferior */}
-      <div className="fixed bottom-6 left-0 right-0 z-50 flex justify-center px-6">
-        <button
-          onClick={handleProceedToOrder}
-          disabled={!userName.trim() || isSubmitting}
-          className={`w-full max-w-md py-3 rounded-full transition-all text-white shadow-lg ${
-            userName.trim() && !isSubmitting
-              ? "bg-gradient-to-r from-[#34808C] to-[#173E44] hover:scale-105 cursor-pointer"
-              : "bg-gradient-to-r from-[#34808C] to-[#173E44] opacity-50 cursor-not-allowed"
-          }`}
-        >
-          {isSubmitting ? (
-            <div className="flex items-center justify-center gap-2">
-              <Loader2 className="h-5 w-5 animate-spin" />
-            </div>
-          ) : (
-            "Continuar"
-          )}
-        </button>
+      {/* Fixed bottom button */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center py-4 md:py-5 lg:py-6">
+        <div className="mx-4 md:mx-6 lg:mx-8 w-full max-w-full px-4 md:px-6 lg:px-8">
+          <button
+            onClick={handleProceedToOrder}
+            disabled={!userName.trim() || isSubmitting}
+            className={`w-full py-3 md:py-4 lg:py-5 rounded-full transition-colors text-white cursor-pointer text-base md:text-lg lg:text-xl ${
+              userName.trim() && !isSubmitting
+                ? "bg-gradient-to-r from-[#34808C] to-[#173E44]"
+                : "bg-gradient-to-r from-[#34808C] to-[#173E44] opacity-50 cursor-not-allowed"
+            }`}
+          >
+            {isSubmitting ? (
+              <div className="flex items-center justify-center gap-2 md:gap-3">
+                <Loader2 className="h-5 w-5 md:h-6 md:w-6 lg:h-7 lg:w-7 animate-spin" />
+              </div>
+            ) : (
+              "Continuar"
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -111,21 +111,21 @@ export default function OrderViewPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">
       <MenuHeaderBack />
-      <div className="px-4 w-full flex-1 flex flex-col">
+      <div className="px-4 md:px-6 lg:px-8 w-full flex-1 flex flex-col">
         <div className="left-4 right-4 bg-gradient-to-tl from-[#0a8b9b] to-[#1d727e] rounded-t-4xl translate-y-7 z-0">
-          <div className="py-6 px-8 flex flex-col justify-center">
-            <h1 className="font-medium text-white text-3xl leading-7 mt-2 mb-6">
+          <div className="py-6 md:py-8 lg:py-10 px-8 md:px-10 lg:px-12 flex flex-col justify-center">
+            <h1 className="font-medium text-white text-3xl md:text-4xl lg:text-5xl leading-7 md:leading-9 lg:leading-tight mt-2 md:mt-3 mb-6 md:mb-8">
               {success ? "¡Orden confirmada!" : "Tu orden"}
             </h1>
           </div>
         </div>
         <div className="flex-1 h-full flex flex-col overflow-hidden">
           {/* Contenido con scroll */}
-          <div className="bg-white rounded-t-4xl flex-1 z-5 flex flex-col px-8 overflow-hidden">
-            <div className="flex-1 overflow-y-auto flex flex-col pb-[120px] pt-6">
+          <div className="bg-white rounded-t-4xl flex-1 z-5 flex flex-col px-6 md:px-8 lg:px-10 overflow-hidden">
+            <div className="flex-1 overflow-y-auto flex flex-col pb-[120px] md:pb-[140px] lg:pb-[160px] pt-6 md:pt-8 lg:pt-10">
               {/* Título con botón de refresh */}
-              <div className="flex justify-center items-start mb-4 relative">
-                <h2 className="bg-[#f9f9f9] border border-[#8e8e8e] rounded-full px-3 py-1 text-base font-medium text-black">
+              <div className="flex justify-center items-start mb-4 md:mb-5 lg:mb-6 relative">
+                <h2 className="bg-[#f9f9f9] border border-[#8e8e8e] rounded-full px-3 md:px-4 lg:px-5 py-1 md:py-1.5 lg:py-2 text-base md:text-lg lg:text-xl font-medium text-black">
                   Items ordenados
                 </h2>
                 <div className="absolute right-0">
@@ -135,19 +135,19 @@ export default function OrderViewPage() {
                     className="rounded-full hover:bg-gray-100 transition-colors disabled:opacity-50"
                   >
                     <RefreshCw
-                      className={`size-5 text-[#0a8b9b] ${isRefreshing ? "animate-spin" : ""}`}
+                      className={`size-5 md:size-6 lg:size-7 text-[#0a8b9b] ${isRefreshing ? "animate-spin" : ""}`}
                     />
                   </button>
                 </div>
               </div>
 
               {isLoading ? (
-                <div className="flex justify-center items-center py-12">
-                  <Loader2 className="size-8 animate-spin text-[#0a8b9b]" />
+                <div className="flex justify-center items-center py-12 md:py-16 lg:py-20">
+                  <Loader2 className="size-8 md:size-10 lg:size-12 animate-spin text-[#0a8b9b]" />
                 </div>
               ) : error ? (
-                <div className="text-center py-8">
-                  <p className="text-red-500">{error}</p>
+                <div className="text-center py-8 md:py-10 lg:py-12">
+                  <p className="text-red-500 text-base md:text-lg lg:text-xl">{error}</p>
                 </div>
               ) : order ? (
                 <>
@@ -156,10 +156,10 @@ export default function OrderViewPage() {
                     {order?.dishes?.map((dish, index) => (
                       <div
                         key={dish.id || index}
-                        className="py-3 flex items-start gap-3"
+                        className="py-3 md:py-4 lg:py-5 flex items-start gap-3 md:gap-4 lg:gap-5"
                       >
                         <div className="flex-shrink-0">
-                          <div className="size-16 bg-gray-300 rounded-sm flex items-center justify-center">
+                          <div className="size-16 md:size-20 lg:size-24 bg-gray-300 rounded-sm flex items-center justify-center">
                             {dish.images &&
                             dish.images.length > 0 &&
                             dish.images[0] ? (
@@ -178,13 +178,13 @@ export default function OrderViewPage() {
                           </div>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-base text-black capitalize">
+                          <h3 className="text-base md:text-lg lg:text-xl text-black capitalize">
                             {dish.item}
                           </h3>
 
                           {dish.custom_fields &&
                             dish.custom_fields.length > 0 && (
-                              <div className="text-xs text-gray-400 space-y-0.5 mt-1">
+                              <div className="text-xs md:text-sm lg:text-base text-gray-400 space-y-0.5 mt-1 md:mt-1.5 lg:mt-2">
                                 {dish.custom_fields.map(
                                   (field: any, idx: number) => (
                                     <div key={idx}>
@@ -203,19 +203,19 @@ export default function OrderViewPage() {
                             )}
 
                           {/* Badge de estado */}
-                          <div className="mt-1">
+                          <div className="mt-1 md:mt-1.5 lg:mt-2">
                             <span
-                              className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full border ${getStatusColor(dish.status)}`}
+                              className={`inline-block px-2 md:px-3 lg:px-4 py-0.5 md:py-1 lg:py-1.5 text-xs md:text-sm lg:text-base font-medium rounded-full border ${getStatusColor(dish.status)}`}
                             >
                               {getStatusText(dish.status)}
                             </span>
                           </div>
                         </div>
                         <div className="text-right flex flex-col items-end">
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs md:text-sm lg:text-base text-gray-500">
                             Cant: {dish.quantity}
                           </p>
-                          <p className="text-base text-black">
+                          <p className="text-base md:text-lg lg:text-xl text-black">
                             ${dish.total_price.toFixed(2)}
                           </p>
                         </div>
@@ -247,8 +247,8 @@ export default function OrderViewPage() {
                   </div>*/}
                 </>
               ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">
+                <div className="text-center py-8 md:py-10 lg:py-12">
+                  <p className="text-gray-500 text-base md:text-lg lg:text-xl">
                     No se encontró información de la orden
                   </p>
                 </div>
@@ -256,11 +256,11 @@ export default function OrderViewPage() {
             </div>{" "}
             {/* Cierra flex-1 overflow-y-auto */}
             {/* Botón fijado en la parte inferior */}
-            <div className="fixed bottom-0 left-0 right-0 mx-4 px-6 z-10">
-              <div className="w-full flex gap-3 justify-center pb-6">
+            <div className="fixed bottom-0 left-0 right-0 mx-4 md:mx-6 lg:mx-8 px-6 md:px-8 lg:px-10 z-10">
+              <div className="w-full flex gap-3 md:gap-4 lg:gap-5 justify-center pb-6 md:pb-8 lg:pb-10">
                 <button
                   onClick={handleContinue}
-                  className="w-full bg-gradient-to-r from-[#34808C] to-[#173E44] text-white py-3 rounded-full cursor-pointer transition-colors"
+                  className="w-full bg-gradient-to-r from-[#34808C] to-[#173E44] text-white text-base md:text-lg lg:text-xl py-3 md:py-4 lg:py-5 rounded-full cursor-pointer transition-colors"
                 >
                   Cerrar
                 </button>
