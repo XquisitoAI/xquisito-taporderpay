@@ -2,13 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
-import {
-  Loader2,
-  ChevronRight,
-  X,
-  Calendar,
-  Utensils,
-} from "lucide-react";
+import { Loader2, ChevronRight, X, Calendar, Utensils } from "lucide-react";
 import { getCardTypeIcon } from "@/utils/cardIcons";
 
 interface OrderHistoryItem {
@@ -104,8 +98,12 @@ export default function HistoryTab() {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
-          <div className="text-gray-400 text-6xl md:text-7xl lg:text-8xl mb-4 md:mb-5 lg:mb-6">📋</div>
-          <p className="text-gray-500 text-base md:text-lg lg:text-xl">No tienes pedidos aún</p>
+          <div className="text-gray-400 text-6xl md:text-7xl lg:text-8xl mb-4 md:mb-5 lg:mb-6">
+            📋
+          </div>
+          <p className="text-gray-500 text-base md:text-lg lg:text-xl">
+            No tienes pedidos aún
+          </p>
         </div>
       </div>
     );
@@ -114,14 +112,14 @@ export default function HistoryTab() {
   // Las órdenes ya vienen agrupadas por transacción desde el backend
   // Cada orden tiene sus platillos en el array "dishes"
   const groupedOrders = orders.sort(
-    (a, b) =>
-      new Date(b.createdAt).getTime() -
-      new Date(a.createdAt).getTime()
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
   return (
     <>
-      <h1 className="text-gray-700 text-xl md:text-2xl lg:text-3xl mb-3 md:mb-4 lg:mb-5">Ordenes previas</h1>
+      <h1 className="text-gray-700 text-xl md:text-2xl lg:text-3xl mb-3 md:mb-4 lg:mb-5">
+        Ordenes previas
+      </h1>
       <div className="space-y-3 md:space-y-4 lg:space-y-5">
         {groupedOrders.map((order: any) => {
           return (
@@ -144,13 +142,17 @@ export default function HistoryTab() {
                     />
                   ) : (
                     <div className="size-16 md:size-20 lg:size-24 bg-teal-100 rounded-lg md:rounded-xl flex items-center justify-center">
-                      <span className="text-2xl md:text-3xl lg:text-4xl">🍽️</span>
+                      <span className="text-2xl md:text-3xl lg:text-4xl">
+                        🍽️
+                      </span>
                     </div>
                   )}
 
                   {/* Order Info */}
                   <div className="flex-1">
-                    <h3 className="text-black mb-1 text-base md:text-lg lg:text-xl">{order.restaurantName}</h3>
+                    <h3 className="text-black mb-1 text-base md:text-lg lg:text-xl">
+                      {order.restaurantName}
+                    </h3>
                     <p className="text-sm md:text-base lg:text-lg text-gray-600 mb-1">
                       {order.totalQuantity}{" "}
                       {order.totalQuantity === 1 ? "articulo" : "articulos"} - $
@@ -327,7 +329,9 @@ export default function HistoryTab() {
 
               {/* Total Summary */}
               <div className="flex justify-between items-center border-t border-[#8e8e8e] pt-4 md:pt-5 lg:pt-6 mb-6 md:mb-8 lg:mb-10">
-                <span className="text-xl md:text-2xl lg:text-3xl font-medium text-black">Total</span>
+                <span className="text-xl md:text-2xl lg:text-3xl font-medium text-black">
+                  Total
+                </span>
                 <span className="text-xl md:text-2xl lg:text-3xl font-medium text-black">
                   ${selectedOrderDetails.totalAmount?.toFixed(2)} MXN
                 </span>

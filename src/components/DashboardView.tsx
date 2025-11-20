@@ -62,12 +62,28 @@ export default function DashboardView() {
         <div className="flex-1 h-full flex flex-col overflow-hidden">
           <div className="bg-white rounded-t-4xl flex-1 z-5 flex flex-col px-6 md:px-7 lg:px-8">
             {/* Tabs */}
-            <div className="grid grid-cols-4 gap-2 my-6 md:my-7 lg:my-8 w-full">
+            <div className="relative grid grid-cols-4 gap-2 my-6 md:my-7 lg:my-8 w-full">
+              {/* Animated Background Indicator */}
+              <div
+                className="absolute top-0 h-full bg-black rounded-full transition-all duration-300 ease-out"
+                style={{
+                  left:
+                    activeTab === "profile"
+                      ? "0%"
+                      : activeTab === "support"
+                      ? "calc(25% + 0.125rem)"
+                      : activeTab === "history"
+                      ? "calc(50% + 0.25rem)"
+                      : "calc(75% + 0.375rem)",
+                  width: "calc(25% - 0.125rem)",
+                }}
+              />
+
               <button
                 onClick={() => setActiveTab("profile")}
-                className={`px-3 md:px-4 lg:px-5 py-0.5 md:py-1 lg:py-1.5 rounded-full cursor-pointer whitespace-nowrap text-base md:text-lg lg:text-xl ${
+                className={`relative px-3 md:px-4 lg:px-5 py-0.5 md:py-1 lg:py-1.5 rounded-full cursor-pointer whitespace-nowrap text-base md:text-lg lg:text-xl transition-colors duration-300 ${
                   activeTab === "profile"
-                    ? "bg-black text-white hover:bg-slate-800"
+                    ? "text-white"
                     : "text-gray-500 hover:bg-gray-100"
                 }`}
               >
@@ -75,9 +91,9 @@ export default function DashboardView() {
               </button>
               <button
                 onClick={() => setActiveTab("support")}
-                className={`px-3 md:px-4 lg:px-5 py-0.5 md:py-1 lg:py-1.5 rounded-full cursor-pointer whitespace-nowrap text-base md:text-lg lg:text-xl ${
+                className={`relative px-3 md:px-4 lg:px-5 py-0.5 md:py-1 lg:py-1.5 rounded-full cursor-pointer whitespace-nowrap text-base md:text-lg lg:text-xl transition-colors duration-300 ${
                   activeTab === "support"
-                    ? "bg-black text-white hover:bg-slate-800"
+                    ? "text-white"
                     : "text-gray-500 hover:bg-gray-100"
                 }`}
               >
@@ -85,9 +101,9 @@ export default function DashboardView() {
               </button>
               <button
                 onClick={() => setActiveTab("history")}
-                className={`px-3 md:px-4 lg:px-5 py-0.5 md:py-1 lg:py-1.5 rounded-full cursor-pointer whitespace-nowrap text-base md:text-lg lg:text-xl ${
+                className={`relative px-3 md:px-4 lg:px-5 py-0.5 md:py-1 lg:py-1.5 rounded-full cursor-pointer whitespace-nowrap text-base md:text-lg lg:text-xl transition-colors duration-300 ${
                   activeTab === "history"
-                    ? "bg-black text-white hover:bg-slate-800"
+                    ? "text-white"
                     : "text-gray-500 hover:bg-gray-100"
                 }`}
               >
@@ -96,9 +112,9 @@ export default function DashboardView() {
 
               <button
                 onClick={() => setActiveTab("cards")}
-                className={`px-3 md:px-4 lg:px-5 py-0.5 md:py-1 lg:py-1.5 rounded-full cursor-pointer whitespace-nowrap text-base md:text-lg lg:text-xl ${
+                className={`relative px-3 md:px-4 lg:px-5 py-0.5 md:py-1 lg:py-1.5 rounded-full cursor-pointer whitespace-nowrap text-base md:text-lg lg:text-xl transition-colors duration-300 ${
                   activeTab === "cards"
-                    ? "bg-black text-white hover:bg-slate-800"
+                    ? "text-white"
                     : "text-gray-500 hover:bg-gray-100"
                 }`}
               >
