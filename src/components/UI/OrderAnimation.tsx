@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useTable, CartItem } from "../../context/TableContext";
+import { useTable } from "../../context/TableContext";
+import { CartItem } from "../../context/CartContext";
 import { useRestaurant } from "../../context/RestaurantContext";
 import { useTableNavigation } from "@/hooks/useTableNavigation";
 import Loader from "@/components/UI/Loader";
@@ -27,7 +28,7 @@ const OrderAnimation = ({
   >("circle");
   const [logoColorful, setLogoColorful] = useState(false);
 
-  const displayName = userName || state.currentUserName || "Usuario";
+  const displayName = userName || user?.firstName || "Usuario";
   const displayItems = orderedItems || [];
   const displayRestaurant = restaurant?.name || "Restaurante";
 
