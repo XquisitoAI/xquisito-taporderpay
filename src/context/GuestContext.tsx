@@ -177,7 +177,9 @@ function GuestProviderInternal({ children }: GuestProviderProps) {
     setTableNumber(null);
     setGuestName(null);
     localStorage.removeItem("xquisito-guest-name");
-    console.log("🗑️ Guest session cleared");
+    // NO eliminar xquisito-guest-id aquí - lo necesitamos para migrar el carrito
+    // El guest_id se mantendrá en localStorage para la migración del carrito
+    console.log("🗑️ Guest session cleared (guest_id preserved for cart migration)");
   };
 
   const setGuestNameHandler = (name: string) => {
