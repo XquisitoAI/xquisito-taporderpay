@@ -146,6 +146,57 @@ export function CartProvider({ children }: { children: ReactNode }) {
     cartApi.setRestaurantId(restaurantId);
   }, [restaurantId]);
 
+  // Migrar carrito cuando el usuario inicia sesión
+  useEffect(() => {
+    const migrateCartIfNeeded = async () => {
+      if (isLoaded && user?.id && restaurantId) {
+        const guestId = cartApi.getGuestIdForUser();
+
+        console.log("🔍 Migration check:", {
+          isLoaded,
+          userId: user.id,
+          restaurantId,
+          guestId,
+          hasGuestId: !!guestId,
+        });
+
+        if (guestId) {
+          console.log("🔄 Attempting to migrate guest cart to user...", {
+            from_guest: guestId,
+            to_user: user.id,
+            restaurant: restaurantId,
+          });
+          try {
+            const response = await cartApi.migrateGuestCart(guestId, user.id);
+            console.log("📦 Migration response:", response);
+
+            if (response.success && response.data) {
+              console.log(`✅ Cart migrated successfully: ${response.data.items_migrated} items`);
+
+              // Limpiar el guest_id del localStorage después de la migración exitosa
+              if (typeof window !== "undefined") {
+                localStorage.removeItem("xquisito-guest-id");
+                console.log("🗑️ Guest ID removed from localStorage after successful migration");
+              }
+
+              // Refrescar el carrito después de la migración
+              await refreshCart();
+            } else {
+              console.warn("⚠️ Migration completed but no data returned:", response);
+            }
+          } catch (error) {
+            console.error("❌ Error migrating cart:", error);
+          }
+        } else {
+          console.log("ℹ️ No guest_id found, skipping migration");
+        }
+      }
+    };
+
+    migrateCartIfNeeded();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, isLoaded, restaurantId]);
+
   // Función para refrescar el carrito desde el backend
   const refreshCart = async () => {
     try {

@@ -349,7 +349,9 @@ class ApiService {
   // Method to clear guest session
   clearGuestSession(): void {
     if (typeof window !== "undefined") {
-      localStorage.removeItem("xquisito-guest-id");
+      // NO eliminar xquisito-guest-id - lo necesitamos para migrar el carrito
+      // Solo limpiar la tabla y restaurante
+      // localStorage.removeItem("xquisito-guest-id"); // COMENTADO - preservar para migración de carrito
       localStorage.removeItem("xquisito-table-number");
       localStorage.removeItem("xquisito-restaurant-id");
     }

@@ -120,11 +120,14 @@ class CartApiService {
   private getUserIdentifier(): { clerk_user_id?: string; guest_id?: string } {
     // Primero intentar usar el clerkUserId establecido manualmente
     if (this.clerkUserId) {
+      console.log("🔑 Using clerk_user_id:", this.clerkUserId);
       return { clerk_user_id: this.clerkUserId };
     }
 
     // Si no hay usuario de Clerk, usar guest_id
-    return { guest_id: this.getGuestId() };
+    const guestId = this.getGuestId();
+    console.log("👤 Using guest_id:", guestId);
+    return { guest_id: guestId };
   }
 
   /**
@@ -137,6 +140,13 @@ class CartApiService {
     extraPrice: number = 0
   ): Promise<ApiResponse<{ cart_item_id: string }>> {
     const userId = this.getUserIdentifier();
+
+    console.log("🛒 Adding item to cart with:", {
+      userId,
+      menuItemId,
+      quantity,
+      restaurantId: this.restaurantId,
+    });
 
     return this.request<{ cart_item_id: string }>("/cart", {
       method: "POST",
@@ -216,6 +226,26 @@ class CartApiService {
         restaurant_id: this.restaurantId,
       }),
     });
+  }
+
+  /**
+   * Migrar carrito de invitado a usuario autenticado
+   */
+  async migrateGuestCart(
+    guestId: string,
+    clerkUserId: string
+  ): Promise<ApiResponse<{ message: string; items_migrated: number }>> {
+    return this.request<{ message: string; items_migrated: number }>(
+      "/cart/migrate",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          guest_id: guestId,
+          clerk_user_id: clerkUserId,
+          restaurant_id: this.restaurantId,
+        }),
+      }
+    );
   }
 
   /**
