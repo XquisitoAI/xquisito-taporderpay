@@ -243,7 +243,10 @@ export default function CardSelectionPage() {
             );
           }
 
-          console.log("✅ Dish order created - Full response:", dishOrderResult);
+          console.log(
+            "✅ Dish order created - Full response:",
+            dishOrderResult
+          );
 
           if (!firstTapOrderId) {
             firstTapOrderId =
@@ -327,6 +330,55 @@ export default function CardSelectionPage() {
         const userName =
           user?.firstName || user?.fullName || cartState.userName || "Usuario";
         setCompletedUserName(userName);
+
+        // Preparar y guardar detalles del pago para payment-success (tarjeta del sistema)
+        const paymentDetailsForSuccess = {
+          orderId: firstTapOrderId,
+          paymentId: firstTapOrderId,
+          transactionId: firstTapOrderId,
+          totalAmountCharged: totalAmount,
+          amount: totalAmount,
+          baseAmount: baseAmount,
+          tipAmount: tipAmount,
+          xquisitoCommissionClient: xquisitoCommissionClient,
+          ivaXquisitoClient: ivaXquisitoClient,
+          xquisitoCommissionTotal: xquisitoCommissionTotal,
+          userName: userName,
+          customerName: customerName,
+          customerEmail: customerEmail,
+          customerPhone: customerPhone,
+          cardLast4: "1234",
+          cardBrand: "visa",
+          orderStatus: "confirmed",
+          paymentStatus: "paid",
+          createdAt: new Date().toISOString(),
+          dishOrders: cartState.items.map((item) => ({
+            dish_order_id: item.id || Date.now(),
+            item: item.name,
+            quantity: item.quantity || 1,
+            price: item.price,
+            extra_price: item.extraPrice || 0,
+            total_price: item.price * (item.quantity || 1),
+            guest_name: customerName,
+            custom_fields: item.customFields || null,
+          })),
+          restaurantId: parseInt(restaurantId),
+          paymentMethodId: null,
+          timestamp: Date.now(),
+          tableNumber: tableNumber,
+        };
+
+        // Guardar en localStorage y sessionStorage
+        localStorage.setItem(
+          "xquisito-completed-payment",
+          JSON.stringify(paymentDetailsForSuccess)
+        );
+
+        const uniqueKey = `xquisito-payment-success-${firstTapOrderId}`;
+        sessionStorage.setItem(
+          uniqueKey,
+          JSON.stringify(paymentDetailsForSuccess)
+        );
 
         // Limpiar el carrito después de completar la orden
         await clearCart();
@@ -559,6 +611,66 @@ export default function CardSelectionPage() {
         user?.firstName || user?.fullName || cartState.userName || "Usuario";
       setCompletedUserName(userName);
 
+      // Preparar y guardar detalles del pago para payment-success
+      const paymentDetailsForSuccess = {
+        orderId: firstTapOrderId,
+        paymentId: firstTapOrderId,
+        transactionId: firstTapOrderId,
+        totalAmountCharged: totalAmount,
+        amount: totalAmount,
+        baseAmount: baseAmount,
+        tipAmount: tipAmount,
+        xquisitoCommissionClient: xquisitoCommissionClient,
+        ivaXquisitoClient: ivaXquisitoClient,
+        xquisitoCommissionTotal: xquisitoCommissionTotal,
+        userName: userName,
+        customerName: customerName,
+        customerEmail: customerEmail,
+        customerPhone: customerPhone,
+        cardLast4:
+          selectedPaymentMethodId === "system-default-card"
+            ? "1234"
+            : allPaymentMethods.find((pm) => pm.id === selectedPaymentMethodId)
+                ?.lastFourDigits || "1234",
+        cardBrand:
+          selectedPaymentMethodId === "system-default-card"
+            ? "visa"
+            : allPaymentMethods.find((pm) => pm.id === selectedPaymentMethodId)
+                ?.cardBrand || "visa",
+        orderStatus: "confirmed",
+        paymentStatus: "paid",
+        createdAt: new Date().toISOString(),
+        dishOrders: cartState.items.map((item) => ({
+          dish_order_id: item.id || Date.now(),
+          item: item.name,
+          quantity: item.quantity || 1,
+          price: item.price,
+          extra_price: item.extraPrice || 0,
+          total_price: item.price * (item.quantity || 1),
+          guest_name: customerName,
+          custom_fields: item.customFields || null,
+        })),
+        restaurantId: parseInt(restaurantId),
+        paymentMethodId:
+          selectedPaymentMethodId === "system-default-card"
+            ? null
+            : selectedPaymentMethodId,
+        timestamp: Date.now(),
+        tableNumber: tableNumber,
+      };
+
+      // Guardar en localStorage y sessionStorage
+      localStorage.setItem(
+        "xquisito-completed-payment",
+        JSON.stringify(paymentDetailsForSuccess)
+      );
+
+      const uniqueKey = `xquisito-payment-success-${firstTapOrderId}`;
+      sessionStorage.setItem(
+        uniqueKey,
+        JSON.stringify(paymentDetailsForSuccess)
+      );
+
       // Limpiar el carrito después de completar la orden
       await clearCart();
       console.log("🧹 Cart cleared after successful order");
@@ -702,56 +814,56 @@ export default function CardSelectionPage() {
               </h3>
               <div className="space-y-2.5">
                 {allPaymentMethods.map((method) => (
+                  <div
+                    key={method.id}
+                    className={`flex items-center py-1.5 px-5 pl-10 border rounded-full transition-colors ${
+                      selectedPaymentMethodId === method.id
+                        ? "border-teal-500 bg-teal-50"
+                        : "border-black/50 bg-[#f9f9f9]"
+                    }`}
+                  >
                     <div
-                      key={method.id}
-                      className={`flex items-center py-1.5 px-5 pl-10 border rounded-full transition-colors ${
+                      onClick={() => setSelectedPaymentMethodId(method.id)}
+                      className="flex items-center justify-center gap-3 mx-auto cursor-pointer text-base md:text-lg lg:text-xl"
+                    >
+                      <div>{getCardTypeIcon(method.cardBrand)}</div>
+                      <div>
+                        <p className="text-black">
+                          **** **** **** {method.lastFourDigits}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div
+                      onClick={() => setSelectedPaymentMethodId(method.id)}
+                      className={`w-4 h-4 rounded-full border-2 cursor-pointer ${
                         selectedPaymentMethodId === method.id
-                          ? "border-teal-500 bg-teal-50"
-                          : "border-black/50 bg-[#f9f9f9]"
+                          ? "border-teal-500 bg-teal-500"
+                          : "border-gray-300"
                       }`}
                     >
-                      <div
-                        onClick={() => setSelectedPaymentMethodId(method.id)}
-                        className="flex items-center justify-center gap-3 mx-auto cursor-pointer text-base md:text-lg lg:text-xl"
-                      >
-                        <div>{getCardTypeIcon(method.cardBrand)}</div>
-                        <div>
-                          <p className="text-black">
-                            **** **** **** {method.lastFourDigits}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div
-                        onClick={() => setSelectedPaymentMethodId(method.id)}
-                        className={`w-4 h-4 rounded-full border-2 cursor-pointer ${
-                          selectedPaymentMethodId === method.id
-                            ? "border-teal-500 bg-teal-500"
-                            : "border-gray-300"
-                        }`}
-                      >
-                        {selectedPaymentMethodId === method.id && (
-                          <div className="w-full h-full rounded-full bg-white scale-50"></div>
-                        )}
-                      </div>
-
-                      {/* Delete Button - No mostrar para tarjeta del sistema */}
-                      {method.id !== "system-default-card" && (
-                        <button
-                          onClick={() => handleDeleteCard(method.id)}
-                          disabled={deletingCardId === method.id}
-                          className="pl-2 text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50 cursor-pointer"
-                          title="Eliminar tarjeta"
-                        >
-                          {deletingCardId === method.id ? (
-                            <Loader2 className="size-5 animate-spin" />
-                          ) : (
-                            <Trash2 className="size-5" />
-                          )}
-                        </button>
+                      {selectedPaymentMethodId === method.id && (
+                        <div className="w-full h-full rounded-full bg-white scale-50"></div>
                       )}
                     </div>
-                  ))}
+
+                    {/* Delete Button - No mostrar para tarjeta del sistema */}
+                    {method.id !== "system-default-card" && (
+                      <button
+                        onClick={() => handleDeleteCard(method.id)}
+                        disabled={deletingCardId === method.id}
+                        className="pl-2 text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50 cursor-pointer"
+                        title="Eliminar tarjeta"
+                      >
+                        {deletingCardId === method.id ? (
+                          <Loader2 className="size-5 animate-spin" />
+                        ) : (
+                          <Trash2 className="size-5" />
+                        )}
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -861,7 +973,7 @@ export default function CardSelectionPage() {
           orderedItems={completedOrderItems}
           onContinue={() => {
             navigateWithTable(
-              `/order-view?orderId=${completedOrderId}&success=true`
+              `/payment-success?orderId=${completedOrderId}&success=true`
             );
           }}
         />

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import { useTable } from "@/context/TableContext";
 import { useTableNavigation } from "@/hooks/useTableNavigation";
 import { useRestaurant } from "@/context/RestaurantContext";
 import MenuHeaderBack from "@/components/headers/MenuHeaderBack";
@@ -28,7 +27,6 @@ export default function OrderViewPage() {
     }
   }, [restaurantId, setRestaurantId]);
 
-  const { state } = useTable();
   const { navigateWithTable } = useTableNavigation();
 
   // Función para cargar la orden
@@ -74,7 +72,8 @@ export default function OrderViewPage() {
   };
 
   const handleContinue = () => {
-    navigateWithTable("/menu");
+    // Los datos ya fueron guardados en card-selection, solo navegar de vuelta
+    navigateWithTable(`/payment-success?orderId=${orderId}&success=true`);
   };
 
   const getStatusColor = (status: string) => {
