@@ -1128,8 +1128,8 @@ export default function DishDetailPage() {
                   disabled={reviewRating === 0 || isSubmittingReview}
                   className={`w-full text-white py-3 md:py-4 lg:py-5 rounded-full transition-colors text-base md:text-lg lg:text-xl ${
                     reviewRating > 0 && !isSubmittingReview
-                      ? "bg-black hover:bg-stone-950 cursor-pointer"
-                      : "bg-stone-800 cursor-not-allowed"
+                      ? "bg-gradient-to-r from-[#34808C] to-[#173E44] cursor-pointer"
+                      : "bg-gradient-to-r from-[#34808C] to-[#173E44] opacity-50 cursor-not-allowed"
                   }`}
                 >
                   {isSubmittingReview
