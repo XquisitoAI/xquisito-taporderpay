@@ -16,6 +16,12 @@ export default function DashboardView() {
     "profile" | "cards" | "history" | "support"
   >("profile");
 
+  // Estados para el chat de soporte
+  const [messages, setMessages] = useState<
+    Array<{ role: "user" | "pepper"; content: string }>
+  >([]);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+
   const { user, isLoaded } = useUser();
   const router = useRouter();
   const { navigateWithTable } = useTableNavigation();
@@ -179,7 +185,14 @@ export default function DashboardView() {
               {activeTab === "profile" && <ProfileTab />}
               {activeTab === "cards" && <CardsTab />}
               {activeTab === "history" && <HistoryTab />}
-              {activeTab === "support" && <SupportTab />}
+              {activeTab === "support" && (
+                <SupportTab
+                  messages={messages}
+                  setMessages={setMessages}
+                  sessionId={sessionId}
+                  setSessionId={setSessionId}
+                />
+              )}
             </div>
           </div>
         </div>
