@@ -171,23 +171,28 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
       console.log(
         "⚠️ deletePaymentMethod: Only registered users can delete saved payment methods"
       );
-      throw new Error("Only registered users can delete saved payment methods");
+      console.log("🔍 Current auth state:", { user, isAuthenticated, isLoading });
+      throw new Error("Debes estar autenticado para eliminar tarjetas");
     }
 
     console.log(
       "🗑️ Deleting payment method for registered user:",
-      paymentMethodId
+      paymentMethodId,
+      "User ID:", user.id
     );
     try {
       // Auth token is automatically managed by AuthContext and apiService
 
       const response = await apiService.deletePaymentMethod(paymentMethodId);
+      console.log("🗑️ Delete response:", response);
+
       if (response.success) {
         removePaymentMethod(paymentMethodId);
         console.log("✅ Payment method deleted successfully:", paymentMethodId);
       } else {
+        console.error("❌ Delete payment method failed:", response.error);
         throw new Error(
-          response.error?.message || "Failed to delete payment method"
+          response.error?.message || "No se pudo eliminar la tarjeta"
         );
       }
     } catch (error) {

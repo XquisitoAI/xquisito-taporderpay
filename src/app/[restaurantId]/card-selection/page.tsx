@@ -31,7 +31,7 @@ export default function CardSelectionPage() {
   const { navigateWithTable, tableNumber } = useTableNavigation();
   const { hasPaymentMethods, paymentMethods, deletePaymentMethod } =
     usePayment();
-  const { user, profile } = useAuth();
+  const { user, profile, isAuthenticated } = useAuth();
 
   // Tarjeta por defecto del sistema para todos los usuarios
   const defaultSystemCard = {
@@ -775,11 +775,17 @@ export default function CardSelectionPage() {
       return;
     }
 
+    console.log("🗑️ Attempting to delete payment method:", paymentMethodId);
+    console.log("🔍 Current user state:", { user, isAuthenticated });
+
     setDeletingCardId(paymentMethodId);
     try {
       await deletePaymentMethod(paymentMethodId);
+      console.log("✅ Payment method deleted successfully");
     } catch (error) {
-      alert("Error al eliminar la tarjeta. Intenta de nuevo.");
+      console.error("❌ Error deleting payment method:", error);
+      const errorMessage = error instanceof Error ? error.message : "Error desconocido";
+      alert(`Error al eliminar la tarjeta: ${errorMessage}`);
     } finally {
       setDeletingCardId(null);
     }
