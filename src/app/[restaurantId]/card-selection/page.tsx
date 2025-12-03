@@ -6,7 +6,8 @@ import { useTableNavigation } from "@/hooks/useTableNavigation";
 import { usePayment } from "@/context/PaymentContext";
 import { useRestaurant } from "@/context/RestaurantContext";
 import { useEffect, useState } from "react";
-import { useUser, useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/context/AuthContext";
+import { authService } from "@/services/auth.service";
 import MenuHeaderBack from "@/components/headers/MenuHeaderBack";
 import { Plus, Trash2, Loader2, CircleAlert } from "lucide-react";
 import { getCardTypeIcon } from "@/utils/cardIcons";
@@ -30,8 +31,7 @@ export default function CardSelectionPage() {
   const { navigateWithTable, tableNumber } = useTableNavigation();
   const { hasPaymentMethods, paymentMethods, deletePaymentMethod } =
     usePayment();
-  const { user } = useUser();
-  const { getToken } = useAuth();
+  const { user, profile } = useAuth();
 
   // Tarjeta por defecto del sistema para todos los usuarios
   const defaultSystemCard = {
@@ -63,6 +63,7 @@ export default function CardSelectionPage() {
   const [tipPercentage, setTipPercentage] = useState(0);
   const [customTip, setCustomTip] = useState("");
   const [showTotalModal, setShowTotalModal] = useState(false);
+  const [showCustomTipInput, setShowCustomTipInput] = useState(false);
 
   // Estados para tarjetas
   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState<
@@ -131,7 +132,7 @@ export default function CardSelectionPage() {
     }
   }, [allPaymentMethods.length, selectedPaymentMethodId, cartState.isLoading]);
 
-  const handlePayment = async (): Promise<void> => {
+  const handleInitiatePayment = (): void => {
     if (!tableNumber) {
       alert(
         "No se encontró el número de mesa. Por favor escanea el código QR nuevamente."
@@ -141,6 +142,30 @@ export default function CardSelectionPage() {
 
     if (!selectedPaymentMethodId) {
       alert("Por favor selecciona una tarjeta de pago");
+      return;
+    }
+
+    // Guardar datos antes de mostrar animación
+    setCompletedOrderItems([...cartState.items]);
+    const userName = profile?.firstName || cartState.userName || "Usuario";
+    setCompletedUserName(userName);
+
+    // Mostrar animación inmediatamente (sin procesar pago aún)
+    setShowAnimation(true);
+  };
+
+  const handleCancelPayment = () => {
+    console.log("❌ Payment cancelled by user");
+    setShowAnimation(false);
+    setCompletedOrderItems([]);
+    setCompletedUserName("");
+  };
+
+  const handleConfirmPayment = async (): Promise<void> => {
+    // Esta función se ejecuta después de que expira el período de cancelación
+    if (!tableNumber || !selectedPaymentMethodId) {
+      console.error("Missing required data for payment confirmation");
+      setShowAnimation(false);
       return;
     }
 
@@ -155,7 +180,7 @@ export default function CardSelectionPage() {
 
         // Configurar token de autenticación si el usuario está logueado
         if (user?.id) {
-          const token = await getToken();
+          const token = authService.getAccessToken();
           if (token) {
             apiService.setAuthToken(token);
           }
@@ -182,9 +207,11 @@ export default function CardSelectionPage() {
         }
 
         // Crear dish orders individuales para cada item del carrito
-        const customerName =
-          user?.fullName || user?.firstName || cartState.userName || "Invitado";
-        const customerEmail = user?.emailAddresses?.[0]?.emailAddress || null;
+        const customerName = profile?.firstName
+          ? `${profile.firstName}`
+          : profile?.firstName || cartState.userName || "Invitado";
+        const customerEmail =
+          profile?.email || user?.email || `${user?.id}@xquisito.ai`;
 
         let firstTapOrderId: string | null = null;
 
@@ -249,13 +276,31 @@ export default function CardSelectionPage() {
           );
 
           if (!firstTapOrderId) {
+            console.log("📝 Attempting to extract tap_order_id from dishOrderResult...");
+            console.log("📝 Full dishOrderResult structure:", JSON.stringify(dishOrderResult, null, 2));
+
+            // El Dish tiene la propiedad tap_order_id según el tipo Dish en tap-order.service.ts
             firstTapOrderId =
               dishOrderResult.data?.data?.tap_order_id ||
               dishOrderResult.data?.tap_order_id ||
               dishOrderResult.data?.data?.id ||
               dishOrderResult.data?.id ||
               null;
-            console.log("📝 First tap_order_id captured:", firstTapOrderId);
+
+            console.log("📝 Extracted tap_order_id:", firstTapOrderId);
+            console.log("📝 Available properties in dishOrderResult.data:", Object.keys(dishOrderResult.data || {}));
+            if (dishOrderResult.data?.data) {
+              console.log("📝 Available properties in dishOrderResult.data.data:", Object.keys(dishOrderResult.data.data || {}));
+            }
+
+            // Guardar inmediatamente en el estado
+            if (firstTapOrderId) {
+              setCompletedOrderId(firstTapOrderId);
+              console.log("✅ completedOrderId set to:", firstTapOrderId);
+            } else {
+              console.error("❌ Could not extract tap_order_id from response");
+              console.error("❌ dishOrderResult.data:", dishOrderResult.data);
+            }
           }
         }
 
@@ -325,13 +370,8 @@ export default function CardSelectionPage() {
           }
         }
 
-        // Guardar datos antes de limpiar el carrito
-        setCompletedOrderItems([...cartState.items]);
-        const userName =
-          user?.firstName || user?.fullName || cartState.userName || "Usuario";
-        setCompletedUserName(userName);
-
         // Preparar y guardar detalles del pago para payment-success (tarjeta del sistema)
+        const userName = profile?.firstName || cartState.userName || "Usuario";
         const paymentDetailsForSuccess = {
           orderId: firstTapOrderId,
           paymentId: firstTapOrderId,
@@ -383,17 +423,13 @@ export default function CardSelectionPage() {
         // Limpiar el carrito después de completar la orden
         await clearCart();
         console.log("🧹 Cart cleared after successful order");
-
-        // Guardar orderId y mostrar animación
-        setCompletedOrderId(firstTapOrderId);
-        setShowAnimation(true);
         return;
       }
 
       // Para tarjetas reales, continuar con el flujo normal de EcartPay
       // Configurar token de autenticación si el usuario está logueado
       if (user?.id) {
-        const token = await getToken();
+        const token = authService.getAccessToken();
         if (token) {
           apiService.setAuthToken(token);
           console.log("🔑 Auth token configured for payment:", {
@@ -413,7 +449,11 @@ export default function CardSelectionPage() {
         paymentMethodId: selectedPaymentMethodId!,
         amount: totalAmount,
         currency: "MXN",
-        description: `Pago Mesa ${tableNumber} - ${user?.fullName || "Invitado"}`,
+        description: `Pago Mesa ${tableNumber} - ${
+          profile?.firstName
+            ? `${profile.firstName}`
+            : profile?.firstName || "Invitado"
+        }`,
         orderId: `order-${Date.now()}`,
         tableNumber: tableNumber,
         restaurantId,
@@ -451,9 +491,11 @@ export default function CardSelectionPage() {
       }
 
       // Paso 3: Crear dish orders individuales para cada item del carrito
-      const customerName =
-        user?.fullName || user?.firstName || cartState.userName || "Invitado";
-      const customerEmail = user?.emailAddresses?.[0]?.emailAddress || null;
+      const customerName = profile?.firstName
+        ? `${profile.firstName}`
+        : profile?.firstName || cartState.userName || "Invitado";
+      const customerEmail =
+        profile?.email || user?.email || `${user?.id}@xquisito.ai`;
 
       let firstTapOrderId: string | null = null;
 
@@ -523,13 +565,30 @@ export default function CardSelectionPage() {
         // Guardar el tap_order_id del primer dish order
         // El backend envuelve la respuesta: { success, data: { success, data: { tap_order_id } } }
         if (!firstTapOrderId) {
+          console.log("📝 Attempting to extract tap_order_id from dishOrderResult (real card)...");
+          console.log("📝 Full dishOrderResult structure:", JSON.stringify(dishOrderResult, null, 2));
+
           firstTapOrderId =
             dishOrderResult.data?.data?.tap_order_id ||
             dishOrderResult.data?.tap_order_id ||
             dishOrderResult.data?.data?.id ||
             dishOrderResult.data?.id ||
             null;
-          console.log("📝 First tap_order_id captured:", firstTapOrderId);
+
+          console.log("📝 Extracted tap_order_id:", firstTapOrderId);
+          console.log("📝 Available properties in dishOrderResult.data:", Object.keys(dishOrderResult.data || {}));
+          if (dishOrderResult.data?.data) {
+            console.log("📝 Available properties in dishOrderResult.data.data:", Object.keys(dishOrderResult.data.data || {}));
+          }
+
+          // Guardar inmediatamente en el estado
+          if (firstTapOrderId) {
+            setCompletedOrderId(firstTapOrderId);
+            console.log("✅ completedOrderId set to:", firstTapOrderId);
+          } else {
+            console.error("❌ Could not extract tap_order_id from response (real card)");
+            console.error("❌ dishOrderResult.data:", dishOrderResult.data);
+          }
         }
       }
 
@@ -604,14 +663,9 @@ export default function CardSelectionPage() {
         }
       }
 
-      // Guardar datos antes de limpiar el carrito
-      setCompletedOrderItems([...cartState.items]);
-      // Obtener nombre del usuario (de Clerk si está loggeado, o del estado si es guest)
-      const userName =
-        user?.firstName || user?.fullName || cartState.userName || "Usuario";
-      setCompletedUserName(userName);
-
       // Preparar y guardar detalles del pago para payment-success
+      // Obtener nombre del usuario (de Supabase si está loggeado, o del estado si es guest)
+      const userName = profile?.firstName || cartState.userName || "Usuario";
       const paymentDetailsForSuccess = {
         orderId: firstTapOrderId,
         paymentId: firstTapOrderId,
@@ -674,15 +728,13 @@ export default function CardSelectionPage() {
       // Limpiar el carrito después de completar la orden
       await clearCart();
       console.log("🧹 Cart cleared after successful order");
-
-      // Guardar orderId y mostrar animación
-      setCompletedOrderId(firstTapOrderId);
-      setShowAnimation(true);
     } catch (error) {
       console.error("Payment/Order error:", error);
       const errorMessage =
         error instanceof Error ? error.message : "Error desconocido";
       alert(`Error: ${errorMessage}`);
+      // Si hay error, ocultar la animación
+      setShowAnimation(false);
     } finally {
       setIsProcessing(false);
     }
@@ -742,17 +794,22 @@ export default function CardSelectionPage() {
 
             {/* Selección de propina */}
             <div className="mb-4">
-              <div className="flex items-center gap-4 mb-2">
-                <span className="text-black font-medium text-base md:text-lg lg:text-xl">
+              {/* Propina label y botones de porcentaje */}
+              <div className="flex items-center gap-4 mb-3">
+                <span className="text-black font-medium text-base md:text-lg lg:text-xl whitespace-nowrap">
                   Propina
                 </span>
-                <div className="grid grid-cols-5 gap-2">
+                {/* Tip Percentage Buttons */}
+                <div className="grid grid-cols-5 gap-2 flex-1">
                   {[0, 10, 15, 20].map((percentage) => (
                     <button
                       key={percentage}
-                      onClick={() => handleTipPercentage(percentage)}
-                      className={`py-1 rounded-full border border-[#8e8e8e]/40 text-black transition-colors cursor-pointer ${
-                        tipPercentage === percentage
+                      onClick={() => {
+                        handleTipPercentage(percentage);
+                        setShowCustomTipInput(false);
+                      }}
+                      className={`py-1 md:py-1.5 lg:py-2 rounded-full border border-[#8e8e8e]/40 text-black transition-colors cursor-pointer ${
+                        tipPercentage === percentage && !showCustomTipInput
                           ? "bg-[#eab3f4] text-white"
                           : "bg-[#f9f9f9] hover:border-gray-400"
                       }`}
@@ -760,27 +817,46 @@ export default function CardSelectionPage() {
                       {percentage === 0 ? "0%" : `${percentage}%`}
                     </button>
                   ))}
-                  <div>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black">
-                        $
-                      </span>
-                      <input
-                        type="number"
-                        value={customTip}
-                        onChange={(e) => handleCustomTipChange(e.target.value)}
-                        placeholder="0.00"
-                        step="0.01"
-                        min="0"
-                        className="w-full pl-6 pr-1 py-1 border border-[#8e8e8e]/40 rounded-full focus:outline-none focus:ring focus:ring-gray-400 focus:border-transparent text-black"
-                      />
-                    </div>
-                  </div>
+                  {/* Custom Tip Button */}
+                  <button
+                    onClick={() => {
+                      setShowCustomTipInput(true);
+                      setTipPercentage(0);
+                    }}
+                    className={`py-1 md:py-1.5 lg:py-2 rounded-full border border-[#8e8e8e]/40 text-black transition-colors cursor-pointer ${
+                      showCustomTipInput
+                        ? "bg-[#eab3f4] text-white"
+                        : "bg-[#f9f9f9] hover:border-gray-400"
+                    }`}
+                  >
+                    $
+                  </button>
                 </div>
               </div>
 
+              {/* Custom Tip Input - Solo se muestra cuando showCustomTipInput es true */}
+              {showCustomTipInput && (
+                <div className="flex flex-col gap-2 mb-3">
+                  <div className="relative w-full">
+                    <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-black text-sm">
+                      $
+                    </span>
+                    <input
+                      type="number"
+                      value={customTip}
+                      onChange={(e) => handleCustomTipChange(e.target.value)}
+                      placeholder="0.00"
+                      step="0.01"
+                      min="0"
+                      autoFocus
+                      className="w-full pl-8 pr-4 py-1 md:py-1.5 lg:py-2 border border-[#8e8e8e]/40 rounded-full focus:outline-none focus:ring focus:ring-gray-400 focus:border-transparent text-black text-center bg-[#f9f9f9] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                    />
+                  </div>
+                </div>
+              )}
+
               {tipAmount > 0 && (
-                <div className="flex justify-end items-center text-sm">
+                <div className="flex justify-end items-center mt-2 text-sm">
                   <span className="text-[#eab3f4] font-medium">
                     +${tipAmount.toFixed(2)} MXN
                   </span>
@@ -880,7 +956,7 @@ export default function CardSelectionPage() {
 
             {/* Botón de pago */}
             <button
-              onClick={handlePayment}
+              onClick={handleInitiatePayment}
               disabled={isProcessing || !selectedPaymentMethodId}
               className={`w-full text-white py-3  rounded-full cursor-pointer transition-colors text-base md:text-lg lg:text-xl ${
                 isProcessing || !selectedPaymentMethodId
@@ -972,10 +1048,25 @@ export default function CardSelectionPage() {
           userName={completedUserName}
           orderedItems={completedOrderItems}
           onContinue={() => {
+            // Obtener el orderId desde localStorage como respaldo
+            const paymentData = localStorage.getItem("xquisito-completed-payment");
+            let orderId = completedOrderId;
+
+            if (!orderId && paymentData) {
+              try {
+                const parsed = JSON.parse(paymentData);
+                orderId = parsed.orderId;
+              } catch (e) {
+                console.error("Error parsing payment data:", e);
+              }
+            }
+
             navigateWithTable(
-              `/payment-success?orderId=${completedOrderId}&success=true`
+              `/payment-success?orderId=${orderId || 'unknown'}&success=true`
             );
           }}
+          onCancel={handleCancelPayment}
+          onConfirm={handleConfirmPayment}
         />
       )}
     </div>

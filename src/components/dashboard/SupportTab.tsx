@@ -9,7 +9,7 @@ import {
   SetStateAction,
 } from "react";
 import { useRestaurant } from "@/context/RestaurantContext";
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/context/AuthContext";
 
 // Función para comunicarse con el agente a través del backend
 async function chatWithAgent(message: string, sessionId: string | null = null) {
@@ -95,7 +95,7 @@ export default function SupportTab({
 
   // Obtener contextos
   const { restaurantId, restaurant } = useRestaurant();
-  const { user } = useUser();
+  const { user, profile } = useAuth();
 
   // Auto-scroll cuando cambian los mensajes (solo cuando hay nuevos mensajes)
   useEffect(() => {
@@ -121,7 +121,7 @@ export default function SupportTab({
       try {
         // Construir el mensaje con el contexto completo
         const userId = user?.id || null;
-        const userName = user?.fullName || user?.firstName || null;
+        const userName = profile?.firstName || null;
 
         const contextualMessage = `[CONTEXT: support_dashboard, restaurant_id=${restaurantId || "null"}, restaurant_name="${restaurant?.name || "unknown"}", user_id=${userId || "null"}, user_name="${userName || "unknown"}"]
 [USER_MESSAGE: ${userMessage}]`;
@@ -163,7 +163,10 @@ export default function SupportTab({
   return (
     <div className="flex-1 flex flex-col min-h-0 pb-6">
       {/* Mensajes con scroll */}
-      <div className="flex-1 overflow-y-auto px-1 min-h-0" style={{ maxHeight: '100%' }}>
+      <div
+        className="flex-1 overflow-y-auto px-1 min-h-0"
+        style={{ maxHeight: "100%" }}
+      >
         <div className="space-y-3 md:space-y-4 lg:space-y-5 py-2">
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full min-h-[200px] text-gray-400">

@@ -4,12 +4,12 @@ import MenuHeader from "../headers/MenuHeader";
 import MenuCategory from "./MenuCategory";
 import { Search, ShoppingCart, Settings } from "lucide-react";
 import { useState, useMemo } from "react";
-import { useUser } from "@clerk/nextjs";
 import { useUserData } from "../../context/userDataContext";
 import { useTableNavigation } from "../../hooks/useTableNavigation";
 import { useCart } from "../../context/CartContext";
 import { useRestaurant } from "../../context/RestaurantContext";
 import Loader from "../UI/Loader";
+import { useAuth } from "@/context/AuthContext";
 
 interface MenuViewProps {
   tableNumber?: string;
@@ -18,7 +18,7 @@ interface MenuViewProps {
 export default function MenuView({ tableNumber }: MenuViewProps) {
   const [filter, setFilter] = useState("Todo");
   const [searchQuery, setSearchQuery] = useState("");
-  const { user, isLoaded } = useUser();
+  const { profile, isLoading } = useAuth();
   const { signUpData } = useUserData();
   const { navigateWithTable } = useTableNavigation();
   const { state: cartState } = useCart();
@@ -38,8 +38,8 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
   }, [menu]);
 
   // Get gender Clerk
-  const gender = signUpData?.gender || user?.unsafeMetadata?.gender;
-  const welcomeMessage = user
+  const gender = profile?.gender;
+  const welcomeMessage = profile
     ? gender === "female"
       ? "Bienvenida"
       : "Bienvenido"
@@ -126,11 +126,11 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
             {/* Settings Icon */}
             <div
               onClick={() => {
-                if (user && isLoaded) {
+                if (profile && !isLoading) {
                   navigateWithTable("/dashboard");
                 } else {
                   sessionStorage.setItem("signInFromMenu", "true");
-                  navigateWithTable("/sign-in");
+                  navigateWithTable("/auth");
                 }
               }}
               className="bg-white rounded-full p-1.5 md:p-2 lg:p-2.5 border border-gray-400 shadow-sm cursor-pointer hover:bg-gray-50 transition-colors"
@@ -170,7 +170,7 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
             </div>
             <h1 className="text-black text-3xl md:text-4xl lg:text-5xl font-medium mt-3 md:mt-5 mb-6 md:mb-8">
               ¡{welcomeMessage}
-              {user?.firstName ? ` ${user.firstName}` : ""}!
+              {profile?.firstName ? ` ${profile.firstName}` : ""}!
             </h1>
           </div>
 

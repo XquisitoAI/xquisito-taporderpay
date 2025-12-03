@@ -532,28 +532,36 @@ export default function PaymentSuccessPage() {
                   Items de la orden
                 </h3>
                 <div className="space-y-3 md:space-y-4 lg:space-y-5 pb-4 md:pb-5 lg:pb-6">
-                  {dishOrders.map((dish: any, index: number) => (
-                    <div
-                      key={dish.dish_order_id || index}
-                      className="flex justify-between items-start gap-3 md:gap-4 lg:gap-5"
-                    >
-                      <div className="flex-1">
-                        <p className="text-white font-medium text-base md:text-lg lg:text-xl">
-                          {dish.quantity}x {dish.item}
-                        </p>
-                        {dish.guest_name && (
-                          <p className="text-xs md:text-sm lg:text-base text-white/60 uppercase">
-                            {dish.guest_name}
+                  {dishOrders.map((dish: any, index: number) => {
+                    // Calcular el precio total correcto: (precio base + extras) * cantidad
+                    const itemPrice = dish.price || 0;
+                    const extraPrice = dish.extra_price || 0;
+                    const quantity = dish.quantity || 1;
+                    const calculatedTotal = (itemPrice + extraPrice) * quantity;
+
+                    return (
+                      <div
+                        key={`${dish.dish_order_id || 'dish'}-${index}-${dish.item}`}
+                        className="flex justify-between items-start gap-3 md:gap-4 lg:gap-5"
+                      >
+                        <div className="flex-1">
+                          <p className="text-white font-medium text-base md:text-lg lg:text-xl">
+                            {quantity}x {dish.item}
                           </p>
-                        )}
+                          {dish.guest_name && (
+                            <p className="text-xs md:text-sm lg:text-base text-white/60 uppercase">
+                              {dish.guest_name}
+                            </p>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <p className="text-white font-medium text-base md:text-lg lg:text-xl">
+                            ${calculatedTotal.toFixed(2)} MXN
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-white font-medium text-base md:text-lg lg:text-xl">
-                          ${dish.total_price?.toFixed(2) || "0.00"} MXN
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
 
                   {/* Propina como item */}
                   {paymentDetails?.tipAmount > 0 && (
