@@ -194,6 +194,14 @@ class ApiService {
     }
   }
 
+  // Generic request method for external use
+  async request<T = any>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<ApiResponse<T>> {
+    return this.makeRequest<T>(endpoint, options);
+  }
+
   // Payment Methods API
   async addPaymentMethod(
     paymentData: AddPaymentMethodRequest
@@ -346,14 +354,22 @@ class ApiService {
     return this.getRestaurantId();
   }
 
-  // Method to clear guest session
+  // Method to clear guest session (guest-specific data only)
   clearGuestSession(): void {
     if (typeof window !== "undefined") {
-      // NO eliminar xquisito-guest-id - lo necesitamos para migrar el carrito
-      // Solo limpiar la tabla y restaurante
-      // localStorage.removeItem("xquisito-guest-id"); // COMENTADO - preservar para migración de carrito
+      localStorage.removeItem("xquisito-guest-id");
+      // Note: Table number and restaurant ID are preserved for authenticated users
+      // They are only cleared when user explicitly logs out
+    }
+  }
+
+  // Method to clear all session data (for logout)
+  clearAllSessionData(): void {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("xquisito-guest-id");
       localStorage.removeItem("xquisito-table-number");
       localStorage.removeItem("xquisito-restaurant-id");
+      localStorage.removeItem("xquisito-guest-name");
     }
   }
 
@@ -472,68 +488,6 @@ class ApiService {
           paymentMethodId,
         }),
       }
-    );
-  }
-
-  // ===============================================
-  // SPLIT BILL API CALLS
-  // ===============================================
-
-  /**
-   * Initialize split bill for a table
-   */
-  async initializeSplitBill(
-    restaurantId: string,
-    tableNumber: string,
-    numberOfPeople: number,
-    userIds?: string[] | null,
-    guestNames?: string[] | null
-  ): Promise<ApiResponse<any>> {
-    return this.makeRequest(
-      `/restaurants/${restaurantId}/tables/${tableNumber}/split-bill`,
-      {
-        method: "POST",
-        body: JSON.stringify({
-          numberOfPeople,
-          userIds,
-          guestNames,
-        }),
-      }
-    );
-  }
-
-  /**
-   * Pay split amount for a table
-   */
-  async paySplitAmount(
-    restaurantId: string,
-    tableNumber: string,
-    userId?: string | null,
-    guestName?: string | null,
-    paymentMethodId?: string | null
-  ): Promise<ApiResponse<any>> {
-    return this.makeRequest(
-      `/restaurants/${restaurantId}/tables/${tableNumber}/pay-split`,
-      {
-        method: "POST",
-        body: JSON.stringify({
-          userId,
-          guestName,
-          paymentMethodId,
-        }),
-      }
-    );
-  }
-
-  /**
-   * Get split payment status for a table
-   */
-  async getSplitPaymentStatus(
-    restaurantId: string,
-    tableNumber: string
-  ): Promise<ApiResponse<any>> {
-    return this.makeRequest(
-      `/restaurants/${restaurantId}/tables/${tableNumber}/split-status`
     );
   }
 
@@ -697,7 +651,9 @@ class ApiService {
    * Get review statistics for a menu item
    */
   async getMenuItemStats(menuItemId: number): Promise<ApiResponse<any>> {
-    return this.makeRequest(`/restaurants/reviews/menu-item/${menuItemId}/stats`);
+    return this.makeRequest(
+      `/restaurants/reviews/menu-item/${menuItemId}/stats`
+    );
   }
 
   /**

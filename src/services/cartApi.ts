@@ -2,8 +2,7 @@
 // CART API SERVICE
 // ===============================================
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -49,14 +48,14 @@ export interface CartTotals {
 }
 
 class CartApiService {
-  private clerkUserId: string | null = null;
+  private supabaseUserId: string | null = null;
   private restaurantId: number | null = null;
 
   /**
-   * Establecer el clerk_user_id manualmente (llamar desde el componente con useUser)
+   * Establecer el supabase_user_id manualmente (llamar desde el componente con useAuth)
    */
-  public setClerkUserId(userId: string | null) {
-    this.clerkUserId = userId;
+  public setSupabaseUserId(userId: string | null) {
+    this.supabaseUserId = userId;
   }
 
   /**
@@ -71,12 +70,37 @@ class CartApiService {
     options?: RequestInit
   ): Promise<ApiResponse<T>> {
     try {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        ...(options?.headers as Record<string, string>),
+      };
+
+      // Add authentication headers (similar to main apiService)
+      const authToken = this.getAuthToken();
+      if (authToken) {
+        // For authenticated users, use Bearer token
+        headers["Authorization"] = `Bearer ${authToken}`;
+        console.log(
+          "🔑 CartAPI - Adding Authorization header for authenticated user"
+        );
+      } else {
+        // For guests, add guest identification headers
+        const guestId = this.getGuestId();
+        if (guestId) {
+          headers["x-guest-id"] = guestId;
+          console.log("🔑 CartAPI - Adding x-guest-id header:", guestId);
+        }
+
+        // Add table number if available
+        const tableNumber = this.getTableNumber();
+        if (tableNumber) {
+          headers["x-table-number"] = tableNumber;
+        }
+      }
+
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        headers: {
-          "Content-Type": "application/json",
-          ...options?.headers,
-        },
         ...options,
+        headers,
       });
 
       const data = await response.json();
@@ -98,36 +122,44 @@ class CartApiService {
 
   /**
    * Obtener guest_id desde GuestContext/localStorage
-   * Usa el mismo formato que GuestContext: 'xquisito-guest-id'
+   * Solo lee el guest_id existente - NO genera uno nuevo
+   * La generación se maneja exclusivamente en GuestContext después de que auth cargue
    */
   private getGuestId(): string {
     if (typeof window === "undefined") return "";
 
-    // Usar el mismo key que GuestContext
-    let guestId = localStorage.getItem("xquisito-guest-id");
-    if (!guestId) {
-      // Generar guest ID en el mismo formato que GuestContext
-      guestId = `guest-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      localStorage.setItem("xquisito-guest-id", guestId);
-    }
-    return guestId;
+    // Solo leer del localStorage - NO generar nuevo ID
+    return localStorage.getItem("xquisito-guest-id") || "";
   }
 
   /**
-   * Obtener identificador de usuario (clerk_user_id o guest_id)
-   * Prioriza clerk_user_id si existe
+   * Obtener el token de autenticación desde localStorage
    */
-  private getUserIdentifier(): { clerk_user_id?: string; guest_id?: string } {
-    // Primero intentar usar el clerkUserId establecido manualmente
-    if (this.clerkUserId) {
-      console.log("🔑 Using clerk_user_id:", this.clerkUserId);
-      return { clerk_user_id: this.clerkUserId };
+  private getAuthToken(): string | null {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem("xquisito_access_token");
+  }
+
+  /**
+   * Obtener número de mesa desde localStorage
+   */
+  private getTableNumber(): string | null {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem("xquisito-table-number");
+  }
+
+  /**
+   * Obtener identificador de usuario (user_id o guest_id)
+   * Prioriza user_id si existe
+   */
+  private getUserIdentifier(): { user_id?: string; guest_id?: string } {
+    // Primero intentar usar el supabaseUserId establecido manualmente
+    if (this.supabaseUserId) {
+      return { user_id: this.supabaseUserId };
     }
 
-    // Si no hay usuario de Clerk, usar guest_id
-    const guestId = this.getGuestId();
-    console.log("👤 Using guest_id:", guestId);
-    return { guest_id: guestId };
+    // Si no hay usuario autenticado, usar guest_id
+    return { guest_id: this.getGuestId() };
   }
 
   /**
@@ -140,13 +172,6 @@ class CartApiService {
     extraPrice: number = 0
   ): Promise<ApiResponse<{ cart_item_id: string }>> {
     const userId = this.getUserIdentifier();
-
-    console.log("🛒 Adding item to cart with:", {
-      userId,
-      menuItemId,
-      quantity,
-      restaurantId: this.restaurantId,
-    });
 
     return this.request<{ cart_item_id: string }>("/cart", {
       method: "POST",
@@ -226,26 +251,6 @@ class CartApiService {
         restaurant_id: this.restaurantId,
       }),
     });
-  }
-
-  /**
-   * Migrar carrito de invitado a usuario autenticado
-   */
-  async migrateGuestCart(
-    guestId: string,
-    clerkUserId: string
-  ): Promise<ApiResponse<{ message: string; items_migrated: number }>> {
-    return this.request<{ message: string; items_migrated: number }>(
-      "/cart/migrate",
-      {
-        method: "POST",
-        body: JSON.stringify({
-          guest_id: guestId,
-          clerk_user_id: clerkUserId,
-          restaurant_id: this.restaurantId,
-        }),
-      }
-    );
   }
 
   /**
