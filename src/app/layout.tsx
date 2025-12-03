@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
+import { AuthProvider } from "@/context/AuthContext";
 import { RestaurantProvider } from "@/context/RestaurantContext";
 import { TableProvider } from "@/context/TableContext";
 import { CartProvider } from "@/context/CartContext";
 import { UserDataProvider } from "@/context/userDataContext";
 import { GuestProvider } from "@/context/GuestContext";
 import { PaymentProvider } from "@/context/PaymentContext";
-import { AuthProvider } from "@/context/AuthContext";
 
 const helveticaNeue = localFont({
   src: [
@@ -109,27 +108,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider signUpFallbackRedirectUrl="" signInFallbackRedirectUrl="">
-      <html lang="es">
-        <body
-          className={`${helveticaNeue.variable} antialiased`}
-          style={{ fontFamily: "var(--font-helvetica-neue)" }}
-        >
-          <AuthProvider>
-            <RestaurantProvider>
-              <CartProvider>
-                <TableProvider>
-                  <GuestProvider>
-                    <PaymentProvider>
-                      <UserDataProvider>{children}</UserDataProvider>
-                    </PaymentProvider>
-                  </GuestProvider>
-                </TableProvider>
-              </CartProvider>
-            </RestaurantProvider>
-          </AuthProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="es">
+      <body
+        className={`${helveticaNeue.variable} antialiased`}
+        style={{ fontFamily: "var(--font-helvetica-neue)" }}
+      >
+        <AuthProvider>
+          <RestaurantProvider>
+            <CartProvider>
+              <TableProvider>
+                <GuestProvider>
+                  <PaymentProvider>
+                    <UserDataProvider>{children}</UserDataProvider>
+                  </PaymentProvider>
+                </GuestProvider>
+              </TableProvider>
+            </CartProvider>
+          </RestaurantProvider>
+        </AuthProvider>
+      </body>
+    </html>
   );
 }

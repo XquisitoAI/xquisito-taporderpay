@@ -10,7 +10,7 @@ import React, {
 } from "react";
 import { apiService } from "../utils/api2";
 import { useSearchParams } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "./AuthContext";
 
 interface GuestContextType {
   isGuest: boolean;
@@ -36,11 +36,11 @@ function GuestProviderInternal({ children }: GuestProviderProps) {
   const [guestName, setGuestName] = useState<string | null>(null);
   const [hasLinkedOrders, setHasLinkedOrders] = useState<boolean>(false);
   const searchParams = useSearchParams();
-  const { user, isLoaded } = useUser();
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   // Link guest orders when user authenticates
   useEffect(() => {
-    if (!isLoaded || !user || hasLinkedOrders) return;
+    if (isLoading || !user || hasLinkedOrders) return;
 
     const storedGuestId = localStorage.getItem("xquisito-guest-id");
     const storedTableNumber = localStorage.getItem("xquisito-table-number");
@@ -73,11 +73,11 @@ function GuestProviderInternal({ children }: GuestProviderProps) {
           console.error("❌ Error linking guest orders:", error);
         });
     }
-  }, [isLoaded, user, hasLinkedOrders]);
+  }, [isLoading, user, hasLinkedOrders]);
 
   // Smart initialization: Auto-detect guest vs registered user context
   useEffect(() => {
-    if (!isLoaded) return; // Wait for Clerk to load
+    if (isLoading) return; // Wait for auth to load
 
     const tableParam = searchParams?.get("table");
 
@@ -140,7 +140,7 @@ function GuestProviderInternal({ children }: GuestProviderProps) {
         "ℹ️ No table parameter and no valid guest session - staying as non-guest"
       );
     }
-  }, [isLoaded, user, searchParams]);
+  }, [isLoading, user, searchParams]);
 
   const setAsGuest = (newTableNumber?: string) => {
     // Generate guest ID through apiService (which handles localStorage)

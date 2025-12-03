@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { authService } from "@/services/auth.service";
-import { useTableNavigation } from "@/hooks/useTableNavigation";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
+import { useRouter } from "next/navigation";
 import { User, Camera, Loader2, Phone, X, LogOut, LogIn } from "lucide-react";
 
 export default function ProfileTab() {
-  const { navigateWithTable } = useTableNavigation();
-  const { logout: contextLogout } = useAuth();
+  const { user, profile, isAuthenticated, isLoading, updateProfile, logout } =
+    useAuth();
+  const router = useRouter();
   const [isUpdating, setIsUpdating] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [firstName, setFirstName] = useState("");
@@ -18,10 +18,9 @@ export default function ProfileTab() {
   const [birthDate, setBirthDate] = useState("");
   const [gender, setGender] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Formatear número de teléfono
-  const formatPhoneNumber = (phoneNumber: string) => {
+  const formatPhoneNumber = (phoneNumber: any) => {
     if (!phoneNumber) return "";
 
     const cleaned = phoneNumber.replace(/\D/g, "");
@@ -45,38 +44,17 @@ export default function ProfileTab() {
   // Load profile data from AuthContext
   useEffect(() => {
     const loadUserData = async () => {
-      setIsLoadingData(true);
-
-      const currentUser = authService.getCurrentUser();
-
-      if (!currentUser) {
-        setIsAuthenticated(false);
-        setIsLoadingData(false);
-        return;
-      }
-
-      setIsAuthenticated(true);
+      if (!profile || isLoading) return;
 
       try {
-        const response = await authService.getMyProfile();
-        console.log("📊 getMyProfile response:", response);
+        setIsLoadingData(true);
 
-        // El backend puede devolver data.data.profile o data.profile
-        const responseData = (response as any).data;
-        const profileData =
-          responseData?.data?.profile || responseData?.profile;
+        // Load data from profile
+        setFirstName(profile.firstName || "");
+        setLastName(profile.lastName || "");
+        setPhone(profile.phone || "");
 
-        if (response.success && profileData) {
-          console.log("✅ Profile data loaded:", profileData);
-          setFirstName(profileData.firstName || "");
-          setLastName(profileData.lastName || "");
-          setPhone(profileData.phone || "");
-          setBirthDate(profileData.birthDate || "");
-          setGender(profileData.gender || "");
-          setPhotoUrl(profileData.photoUrl || "");
-        } else {
-          console.warn("⚠️ No profile data in response:", response);
-        }
+        setGender(profile.gender || "");
       } catch (error) {
         console.error("❌ Error loading user data:", error);
       } finally {
@@ -85,24 +63,28 @@ export default function ProfileTab() {
     };
 
     loadUserData();
-  }, []);
+  }, [profile, isLoading]);
 
   const handleUpdateProfile = async () => {
-    if (!isAuthenticated) return;
+    if (!profile) return;
 
     setIsUpdating(true);
     try {
-      const response = await authService.updateMyProfile({
-        firstName,
-        lastName,
-        birthDate: birthDate || undefined,
+      const profileData = {
+        firstName: firstName,
+        lastName: lastName,
+        phone: phone,
         gender: gender as "male" | "female" | "other" | undefined,
-      });
+        // Convert age to birth date
+        birthDate: birthDate,
+      };
+
+      const response = await updateProfile(profileData);
 
       if (response.success) {
         alert("Perfil actualizado correctamente");
       } else {
-        throw new Error(response.error || "Error al actualizar");
+        throw new Error("Error al actualizar el perfil");
       }
     } catch (error) {
       console.error("Error al actualizar el perfil:", error);
@@ -113,7 +95,7 @@ export default function ProfileTab() {
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!isAuthenticated || !e.target.files || !e.target.files[0]) return;
+    if (!profile || !e.target.files || !e.target.files[0]) return;
 
     const file = e.target.files[0];
 
@@ -132,34 +114,9 @@ export default function ProfileTab() {
     setIsUpdating(true);
 
     try {
-      const token = localStorage.getItem("xquisito_access_token");
-      if (!token) {
-        alert("No estás autenticado");
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append("photo", file);
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/profiles/upload-photo`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        }
-      );
-
-      const data = await response.json();
-
-      if (data.success && data.data?.photoUrl) {
-        setPhotoUrl(data.data.photoUrl);
-        alert("Foto de perfil actualizada correctamente");
-      } else {
-        throw new Error(data.error || "Error al subir la foto");
-      }
+      // TODO: Implement photo upload with new backend
+      console.log("Photo upload not yet implemented with new auth system");
+      alert("Funcionalidad de foto no disponible aún");
     } catch (error) {
       console.error("Error al actualizar la foto:", error);
       alert("Error al actualizar la foto");
@@ -168,20 +125,7 @@ export default function ProfileTab() {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      // Use context logout which will update the auth state
-      await contextLogout();
-      setIsLogoutModalOpen(false);
-      // Redirect to menu with table navigation
-      navigateWithTable("/menu");
-    } catch (error) {
-      console.error("Error al cerrar sesión:", error);
-      alert("Error al cerrar sesión");
-    }
-  };
-
-  if (isLoadingData) {
+  if (isLoading || !profile || isLoadingData) {
     return (
       <div className="flex items-center justify-center py-12 md:py-16 lg:py-20">
         <Loader2 className="size-8 md:size-10 lg:size-12 animate-spin text-teal-600" />
@@ -194,22 +138,12 @@ export default function ProfileTab() {
       {/* Profile Image */}
       <div className="flex flex-col items-center">
         <div className="relative group mb-4">
-          <div className="size-28 md:size-32 lg:size-36 rounded-full bg-gray-200 overflow-hidden border-2 md:border-4 border-teal-600 flex items-center justify-center">
-            {isAuthenticated && photoUrl ? (
-              <img
-                src={photoUrl}
-                alt="Profile"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div>
-                <img
-                  src="https://t4.ftcdn.net/jpg/02/15/84/43/360_F_215844325_ttX9YiIIyeaR7Ne6EaLLjMAmy4GvPC69.jpg"
-                  alt="Profile Pic"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
+          <div className="size-28 md:size-32 lg:size-36 rounded-full bg-gray-200 overflow-hidden border-2 md:border-4 border-teal-600">
+            <img
+              src={profile.photoUrl || "/default-avatar.png"}
+              alt="Profile"
+              className="w-full h-full object-cover"
+            />
           </div>
           {isAuthenticated && (
             <label
@@ -237,7 +171,7 @@ export default function ProfileTab() {
           Teléfono
         </label>
         <div className="w-full px-4 md:px-5 lg:px-6 py-3 md:py-4 lg:py-5 bg-gray-100 border border-gray-300 rounded-lg text-gray-600 text-base md:text-lg lg:text-xl">
-          {formatPhoneNumber(phone)}
+          {formatPhoneNumber(profile.phone) || "No disponible"}
         </div>
       </div>
 
@@ -277,7 +211,7 @@ export default function ProfileTab() {
 
       <div className="flex gap-3 md:gap-4 lg:gap-5 mb-6 md:mb-8 lg:mb-10">
         {/* Fecha de nacimiento */}
-        <div className="space-y-2 flex-1">
+        <div className="space-y-2 flex-1 min-w-0">
           <label className="gap-1.5 md:gap-2 flex items-center text-sm md:text-base lg:text-lg text-gray-700">
             Fecha de nacimiento
           </label>
@@ -287,24 +221,23 @@ export default function ProfileTab() {
             onChange={(e) => setBirthDate(e.target.value)}
             max={new Date().toISOString().split("T")[0]}
             placeholder="dd/mm/aaaa"
-            className="cursor-pointer w-full px-4 md:px-5 lg:px-6 py-3 md:py-4 lg:py-5 border text-black text-base md:text-lg lg:text-xl border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+            className="cursor-pointer w-full px-2 md:px-5 lg:px-6 py-3 md:py-4 lg:py-5 border text-black text-base md:text-lg lg:text-xl border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed [&::-webkit-calendar-picker-indicator]:cursor-pointer"
             disabled={isUpdating || !isAuthenticated}
             lang="es-MX"
           />
         </div>
 
         {/* Genero */}
-        <div className="space-y-2 flex-1">
+        <div className="space-y-2 flex-1 min-w-0">
           <label className="gap-1.5 md:gap-2 flex items-center text-sm md:text-base lg:text-lg text-gray-700">
             Género
           </label>
           <select
             value={gender}
             onChange={(e) => setGender(e.target.value)}
-            className="cursor-pointer w-full px-4 md:px-5 lg:px-6 py-3 md:py-4 lg:py-5 border text-black text-base md:text-lg lg:text-xl border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+            className="cursor-pointer w-full px-2 md:px-5 lg:px-6 py-3 md:py-4 lg:py-5 border text-black text-base md:text-lg lg:text-xl border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
             disabled={isUpdating || !isAuthenticated}
           >
-            <option value="">Tu género</option>
             <option value="male">Masculino</option>
             <option value="female">Femenino</option>
             <option value="other">Otro</option>
@@ -394,7 +327,10 @@ export default function ProfileTab() {
                 Cancelar
               </button>
               <button
-                onClick={handleLogout}
+                onClick={async () => {
+                  await logout();
+                  router.push("/");
+                }}
                 className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 md:py-3 text-base md:text-lg rounded-full cursor-pointer transition-colors"
               >
                 Cerrar sesión

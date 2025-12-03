@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 import Loader from "./UI/Loader";
 import ProfileTab from "./dashboard/ProfileTab";
 import CardsTab from "./dashboard/CardsTab";
@@ -15,14 +16,15 @@ export default function DashboardView() {
     "profile" | "cards" | "history" | "support"
   >("profile");
 
-  // Estados para el chat de soporte
-  const [messages, setMessages] = useState<
+  const { user, isAuthenticated, isLoading, profile } = useAuth();
+  const router = useRouter();
+  const { navigateWithTable } = useTableNavigation();
+
+  // States for Support Tab (Pepper chat)
+  const [supportMessages, setSupportMessages] = useState<
     Array<{ role: "user" | "pepper"; content: string }>
   >([]);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-
-  const { profile, isLoading } = useAuth();
-  const { navigateWithTable } = useTableNavigation();
+  const [supportSessionId, setSupportSessionId] = useState<string | null>(null);
 
   // Loading state
   if (isLoading) {
@@ -30,7 +32,7 @@ export default function DashboardView() {
   }
 
   // Not authenticated (shouldn't happen but good fallback)
-  if (!profile) {
+  if (!isAuthenticated || !user) {
     return (
       <div className="h-[100dvh] bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">
         <div className="flex-1 flex flex-col items-center justify-center px-5 md:px-8 lg:px-10 pb-12 md:py-10 lg:py-12">
@@ -185,10 +187,10 @@ export default function DashboardView() {
               {activeTab === "history" && <HistoryTab />}
               {activeTab === "support" && (
                 <SupportTab
-                  messages={messages}
-                  setMessages={setMessages}
-                  sessionId={sessionId}
-                  setSessionId={setSessionId}
+                  messages={supportMessages}
+                  setMessages={setSupportMessages}
+                  sessionId={supportSessionId}
+                  setSessionId={setSupportSessionId}
                 />
               )}
             </div>

@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import { apiService, PaymentMethod } from "../utils/api2";
 import { useGuest } from "./GuestContext";
-import { useUser, useAuth } from "@clerk/nextjs";
+import { useAuth } from "./AuthContext";
 
 interface PaymentContextType {
   paymentMethods: PaymentMethod[];
@@ -32,17 +32,12 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { isGuest, guestId, setAsAuthenticated } = useGuest();
-  const { user, isLoaded } = useUser();
-  const { getToken } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   const hasPaymentMethods = paymentMethods.length > 0;
 
   const refreshPaymentMethods = async () => {
-    // Only fetch if user is authenticated (either registered user or guest)
-    if (!isLoaded) {
-      setPaymentMethods([]);
-      return;
-    }
+    // Fetch payment methods for both authenticated users and guests
 
     // For registered users - prioritize user over guest session
     if (user) {
@@ -65,13 +60,8 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
       console.log("  isGuest state:", isGuest);
       setIsLoading(true);
       try {
-        // Get Clerk auth token
-        const token = await getToken();
-        if (token) {
-          apiService.setAuthToken(token);
-        } else {
-          console.warn("  ⚠️ No Clerk token available!");
-        }
+        // Set auth token from AuthContext (token is automatically managed)
+        // No need to manually get token since apiService handles it through AuthContext
 
         const response = await apiService.getPaymentMethods();
         if (response.success && response.data?.paymentMethods) {
@@ -148,11 +138,7 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
       paymentMethodId
     );
     try {
-      // Get Clerk auth token
-      const token = await getToken();
-      if (token) {
-        apiService.setAuthToken(token);
-      }
+      // Auth token is automatically managed by AuthContext and apiService
 
       const response =
         await apiService.setDefaultPaymentMethod(paymentMethodId);
@@ -193,11 +179,7 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
       paymentMethodId
     );
     try {
-      // Get Clerk auth token
-      const token = await getToken();
-      if (token) {
-        apiService.setAuthToken(token);
-      }
+      // Auth token is automatically managed by AuthContext and apiService
 
       const response = await apiService.deletePaymentMethod(paymentMethodId);
       if (response.success) {
@@ -216,23 +198,21 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
 
   // Load payment methods when user context changes
   useEffect(() => {
-    if (isLoaded) {
-      // If user is authenticated, clear any guest session
-      if (user && isGuest) {
-        console.log("🔐 User authenticated - clearing guest session");
-        setAsAuthenticated(user.id);
-      }
-
-      console.log("🔄 PaymentContext - Context changed:", {
-        isLoaded,
-        hasUser: !!user,
-        userId: user?.id,
-        isGuest,
-        guestId,
-      });
-      refreshPaymentMethods();
+    // If user is authenticated, clear any guest session
+    if (user && isGuest) {
+      console.log("🔐 User authenticated - clearing guest session");
+      setAsAuthenticated(user.id);
     }
-  }, [isLoaded, user?.id, isGuest, guestId, setAsAuthenticated]);
+
+    console.log("🔄 PaymentContext - Context changed:", {
+      isAuthenticated,
+      hasUser: !!user,
+      userId: user?.id,
+      isGuest,
+      guestId,
+    });
+    refreshPaymentMethods();
+  }, [isAuthenticated, user?.id, isGuest, guestId, setAsAuthenticated]);
 
   const value: PaymentContextType = {
     paymentMethods,

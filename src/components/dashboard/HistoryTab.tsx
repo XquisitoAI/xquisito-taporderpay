@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuth } from "../../context/AuthContext";
 import { Loader2, ChevronRight, X, Calendar, Utensils } from "lucide-react";
 import { getCardTypeIcon } from "@/utils/cardIcons";
-import { useAuth } from "@/context/AuthContext";
 
 interface OrderHistoryItem {
   orderType?: "flex-bill" | "tap-order-and-pay" | "pick-and-go"; // Tipo de orden
@@ -33,7 +33,7 @@ interface OrderHistoryItem {
 }
 
 export default function HistoryTab() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [orders, setOrders] = useState<OrderHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +54,7 @@ export default function HistoryTab() {
 
   useEffect(() => {
     const fetchOrderHistory = async () => {
-      if (!user) return;
+      if (!user || !isAuthenticated) return;
 
       try {
         setIsLoading(true);
@@ -76,7 +76,7 @@ export default function HistoryTab() {
     };
 
     fetchOrderHistory();
-  }, [user]);
+  }, [user, isAuthenticated]);
 
   if (isLoading) {
     return (

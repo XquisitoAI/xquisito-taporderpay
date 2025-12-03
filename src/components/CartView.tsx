@@ -6,13 +6,13 @@ import { useTable } from "../context/TableContext";
 import { useCart } from "../context/CartContext";
 import { useTableNavigation } from "../hooks/useTableNavigation";
 import MenuHeaderBack from "./headers/MenuHeaderBack";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "../context/AuthContext";
 
 export default function CartView() {
   const { state: tableState } = useTable();
   const { state: cartState, updateQuantity } = useCart();
   const { navigateWithTable } = useTableNavigation();
-  const { isLoading, profile } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const MINIMUM_AMOUNT = 20; // Mínimo de compra requerido
@@ -20,7 +20,7 @@ export default function CartView() {
 
   const handleOrder = async () => {
     // Si el usuario está loggeado, ir directamente a card-selection
-    if (!isLoading && profile) {
+    if (!isLoading && isAuthenticated) {
       setIsSubmitting(true);
       try {
         navigateWithTable("/card-selection");

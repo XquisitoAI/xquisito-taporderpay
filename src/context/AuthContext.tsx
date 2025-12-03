@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Cargar usuario del localStorage al montar
   useEffect(() => {
-    const loadUser = () => {
+    const loadUser = async () => {
       const currentUser = authService.getCurrentUser();
       if (currentUser) {
         setUser(currentUser);
@@ -66,8 +66,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           apiService.setAuthToken(currentUser.token);
           console.log("🔑 Auth token restored in ApiService from localStorage");
         }
-        // Cargar perfil
-        loadProfile();
+        // Cargar perfil y esperar a que termine
+        await loadProfile();
       }
       setIsLoading(false);
     };
@@ -92,6 +92,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
           console.warn("⚠️ No profile data found in response");
         }
+      } else if (response.error?.includes("401")) {
+        // Token expired or invalid - let apiService handle refresh
+        console.log(
+          "🔄 Token expired in loadProfile, apiService will handle refresh"
+        );
+        // Don't logout here, let the refresh logic in apiService handle it
+      } else {
+        console.warn("⚠️ Error loading profile:", response.error);
       }
     } catch (error) {
       console.error("❌ Error loading profile:", error);
@@ -187,9 +195,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error(
-      "useSupabaseAuth must be used within a SupabaseAuthProvider"
-    );
+    throw new Error("useAuth must be used within a AuthProvider");
   }
   return context;
 }

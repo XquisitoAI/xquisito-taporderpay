@@ -18,7 +18,7 @@ interface MenuViewProps {
 export default function MenuView({ tableNumber }: MenuViewProps) {
   const [filter, setFilter] = useState("Todo");
   const [searchQuery, setSearchQuery] = useState("");
-  const { profile, isLoading } = useAuth();
+  const { user, profile, isAuthenticated, isLoading } = useAuth();
   const { signUpData } = useUserData();
   const { navigateWithTable } = useTableNavigation();
   const { state: cartState } = useCart();
@@ -37,9 +37,9 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
     return categories;
   }, [menu]);
 
-  // Get gender Clerk
-  const gender = profile?.gender;
-  const welcomeMessage = profile
+  // Get gender from profile or signUpData
+  const gender = signUpData?.gender;
+  const welcomeMessage = user
     ? gender === "female"
       ? "Bienvenida"
       : "Bienvenido"
@@ -126,7 +126,7 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
             {/* Settings Icon */}
             <div
               onClick={() => {
-                if (profile && !isLoading) {
+                if (isAuthenticated) {
                   navigateWithTable("/dashboard");
                 } else {
                   sessionStorage.setItem("signInFromMenu", "true");

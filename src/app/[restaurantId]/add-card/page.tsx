@@ -15,7 +15,7 @@ import { apiService } from "@/utils/api2";
 import MenuHeaderBack from "@/components/headers/MenuHeaderBack";
 import CardScanner from "@/components/CardScanner";
 import Loader from "@/components/UI/Loader";
-import { useUser, useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/context/AuthContext";
 import { Camera } from "lucide-react";
 
 function AddCardContent() {
@@ -37,8 +37,7 @@ function AddCardContent() {
   const { guestId, tableNumber } = useGuest();
   const { addPaymentMethod, refreshPaymentMethods, paymentMethods } =
     usePayment();
-  const { user, isLoaded } = useUser();
-  const { getToken } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   // Refresh payment methods on mount to ensure we have the latest data
   useEffect(() => {

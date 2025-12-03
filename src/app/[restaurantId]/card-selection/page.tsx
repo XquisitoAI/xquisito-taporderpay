@@ -276,8 +276,13 @@ export default function CardSelectionPage() {
           );
 
           if (!firstTapOrderId) {
-            console.log("📝 Attempting to extract tap_order_id from dishOrderResult...");
-            console.log("📝 Full dishOrderResult structure:", JSON.stringify(dishOrderResult, null, 2));
+            console.log(
+              "📝 Attempting to extract tap_order_id from dishOrderResult..."
+            );
+            console.log(
+              "📝 Full dishOrderResult structure:",
+              JSON.stringify(dishOrderResult, null, 2)
+            );
 
             // El Dish tiene la propiedad tap_order_id según el tipo Dish en tap-order.service.ts
             firstTapOrderId =
@@ -288,9 +293,15 @@ export default function CardSelectionPage() {
               null;
 
             console.log("📝 Extracted tap_order_id:", firstTapOrderId);
-            console.log("📝 Available properties in dishOrderResult.data:", Object.keys(dishOrderResult.data || {}));
+            console.log(
+              "📝 Available properties in dishOrderResult.data:",
+              Object.keys(dishOrderResult.data || {})
+            );
             if (dishOrderResult.data?.data) {
-              console.log("📝 Available properties in dishOrderResult.data.data:", Object.keys(dishOrderResult.data.data || {}));
+              console.log(
+                "📝 Available properties in dishOrderResult.data.data:",
+                Object.keys(dishOrderResult.data.data || {})
+              );
             }
 
             // Guardar inmediatamente en el estado
@@ -427,7 +438,7 @@ export default function CardSelectionPage() {
       }
 
       // Para tarjetas reales, continuar con el flujo normal de EcartPay
-      // Configurar token de autenticación si el usuario está logueado
+      // Note: Authentication token is now managed by AuthContext
       if (user?.id) {
         const token = authService.getAccessToken();
         if (token) {
@@ -565,8 +576,13 @@ export default function CardSelectionPage() {
         // Guardar el tap_order_id del primer dish order
         // El backend envuelve la respuesta: { success, data: { success, data: { tap_order_id } } }
         if (!firstTapOrderId) {
-          console.log("📝 Attempting to extract tap_order_id from dishOrderResult (real card)...");
-          console.log("📝 Full dishOrderResult structure:", JSON.stringify(dishOrderResult, null, 2));
+          console.log(
+            "📝 Attempting to extract tap_order_id from dishOrderResult (real card)..."
+          );
+          console.log(
+            "📝 Full dishOrderResult structure:",
+            JSON.stringify(dishOrderResult, null, 2)
+          );
 
           firstTapOrderId =
             dishOrderResult.data?.data?.tap_order_id ||
@@ -576,9 +592,15 @@ export default function CardSelectionPage() {
             null;
 
           console.log("📝 Extracted tap_order_id:", firstTapOrderId);
-          console.log("📝 Available properties in dishOrderResult.data:", Object.keys(dishOrderResult.data || {}));
+          console.log(
+            "📝 Available properties in dishOrderResult.data:",
+            Object.keys(dishOrderResult.data || {})
+          );
           if (dishOrderResult.data?.data) {
-            console.log("📝 Available properties in dishOrderResult.data.data:", Object.keys(dishOrderResult.data.data || {}));
+            console.log(
+              "📝 Available properties in dishOrderResult.data.data:",
+              Object.keys(dishOrderResult.data.data || {})
+            );
           }
 
           // Guardar inmediatamente en el estado
@@ -586,7 +608,9 @@ export default function CardSelectionPage() {
             setCompletedOrderId(firstTapOrderId);
             console.log("✅ completedOrderId set to:", firstTapOrderId);
           } else {
-            console.error("❌ Could not extract tap_order_id from response (real card)");
+            console.error(
+              "❌ Could not extract tap_order_id from response (real card)"
+            );
             console.error("❌ dishOrderResult.data:", dishOrderResult.data);
           }
         }
@@ -1049,7 +1073,9 @@ export default function CardSelectionPage() {
           orderedItems={completedOrderItems}
           onContinue={() => {
             // Obtener el orderId desde localStorage como respaldo
-            const paymentData = localStorage.getItem("xquisito-completed-payment");
+            const paymentData = localStorage.getItem(
+              "xquisito-completed-payment"
+            );
             let orderId = completedOrderId;
 
             if (!orderId && paymentData) {
@@ -1062,7 +1088,7 @@ export default function CardSelectionPage() {
             }
 
             navigateWithTable(
-              `/payment-success?orderId=${orderId || 'unknown'}&success=true`
+              `/payment-success?orderId=${orderId || "unknown"}&success=true`
             );
           }}
           onCancel={handleCancelPayment}
