@@ -53,7 +53,7 @@ export default function ProfileTab() {
         setFirstName(profile.firstName || "");
         setLastName(profile.lastName || "");
         setPhone(profile.phone || "");
-
+        setBirthDate(profile.birthDate || "");
         setGender(profile.gender || "");
       } catch (error) {
         console.error("❌ Error loading user data:", error);

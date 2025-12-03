@@ -42,14 +42,24 @@ export default function HistoryTab() {
   // Bloquear scroll cuando el modal está abierto
   useEffect(() => {
     if (selectedOrderDetails) {
+      // Bloquear scroll en body y html para móviles
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
       document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
+      document.documentElement.style.overflow = "hidden";
 
-    return () => {
-      document.body.style.overflow = "unset";
-    };
+      return () => {
+        // Restaurar scroll
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.width = "";
+        document.body.style.overflow = "";
+        document.documentElement.style.overflow = "";
+        window.scrollTo(0, scrollY);
+      };
+    }
   }, [selectedOrderDetails]);
 
   useEffect(() => {
@@ -309,8 +319,15 @@ export default function HistoryTab() {
                 {selectedOrderDetails.dishes?.map((dish: any) => (
                   <div
                     key={dish.dishOrderId}
-                    className="flex justify-between items-start gap-3 md:gap-4 lg:gap-5"
+                    className="flex justify-between items-center gap-3 md:gap-4 lg:gap-5"
                   >
+                    <div className="size-14 md:size-16 lg:size-20 bg-gray-300 rounded-sm md:rounded-md flex items-center justify-center hover:scale-105 transition-transform duration-200">
+                      <img
+                        src={dish.images[0]}
+                        alt="Dish preview"
+                        className="w-full h-full object-cover rounded-sm md:rounded-md"
+                      />
+                    </div>
                     {/* Dish Info */}
                     <div className="flex-1">
                       <p className="text-white font-medium text-base md:text-lg lg:text-xl capitalize">
