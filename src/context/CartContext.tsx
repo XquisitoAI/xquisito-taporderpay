@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import { MenuItemData } from "../interfaces/menuItemData";
 import { cartApi, CartItem as ApiCartItem } from "../services/cartApi";
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "./AuthContext";
 import { useRestaurant } from "./RestaurantContext";
 
 // Interfaz para un item del carrito (frontend)
@@ -132,15 +132,15 @@ const CartContext = createContext<CartContextType | null>(null);
 // Provider del carrito
 export function CartProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, initialState);
-  const { user, isLoaded } = useUser();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const { restaurantId } = useRestaurant();
 
-  // Establecer clerk_user_id y restaurant_id en cartApi cuando cambien
+  // Establecer user_id y restaurant_id en cartApi cuando cambien
   useEffect(() => {
-    if (isLoaded) {
+    if (!isLoading) {
       cartApi.setClerkUserId(user?.id || null);
     }
-  }, [user, isLoaded]);
+  }, [user, isLoading]);
 
   useEffect(() => {
     cartApi.setRestaurantId(restaurantId);
@@ -149,11 +149,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // Migrar carrito cuando el usuario inicia sesión
   useEffect(() => {
     const migrateCartIfNeeded = async () => {
-      if (isLoaded && user?.id && restaurantId) {
+      if (!isLoading && user?.id && restaurantId) {
         const guestId = cartApi.getGuestIdForUser();
 
         console.log("🔍 Migration check:", {
-          isLoaded,
+          isLoading: isLoading,
           userId: user.id,
           restaurantId,
           guestId,
@@ -195,7 +195,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     migrateCartIfNeeded();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, isLoaded, restaurantId]);
+  }, [user?.id, isLoading, restaurantId]);
 
   // Función para refrescar el carrito desde el backend
   const refreshCart = async () => {

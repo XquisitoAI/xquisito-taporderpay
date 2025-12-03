@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useUser, useClerk } from "@clerk/nextjs";
+import { useAuth } from "../../context/AuthContext";
+import { useRouter } from "next/navigation";
 import {
   User,
   Mail,
@@ -16,8 +17,8 @@ import {
 } from "lucide-react";
 
 export default function ProfileTab() {
-  const { user, isLoaded } = useUser();
-  const { signOut } = useClerk();
+  const { user, profile, isAuthenticated, isLoading, updateProfile, logout } = useAuth();
+  const router = useRouter();
   const [isUpdating, setIsUpdating] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [firstName, setFirstName] = useState("");
@@ -37,34 +38,22 @@ export default function ProfileTab() {
 
   useEffect(() => {
     const loadUserData = async () => {
-      if (!user || !isLoaded) return;
+      if (!profile || isLoading) return;
 
       try {
         setIsLoadingData(true);
 
-        // Actualizar clerk
-        setFirstName(user.firstName || "");
-        setLastName(user.lastName || "");
-        setPhone(user.phoneNumbers?.[0]?.phoneNumber || "");
-        setAge((user.unsafeMetadata?.age as number) || null);
-        setGender((user.unsafeMetadata?.gender as string) || "");
-
-        // Traer la info de backend mas actualizada
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/users/${user.id}`
-        );
-
-        if (response.ok) {
-          const result = await response.json();
-          if (result.success && result.user) {
-            // Actualizar datos a backend
-            setAge(result.user.age || null);
-            setGender(result.user.gender || "");
-            setPhone(
-              result.user.phone || user.phoneNumbers?.[0]?.phoneNumber || ""
-            );
-          }
+        // Load data from profile
+        setFirstName(profile.firstName || "");
+        setLastName(profile.lastName || "");
+        setPhone(profile.phone || "");
+        // Convert birthDate to age if available
+        if (profile.birthDate) {
+          const birthYear = new Date(profile.birthDate).getFullYear();
+          const currentYear = new Date().getFullYear();
+          setAge(currentYear - birthYear);
         }
+        setGender(profile.gender || "");
       } catch (error) {
         console.error("Error loading user data:", error);
       } finally {
@@ -73,57 +62,28 @@ export default function ProfileTab() {
     };
 
     loadUserData();
-  }, [user, isLoaded]);
+  }, [profile, isLoading]);
 
   const handleUpdateProfile = async () => {
-    if (!user) return;
+    if (!profile) return;
 
     setIsUpdating(true);
     try {
-      // Actualizar datos de clerk
-      await user.update({
+      const profileData = {
         firstName: firstName,
         lastName: lastName,
-        unsafeMetadata: {
-          ...user.unsafeMetadata,
-          age: age,
-          gender: gender,
-        },
-      });
-
-      // Actualizar datos a base de datos
-      const userData = {
-        clerkUserId: user.id,
-        email: user.primaryEmailAddress?.emailAddress,
-        firstName: firstName,
-        lastName: lastName,
-        age: age,
-        gender: gender,
         phone: phone,
+        gender: gender,
+        // Convert age to birth date
+        birthDate: age ? new Date(new Date().getFullYear() - age, 0, 1).toISOString() : undefined,
       };
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(userData),
-      });
+      const response = await updateProfile(profileData);
 
-      const result = await response.json();
-
-      if (result.success) {
-        await user.reload();
-
-        setFirstName(firstName);
-        setLastName(lastName);
-        setAge(age);
-        setGender(gender);
-        setPhone(phone);
-
+      if (response.success) {
         alert("Perfil actualizado correctamente");
       } else {
-        throw new Error("Error al actualizar en el backend");
+        throw new Error("Error al actualizar el perfil");
       }
     } catch (error) {
       console.error("Error al actualizar el perfil:", error);
@@ -134,14 +94,15 @@ export default function ProfileTab() {
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!user || !e.target.files || !e.target.files[0]) return;
+    if (!profile || !e.target.files || !e.target.files[0]) return;
 
     const file = e.target.files[0];
     setIsUpdating(true);
 
     try {
-      await user.setProfileImage({ file });
-      alert("Foto actualizada correctamente");
+      // TODO: Implement photo upload with new backend
+      console.log("Photo upload not yet implemented with new auth system");
+      alert("Funcionalidad de foto no disponible aún");
     } catch (error) {
       console.error("Error al actualizar la foto:", error);
       alert("Error al actualizar la foto");
@@ -151,113 +112,11 @@ export default function ProfileTab() {
   };
 
   const handleUpdatePassword = async () => {
-    if (!user) return;
-
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      alert("Por favor completa todos los campos de contraseña");
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      alert("Las contraseñas nuevas no coinciden");
-      return;
-    }
-
-    if (newPassword.length < 8) {
-      alert("La contraseña debe tener al menos 8 caracteres");
-      return;
-    }
-
-    setIsUpdatingPassword(true);
-    try {
-      if (!user.passwordEnabled) {
-        alert(
-          "No puedes cambiar la contraseña porque tu cuenta fue creada con un proveedor social (Google, Facebook, etc.)"
-        );
-        setIsUpdatingPassword(false);
-        return;
-      }
-
-      try {
-        const emailAddress = user.primaryEmailAddress?.emailAddress;
-
-        if (!emailAddress) {
-          alert("No se pudo verificar tu email. Por favor intenta nuevamente.");
-          return;
-        }
-
-        await fetch("/api/verify-password", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: emailAddress,
-            password: currentPassword,
-          }),
-        });
-      } catch (verifyError) {
-        console.log("Re-authentication attempt:", verifyError);
-      }
-
-      // Actualizar password
-      await user.updatePassword({
-        currentPassword: currentPassword,
-        newPassword: newPassword,
-        signOutOfOtherSessions: false,
-      });
-
-      alert("Contraseña actualizada correctamente");
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      setIsPasswordModalOpen(false);
-    } catch (error: any) {
-      console.error("Error al actualizar la contraseña:", error);
-
-      // Error messages
-      if (error.errors && error.errors[0]?.message) {
-        const errorMessage = error.errors[0].message;
-        const errorCode = error.errors[0]?.code;
-
-        if (
-          errorMessage.includes("verification") ||
-          errorCode === "form_password_incorrect"
-        ) {
-          alert(
-            "La contraseña actual es incorrecta. Por favor verifica e intenta nuevamente."
-          );
-        } else if (
-          errorMessage.includes("current_password_invalid") ||
-          errorMessage.includes("incorrect")
-        ) {
-          alert(
-            "La contraseña actual es incorrecta. Por favor verifica e intenta nuevamente."
-          );
-        } else if (errorMessage.includes("password_pwned")) {
-          alert(
-            "Esta contraseña ha sido encontrada en filtraciones de datos y no es segura. Por favor elige otra contraseña."
-          );
-        } else if (errorMessage.includes("password_too_common")) {
-          alert(
-            "Esta contraseña es muy común. Por favor elige una contraseña más segura."
-          );
-        } else {
-          alert(errorMessage);
-        }
-      } else if (error.message) {
-        alert(error.message);
-      } else {
-        alert(
-          "Error al actualizar la contraseña. Verifica tu contraseña actual e intenta nuevamente."
-        );
-      }
-    } finally {
-      setIsUpdatingPassword(false);
-    }
+    alert("Cambio de contraseña no disponible con autenticación por teléfono");
+    setIsPasswordModalOpen(false);
   };
 
-  if (!isLoaded || !user || isLoadingData) {
+  if (isLoading || !profile || isLoadingData) {
     return (
       <div className="flex items-center justify-center py-12 md:py-16 lg:py-20">
         <Loader2 className="size-8 md:size-10 lg:size-12 animate-spin text-teal-600" />
@@ -272,7 +131,7 @@ export default function ProfileTab() {
         <div className="relative group mb-4">
           <div className="size-28 md:size-32 lg:size-36 rounded-full bg-gray-200 overflow-hidden border-2 md:border-4 border-teal-600">
             <img
-              src={user.imageUrl}
+              src={profile.photoUrl || '/default-avatar.png'}
               alt="Profile"
               className="w-full h-full object-cover"
             />
@@ -301,7 +160,7 @@ export default function ProfileTab() {
           Correo electrónico
         </label>
         <div className="w-full px-4 md:px-5 lg:px-6 py-3 md:py-4 lg:py-5 bg-gray-100 border border-gray-300 rounded-lg text-gray-600 text-base md:text-lg lg:text-xl">
-          {user.primaryEmailAddress?.emailAddress}
+          {profile.email || 'No disponible'}
         </div>
       </div>
 
@@ -605,7 +464,10 @@ export default function ProfileTab() {
                 Cancelar
               </button>
               <button
-                onClick={() => signOut()}
+                onClick={async () => {
+                  await logout();
+                  router.push('/');
+                }}
                 className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 md:py-3 text-base md:text-lg rounded-full cursor-pointer transition-colors"
               >
                 Cerrar sesión

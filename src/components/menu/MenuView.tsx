@@ -4,7 +4,7 @@ import MenuHeader from "../headers/MenuHeader";
 import MenuCategory from "./MenuCategory";
 import { Search, ShoppingCart, Settings } from "lucide-react";
 import { useState, useMemo } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "../../context/AuthContext";
 import { useUserData } from "../../context/userDataContext";
 import { useTableNavigation } from "../../hooks/useTableNavigation";
 import { useCart } from "../../context/CartContext";
@@ -18,7 +18,7 @@ interface MenuViewProps {
 export default function MenuView({ tableNumber }: MenuViewProps) {
   const [filter, setFilter] = useState("Todo");
   const [searchQuery, setSearchQuery] = useState("");
-  const { user, isLoaded } = useUser();
+  const { user, profile, isAuthenticated, isLoading } = useAuth();
   const { signUpData } = useUserData();
   const { navigateWithTable } = useTableNavigation();
   const { state: cartState } = useCart();
@@ -37,8 +37,8 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
     return categories;
   }, [menu]);
 
-  // Get gender Clerk
-  const gender = signUpData?.gender || user?.unsafeMetadata?.gender;
+  // Get gender from profile or signUpData
+  const gender = signUpData?.gender;
   const welcomeMessage = user
     ? gender === "female"
       ? "Bienvenida"
@@ -126,11 +126,11 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
             {/* Settings Icon */}
             <div
               onClick={() => {
-                if (user && isLoaded) {
+                if (isAuthenticated) {
                   navigateWithTable("/dashboard");
                 } else {
                   sessionStorage.setItem("signInFromMenu", "true");
-                  navigateWithTable("/sign-in");
+                  navigateWithTable("/auth");
                 }
               }}
               className="bg-white rounded-full p-1.5 md:p-2 lg:p-2.5 border border-gray-400 shadow-sm cursor-pointer hover:bg-gray-50 transition-colors"
@@ -170,7 +170,7 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
             </div>
             <h1 className="text-black text-3xl md:text-4xl lg:text-5xl font-medium mt-3 md:mt-5 mb-6 md:mb-8">
               ¡{welcomeMessage}
-              {user?.firstName ? ` ${user.firstName}` : ""}!
+              {profile?.firstName ? ` ${profile.firstName}` : ""}!
             </h1>
           </div>
 

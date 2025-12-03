@@ -6,18 +6,18 @@ import { useTable } from "../context/TableContext";
 import { useCart } from "../context/CartContext";
 import { useTableNavigation } from "../hooks/useTableNavigation";
 import MenuHeaderBack from "./headers/MenuHeaderBack";
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "../context/AuthContext";
 
 export default function CartView() {
   const { state: tableState } = useTable();
   const { state: cartState, updateQuantity } = useCart();
   const { navigateWithTable } = useTableNavigation();
-  const { isLoaded, isSignedIn, user } = useUser();
+  const { isAuthenticated, isLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleOrder = async () => {
     // Si el usuario está loggeado, ir directamente a card-selection
-    if (isLoaded && isSignedIn && user) {
+    if (!isLoading && isAuthenticated) {
       setIsSubmitting(true);
       try {
         navigateWithTable("/card-selection");

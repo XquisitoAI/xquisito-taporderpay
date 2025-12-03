@@ -124,10 +124,29 @@ class ApiService {
     this.authToken = undefined;
   }
 
+  // Clear all session data including table context
+  clearAllSessionData() {
+    this.clearAuthToken();
+    // Clear session storage
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("pendingTableRedirect");
+      sessionStorage.removeItem("signupFromPaymentFlow");
+      sessionStorage.removeItem("signupFromPaymentSuccess");
+      sessionStorage.removeItem("signInFromMenu");
+      sessionStorage.removeItem("signupFromOrder");
+      sessionStorage.removeItem("pendingRestaurantId");
+      // Clear localStorage guest data
+      localStorage.removeItem("xquisito-guest-id");
+      localStorage.removeItem("xquisito-table-number");
+      localStorage.removeItem("xquisito-restaurant-id");
+    }
+  }
+
   private async makeRequest<T = any>(
     endpoint: string,
     options: RequestInit = {},
-    authToken?: string
+    authToken?: string,
+    isRetry: boolean = false
   ): Promise<ApiResponse<T>> {
     try {
       const url = `${this.baseURL}${endpoint}`;
@@ -163,6 +182,69 @@ class ApiService {
       });
 
       const data = await response.json();
+
+      // Handle 401 Unauthorized - Token expired
+      if (
+        response.status === 401 &&
+        !isRetry &&
+        typeof window !== "undefined"
+      ) {
+        console.log("🔄 Token expired (401), attempting to refresh...");
+
+        const refreshToken = localStorage.getItem("xquisito_refresh_token");
+        if (refreshToken) {
+          try {
+            // Attempt to refresh the token
+            const refreshResponse = await fetch(
+              `${this.baseURL}/auth/refresh`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ refresh_token: refreshToken }),
+              }
+            );
+
+            const refreshData = await refreshResponse.json();
+
+            if (
+              refreshResponse.ok &&
+              refreshData.success &&
+              refreshData.data?.session?.access_token
+            ) {
+              // Store new tokens
+              const newAccessToken = refreshData.data.session.access_token;
+              const newRefreshToken = refreshData.data.session.refresh_token;
+
+              localStorage.setItem("xquisito_access_token", newAccessToken);
+              localStorage.setItem("xquisito_refresh_token", newRefreshToken);
+              this.authToken = newAccessToken;
+
+              console.log(
+                "✅ Token refreshed successfully, retrying original request"
+              );
+
+              // Retry the original request with the new token
+              return this.makeRequest<T>(
+                endpoint,
+                options,
+                newAccessToken,
+                true
+              );
+            } else {
+              console.log("❌ Token refresh failed, logging out user");
+              this.handleAuthFailure();
+            }
+          } catch (refreshError) {
+            console.error("❌ Error refreshing token:", refreshError);
+            this.handleAuthFailure();
+          }
+        } else {
+          console.log("❌ No refresh token available, logging out user");
+          this.handleAuthFailure();
+        }
+      }
 
       if (!response.ok) {
         return {
@@ -736,6 +818,50 @@ class ApiService {
     return this.makeRequest(`/restaurants/reviews/${reviewId}`, {
       method: "DELETE",
     });
+  }
+
+  // ===============================================
+  // GENERIC REQUEST METHOD
+  // ===============================================
+
+  /**
+   * Generic request method for external use
+   */
+  async request<T = any>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<ApiResponse<T>> {
+    return this.makeRequest<T>(endpoint, options);
+  }
+
+  /**
+   * Handle authentication failures by clearing tokens and redirecting to auth
+   */
+  private handleAuthFailure(): void {
+    console.log("🚨 Authentication failure - clearing tokens and redirecting to auth");
+
+    // Clear all auth-related tokens
+    this.authToken = undefined;
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("xquisito_access_token");
+      localStorage.removeItem("xquisito_refresh_token");
+      sessionStorage.removeItem("was_authenticated");
+
+      // Redirect to auth page if not already there
+      if (!window.location.pathname.includes('/auth')) {
+        const currentUrl = new URL(window.location.href);
+        const restaurantId = currentUrl.pathname.split('/')[1];
+        const tableNumber = currentUrl.searchParams.get('table');
+
+        let redirectUrl = `/${restaurantId}/auth`;
+        if (tableNumber) {
+          redirectUrl += `?table=${tableNumber}`;
+        }
+
+        console.log("🔄 Redirecting to:", redirectUrl);
+        window.location.href = redirectUrl;
+      }
+    }
   }
 }
 

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
+import { AuthProvider } from "@/context/AuthContext";
 import { RestaurantProvider } from "@/context/RestaurantContext";
 import { TableProvider } from "@/context/TableContext";
 import { CartProvider } from "@/context/CartContext";
@@ -108,12 +108,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider signUpFallbackRedirectUrl="" signInFallbackRedirectUrl="">
-      <html lang="es">
-        <body
-          className={`${helveticaNeue.variable} antialiased`}
-          style={{ fontFamily: "var(--font-helvetica-neue)" }}
-        >
+    <html lang="es">
+      <body
+        className={`${helveticaNeue.variable} antialiased`}
+        style={{ fontFamily: "var(--font-helvetica-neue)" }}
+      >
+        <AuthProvider>
           <RestaurantProvider>
             <CartProvider>
               <TableProvider>
@@ -125,8 +125,8 @@ export default function RootLayout({
               </TableProvider>
             </CartProvider>
           </RestaurantProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+        </AuthProvider>
+      </body>
+    </html>
   );
 }

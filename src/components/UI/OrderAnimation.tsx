@@ -6,7 +6,7 @@ import { CartItem } from "../../context/CartContext";
 import { useRestaurant } from "../../context/RestaurantContext";
 import { useTableNavigation } from "@/hooks/useTableNavigation";
 import Loader from "@/components/UI/Loader";
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "../../context/AuthContext";
 
 interface OrderAnimationProps {
   userName?: string;
@@ -22,17 +22,17 @@ const OrderAnimation = ({
   const { navigateWithTable } = useTableNavigation();
   const { state } = useTable();
   const { restaurant, loading } = useRestaurant();
-  const { user } = useUser();
+  const { profile } = useAuth();
   const [animationState, setAnimationState] = useState<
     "circle" | "content" | "greenCircle" | "success"
   >("circle");
   const [logoColorful, setLogoColorful] = useState(false);
 
-  const displayName = userName || user?.firstName || "Usuario";
+  const displayName = userName || profile?.firstName || "Usuario";
   const displayItems = orderedItems || [];
   const displayRestaurant = restaurant?.name || "Restaurante";
 
-  const userImage = user?.imageUrl;
+  const userImage = profile?.photoUrl;
   const hasUserImage = !!userImage;
 
   useEffect(() => {

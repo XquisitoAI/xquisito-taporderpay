@@ -6,7 +6,7 @@ import { useTableNavigation } from "@/hooks/useTableNavigation";
 import { usePayment } from "@/context/PaymentContext";
 import { useRestaurant } from "@/context/RestaurantContext";
 import { useEffect, useState } from "react";
-import { useUser, useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/context/AuthContext";
 import MenuHeaderBack from "@/components/headers/MenuHeaderBack";
 import { Plus, Trash2, Loader2, CircleAlert } from "lucide-react";
 import { getCardTypeIcon } from "@/utils/cardIcons";
@@ -30,8 +30,7 @@ export default function CardSelectionPage() {
   const { navigateWithTable, tableNumber } = useTableNavigation();
   const { hasPaymentMethods, paymentMethods, deletePaymentMethod } =
     usePayment();
-  const { user } = useUser();
-  const { getToken } = useAuth();
+  const { user, profile } = useAuth();
 
   // Tarjeta por defecto del sistema para todos los usuarios
   const defaultSystemCard = {
@@ -153,13 +152,8 @@ export default function CardSelectionPage() {
           "💳 Sistema: Procesando pago con tarjeta del sistema (sin EcartPay)"
         );
 
-        // Configurar token de autenticación si el usuario está logueado
-        if (user?.id) {
-          const token = await getToken();
-          if (token) {
-            apiService.setAuthToken(token);
-          }
-        }
+        // Note: Authentication token is now managed by AuthContext
+        // No need to manually set token here
 
         // Continuar con la creación de dish orders directamente
         let customerPhone: string | null = null;
@@ -183,8 +177,8 @@ export default function CardSelectionPage() {
 
         // Crear dish orders individuales para cada item del carrito
         const customerName =
-          user?.fullName || user?.firstName || cartState.userName || "Invitado";
-        const customerEmail = user?.emailAddresses?.[0]?.emailAddress || null;
+          profile?.firstName || cartState.userName || "Invitado";
+        const customerEmail = profile?.email || null;
 
         let firstTapOrderId: string | null = null;
 
@@ -328,7 +322,7 @@ export default function CardSelectionPage() {
         // Guardar datos antes de limpiar el carrito
         setCompletedOrderItems([...cartState.items]);
         const userName =
-          user?.firstName || user?.fullName || cartState.userName || "Usuario";
+          profile?.firstName || cartState.userName || "Usuario";
         setCompletedUserName(userName);
 
         // Preparar y guardar detalles del pago para payment-success (tarjeta del sistema)
@@ -391,19 +385,11 @@ export default function CardSelectionPage() {
       }
 
       // Para tarjetas reales, continuar con el flujo normal de EcartPay
-      // Configurar token de autenticación si el usuario está logueado
+      // Note: Authentication token is now managed by AuthContext
       if (user?.id) {
-        const token = await getToken();
-        if (token) {
-          apiService.setAuthToken(token);
-          console.log("🔑 Auth token configured for payment:", {
-            userId: user.id,
-            tokenLength: token.length,
-            tokenPreview: token.substring(0, 20) + "...",
-          });
-        } else {
-          console.warn("⚠️ User is logged in but no token available");
-        }
+        console.log("🔑 User authenticated:", {
+          userId: user.id,
+        });
       } else {
         console.log("👥 No user logged in, will process as guest");
       }
@@ -413,7 +399,7 @@ export default function CardSelectionPage() {
         paymentMethodId: selectedPaymentMethodId!,
         amount: totalAmount,
         currency: "MXN",
-        description: `Pago Mesa ${tableNumber} - ${user?.fullName || "Invitado"}`,
+        description: `Pago Mesa ${tableNumber} - ${profile?.firstName || "Invitado"}`,
         orderId: `order-${Date.now()}`,
         tableNumber: tableNumber,
         restaurantId,
@@ -452,8 +438,8 @@ export default function CardSelectionPage() {
 
       // Paso 3: Crear dish orders individuales para cada item del carrito
       const customerName =
-        user?.fullName || user?.firstName || cartState.userName || "Invitado";
-      const customerEmail = user?.emailAddresses?.[0]?.emailAddress || null;
+        profile?.firstName || cartState.userName || "Invitado";
+      const customerEmail = profile?.email || null;
 
       let firstTapOrderId: string | null = null;
 
@@ -606,9 +592,9 @@ export default function CardSelectionPage() {
 
       // Guardar datos antes de limpiar el carrito
       setCompletedOrderItems([...cartState.items]);
-      // Obtener nombre del usuario (de Clerk si está loggeado, o del estado si es guest)
+      // Obtener nombre del usuario (del perfil si está loggeado, o del estado si es guest)
       const userName =
-        user?.firstName || user?.fullName || cartState.userName || "Usuario";
+        profile?.firstName || cartState.userName || "Usuario";
       setCompletedUserName(userName);
 
       // Preparar y guardar detalles del pago para payment-success

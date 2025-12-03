@@ -16,7 +16,7 @@ import {
   CustomField,
 } from "@/interfaces/menuItemData";
 import { reviewsApi, Review, ReviewStats } from "@/services/reviewsApi";
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/context/AuthContext";
 
 export default function DishDetailPage() {
   const params = useParams();
@@ -47,7 +47,7 @@ export default function DishDetailPage() {
   const [myReview, setMyReview] = useState<Review | null>(null);
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [isLoadingReviews, setIsLoadingReviews] = useState(true);
-  const { isLoaded, user } = useUser();
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   // Intentar cargar datos del menú del contexto de forma sincrónica (precarga instantánea)
   const initialDishData = useMemo(() => {
@@ -317,8 +317,7 @@ export default function DishDetailPage() {
 
     try {
       // Determinar si el usuario está autenticado
-      const isAuthenticated = isLoaded && user;
-      const userId = isAuthenticated ? user.id : null;
+      const userId = isAuthenticated ? user?.id : null;
 
       // Solo usar guestId si NO está autenticado
       const guestId =
@@ -361,8 +360,7 @@ export default function DishDetailPage() {
       let response;
 
       // Determinar si el usuario está autenticado
-      const isAuthenticated = isLoaded && user;
-      const userId = isAuthenticated ? user.id : null;
+      const userId = isAuthenticated ? user?.id : null;
 
       // Solo usar guestId si NO está autenticado
       const guestId =
