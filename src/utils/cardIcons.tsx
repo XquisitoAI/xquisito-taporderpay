@@ -8,12 +8,12 @@ import {
 import { CreditCard } from "lucide-react";
 
 export function getCardTypeIcon(
-  cardType: string,
+  cardType: string | undefined | null,
   size: "small" | "medium" = "medium",
   customWidth?: number,
   customHeight?: number
 ): JSX.Element {
-  const type = cardType.toLowerCase() || "unknown";
+  const type = cardType?.toLowerCase() || "unknown";
 
   // Define size presets
   const sizes = {

@@ -130,12 +130,8 @@ function AddCardContent() {
     try {
       // Configure API service based on user type
       if (user) {
-        // For registered users, set auth token
+        // For registered users, auth token is automatically handled by AuthContext and apiService
         console.log("💳 Adding card for registered user:", user.id);
-        const token = await getToken();
-        if (token) {
-          apiService.setAuthToken(token);
-        }
       } else if (isGuest && guestId && tableNumber) {
         // For guests only (when no registered user)
         console.log("💳 Adding card for guest:", guestId);
