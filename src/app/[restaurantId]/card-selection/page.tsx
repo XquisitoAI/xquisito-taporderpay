@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { authService } from "@/services/auth.service";
 import MenuHeaderBack from "@/components/headers/MenuHeaderBack";
-import { Plus, Trash2, Loader2, CircleAlert } from "lucide-react";
+import { Plus, Trash2, Loader2, CircleAlert, X } from "lucide-react";
 import { getCardTypeIcon } from "@/utils/cardIcons";
 import Loader from "@/components/UI/Loader";
 import OrderAnimation from "@/components/UI/OrderAnimation";
@@ -38,7 +38,7 @@ export default function CardSelectionPage() {
     id: "system-default-card",
     lastFourDigits: "1234",
     cardBrand: "visa",
-    cardType: "debit",
+    cardType: "credit",
     isDefault: true,
     isSystemCard: true,
   };
@@ -64,6 +64,8 @@ export default function CardSelectionPage() {
   const [customTip, setCustomTip] = useState("");
   const [showTotalModal, setShowTotalModal] = useState(false);
   const [showCustomTipInput, setShowCustomTipInput] = useState(false);
+  const [showPaymentOptionsModal, setShowPaymentOptionsModal] = useState(false);
+  const [selectedMSI, setSelectedMSI] = useState<number | null>(null);
 
   // Estados para tarjetas
   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState<
@@ -784,12 +786,58 @@ export default function CardSelectionPage() {
       console.log("✅ Payment method deleted successfully");
     } catch (error) {
       console.error("❌ Error deleting payment method:", error);
-      const errorMessage = error instanceof Error ? error.message : "Error desconocido";
+      const errorMessage =
+        error instanceof Error ? error.message : "Error desconocido";
       alert(`Error al eliminar la tarjeta: ${errorMessage}`);
     } finally {
       setDeletingCardId(null);
     }
   };
+
+  // Calcular el total a mostrar según la opción MSI seleccionada
+  const getDisplayTotal = () => {
+    if (selectedMSI === null) {
+      return totalAmount;
+    }
+
+    // Obtener el tipo de tarjeta seleccionada
+    const selectedMethod = allPaymentMethods.find(
+      (pm) => pm.id === selectedPaymentMethodId
+    );
+    const cardBrand = selectedMethod?.cardBrand;
+
+    // Configuración de MSI según el tipo de tarjeta
+    const msiOptions =
+      cardBrand === "amex"
+        ? [
+            { months: 3, rate: 3.25 },
+            { months: 6, rate: 6.25 },
+            { months: 9, rate: 8.25 },
+            { months: 12, rate: 10.25 },
+            { months: 15, rate: 13.25 },
+            { months: 18, rate: 15.25 },
+            { months: 21, rate: 17.25 },
+            { months: 24, rate: 19.25 },
+          ]
+        : [
+            { months: 3, rate: 3.5 },
+            { months: 6, rate: 5.5 },
+            { months: 9, rate: 8.5 },
+            { months: 12, rate: 11.5 },
+            { months: 18, rate: 15.0 },
+          ];
+
+    // Encontrar la opción seleccionada
+    const selectedOption = msiOptions.find((opt) => opt.months === selectedMSI);
+    if (!selectedOption) return totalAmount;
+
+    // Calcular comisión e IVA
+    const commission = totalAmount * (selectedOption.rate / 100);
+    const ivaCommission = commission * 0.16;
+    return totalAmount + commission + ivaCommission;
+  };
+
+  const displayTotal = getDisplayTotal();
 
   if (isLoadingInitial) {
     return <Loader />;
@@ -799,9 +847,9 @@ export default function CardSelectionPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">
       <MenuHeaderBack />
 
-      <div className="px-4 md:px-6 lg:px-8 w-full fixed bottom-0 left-0 right-0">
-        <div className="flex-1 flex flex-col relative">
-          <div className="left-4 right-4 bg-gradient-to-tl from-[#0a8b9b] to-[#1d727e] rounded-t-4xl translate-y-7 z-0">
+      <div className="flex-1 w-full overflow-y-auto">
+        <div className="flex flex-col relative px-4 md:px-6 lg:px-8 pt-4 md:pt-6">
+          <div className="bg-gradient-to-tl from-[#0a8b9b] to-[#1d727e] rounded-t-4xl mb-[-28px] z-0">
             <div className="py-6 md:py-8 lg:py-10 px-8 md:px-10 lg:px-12 flex flex-col justify-center">
               <h1 className="font-medium text-white text-3xl md:text-4xl lg:text-5xl leading-7 md:leading-9 lg:leading-tight mt-2 md:mt-3 mb-6 md:mb-8">
                 Selecciona tu método de pago
@@ -907,10 +955,51 @@ export default function CardSelectionPage() {
                     onClick={() => setShowTotalModal(true)}
                   />
                 </div>
-                <span className="font-medium text-black text-base md:text-lg lg:text-xl">
-                  ${totalAmount.toFixed(2)} MXN
-                </span>
+                <div className="text-right">
+                  {selectedMSI !== null ? (
+                    <>
+                      <span className="font-medium text-black text-base md:text-lg lg:text-xl">
+                        ${(displayTotal / selectedMSI).toFixed(2)} MXN x{" "}
+                        {selectedMSI} meses
+                      </span>
+                    </>
+                  ) : (
+                    <span className="font-medium text-black text-base md:text-lg lg:text-xl">
+                      ${displayTotal.toFixed(2)} MXN
+                    </span>
+                  )}
+                </div>
               </div>
+
+              {/* Payment Options - Solo mostrar si es tarjeta de crédito */}
+              {(() => {
+                const selectedMethod = allPaymentMethods.find(
+                  (pm) => pm.id === selectedPaymentMethodId
+                );
+                return selectedMethod?.cardType === "credit" ? (
+                  <div
+                    className="py-2 cursor-pointer"
+                    onClick={() => setShowPaymentOptionsModal(true)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-black text-base md:text-lg lg:text-xl">
+                        Pago a meses
+                      </span>
+                      <div
+                        className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                          selectedMSI !== null
+                            ? "border-[#eab3f4] bg-[#eab3f4]"
+                            : "border-gray-300"
+                        }`}
+                      >
+                        {selectedMSI !== null && (
+                          <div className="w-full h-full rounded-full bg-white scale-50"></div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ) : null;
+              })()}
             </div>
 
             {/* Métodos de pago guardados - Mostrar siempre (incluye tarjeta del sistema) */}
@@ -1012,11 +1101,11 @@ export default function CardSelectionPage() {
       {/* Modal de resumen del total */}
       {showTotalModal && (
         <div
-          className="fixed inset-0 flex items-end justify-center"
+          className="fixed inset-0 flex items-end justify-center backdrop-blur-sm"
           style={{ zIndex: 99999 }}
         >
           <div
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-black/20"
             onClick={() => setShowTotalModal(false)}
           ></div>
           <div className="relative bg-white rounded-t-4xl w-full mx-4 md:mx-6 lg:mx-8">
@@ -1029,7 +1118,7 @@ export default function CardSelectionPage() {
                   onClick={() => setShowTotalModal(false)}
                   className="p-1 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
                 >
-                  ✕
+                  <X className="size-5 text-gray-500" />
                 </button>
               </div>
             </div>
@@ -1067,6 +1156,197 @@ export default function CardSelectionPage() {
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de opciones de pago */}
+      {showPaymentOptionsModal && (
+        <div
+          className="fixed inset-0 flex items-end justify-center backdrop-blur-sm"
+          style={{ zIndex: 99999 }}
+        >
+          {/* Fondo */}
+          <div
+            className="absolute inset-0 bg-black/20"
+            onClick={() => setShowPaymentOptionsModal(false)}
+          ></div>
+
+          {/* Modal */}
+          <div className="relative bg-white rounded-t-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            {/* Titulo */}
+            <div className="px-6 pt-4 sticky top-0 bg-white z-10">
+              <div className="flex items-center justify-between pb-4 border-b border-[#8e8e8e]">
+                <h3 className="text-lg font-semibold text-black">
+                  Opciones de pago
+                </h3>
+                <button
+                  onClick={() => setShowPaymentOptionsModal(false)}
+                  className="p-1 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+                >
+                  <X className="size-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            {/* Contenido */}
+            <div className="px-6 py-4">
+              {(() => {
+                const selectedMethod = allPaymentMethods.find(
+                  (pm) => pm.id === selectedPaymentMethodId
+                );
+                const cardBrand = selectedMethod?.cardBrand;
+
+                // Configuración de MSI según el tipo de tarjeta
+                const msiOptions =
+                  cardBrand === "amex"
+                    ? [
+                        { months: 3, rate: 3.25, minAmount: 0 },
+                        { months: 6, rate: 6.25, minAmount: 0 },
+                        { months: 9, rate: 8.25, minAmount: 0 },
+                        { months: 12, rate: 10.25, minAmount: 0 },
+                        { months: 15, rate: 13.25, minAmount: 0 },
+                        { months: 18, rate: 15.25, minAmount: 0 },
+                        { months: 21, rate: 17.25, minAmount: 0 },
+                        { months: 24, rate: 19.25, minAmount: 0 },
+                      ]
+                    : [
+                        // Visa/Mastercard
+                        { months: 3, rate: 3.5, minAmount: 300 },
+                        { months: 6, rate: 5.5, minAmount: 600 },
+                        { months: 9, rate: 8.5, minAmount: 900 },
+                        { months: 12, rate: 11.5, minAmount: 1200 },
+                        { months: 18, rate: 15.0, minAmount: 1800 },
+                      ];
+
+                return (
+                  <div className="space-y-2.5">
+                    {/* Opción: Pago completo */}
+                    <div
+                      onClick={() => setSelectedMSI(null)}
+                      className={`py-2 px-5 border rounded-full cursor-pointer transition-colors ${
+                        selectedMSI === null
+                          ? "border-teal-500 bg-teal-50"
+                          : "border-black/50 bg-[#f9f9f9] hover:border-gray-400"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <p className="font-medium text-black text-base md:text-lg">
+                            Pago completo
+                          </p>
+                          <p className="text-xs md:text-sm text-gray-600">
+                            ${totalAmount.toFixed(2)} MXN
+                          </p>
+                        </div>
+                        <div
+                          className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                            selectedMSI === null
+                              ? "border-teal-500 bg-teal-500"
+                              : "border-gray-300"
+                          }`}
+                        >
+                          {selectedMSI === null && (
+                            <div className="w-full h-full rounded-full bg-white scale-50"></div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Separador */}
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-gray-300"></div>
+                      </div>
+                      <div className="relative flex justify-center text-sm">
+                        <span className="px-2 bg-white text-gray-500">
+                          Pago a meses
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Opciones MSI */}
+                    {(() => {
+                      const availableOptions = msiOptions.filter(
+                        (option) => totalAmount >= option.minAmount
+                      );
+                      const hasUnavailableOptions =
+                        availableOptions.length < msiOptions.length;
+                      const minAmountNeeded = msiOptions[0]?.minAmount || 0;
+
+                      return (
+                        <>
+                          {availableOptions.map((option) => {
+                            // Calcular comisión e IVA
+                            const commission =
+                              totalAmount * (option.rate / 100);
+                            const ivaCommission = commission * 0.16;
+                            const totalWithCommission =
+                              totalAmount + commission + ivaCommission;
+                            const monthlyPayment =
+                              totalWithCommission / option.months;
+
+                            return (
+                              <div
+                                key={option.months}
+                                onClick={() => setSelectedMSI(option.months)}
+                                className={`py-2 px-5 border rounded-full cursor-pointer transition-colors ${
+                                  selectedMSI === option.months
+                                    ? "border-teal-500 bg-teal-50"
+                                    : "border-black/50 bg-[#f9f9f9] hover:border-gray-400"
+                                }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1">
+                                    <p className="font-medium text-black text-base md:text-lg">
+                                      ${monthlyPayment.toFixed(2)} MXN x{" "}
+                                      {option.months} meses
+                                    </p>
+                                    <p className="text-xs md:text-sm text-gray-600">
+                                      Total ${totalWithCommission.toFixed(2)}{" "}
+                                      MXN
+                                    </p>
+                                  </div>
+                                  <div
+                                    className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                                      selectedMSI === option.months
+                                        ? "border-teal-500 bg-teal-500"
+                                        : "border-gray-300"
+                                    }`}
+                                  >
+                                    {selectedMSI === option.months && (
+                                      <div className="w-full h-full rounded-full bg-white scale-50"></div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+
+                          {hasUnavailableOptions &&
+                            totalAmount < minAmountNeeded && (
+                              <p className="text-xs md:text-sm text-gray-500 text-center mt-2">
+                                Monto mínimo ${minAmountNeeded.toFixed(2)} MXN
+                                para pagos a meses
+                              </p>
+                            )}
+                        </>
+                      );
+                    })()}
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Footer con botón de confirmar */}
+            <div className="px-6 py-4 border-t border-gray-200 sticky bottom-0 bg-white">
+              <button
+                onClick={() => setShowPaymentOptionsModal(false)}
+                className="w-full bg-gradient-to-r from-[#34808C] to-[#173E44] text-white py-3 rounded-full cursor-pointer transition-colors text-base"
+              >
+                Confirmar
+              </button>
             </div>
           </div>
         </div>

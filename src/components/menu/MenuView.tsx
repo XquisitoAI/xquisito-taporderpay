@@ -168,10 +168,15 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
                 className="w-full h-full object-cover"
               />
             </div>
-            <h1 className="text-black text-3xl md:text-4xl lg:text-5xl font-medium mt-3 md:mt-5 mb-6 md:mb-8">
-              ¡{welcomeMessage}
-              {profile?.firstName ? ` ${profile.firstName}` : ""}!
-            </h1>
+            <div className="text-black mt-3 md:mt-5 mb-6 md:mb-8 flex flex-col items-center">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-medium">
+                ¡{welcomeMessage}
+                {profile?.firstName ? ` ${profile.firstName}` : ""}!
+              </h1>
+              <h3 className="mt-1 text-black/70 text-xl md:text-2xl lg:text-3xl">
+                Mesa {tableNumber}
+              </h3>
+            </div>
           </div>
 
           {/* Search Input */}

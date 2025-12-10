@@ -56,16 +56,22 @@ export function getCommissionRates(amount: number): CommissionRates {
       clientPays: 6.0,
       restaurantPays: 2.0,
     };
-  } else if (amount >= 50 && amount < 100) {
+  } else if (amount >= 50 && amount <= 100) {
     return {
       xquisitoTotal: 5.8,
       clientPays: 3.8,
       restaurantPays: 2.0,
     };
-  } else if (amount >= 150) {
+  } else if (amount >= 101 && amount <= 150) {
     return {
       xquisitoTotal: 4.2,
       clientPays: 2.2,
+      restaurantPays: 2.0,
+    };
+  } else if (amount > 150) {
+    return {
+      xquisitoTotal: 4.0,
+      clientPays: 2.0,
       restaurantPays: 2.0,
     };
   } else {

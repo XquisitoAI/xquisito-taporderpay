@@ -9,8 +9,6 @@ import { useRestaurant } from "@/context/RestaurantContext";
 import { useAuth } from "@/context/AuthContext";
 import { useTableNavigation } from "@/hooks/useTableNavigation";
 
-
-
 type Step = "phone" | "verify" | "profile";
 
 interface Country {
@@ -152,13 +150,13 @@ export default function AuthPage() {
 
     if (isFromOrder && tableNumber) {
       // User signed in/up from order, redirect to payment-options
-      navigateWithTable("/payment-options");
+      navigateWithTable("/card-selection");
     } else if (isFromMenu && tableNumber) {
       // User signed in from MenuView settings, redirect to dashboard
       navigateWithTable("/dashboard");
     } else if (isFromPaymentFlow && tableNumber) {
       // User signed up during payment flow, redirect to payment-options
-      navigateWithTable("/payment-options");
+      navigateWithTable("/card-selection");
     } else if (isFromPaymentSuccess) {
       // User signed up from payment-success, redirect to dashboard
       navigateWithTable("/dashboard");

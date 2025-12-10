@@ -321,6 +321,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
       if (response.success) {
         dispatch({ type: "CLEAR_CART" });
+        // Refrescar desde el backend para asegurar sincronización
+        await refreshCart();
       } else {
         console.error("Error clearing cart:", response.error);
         dispatch({ type: "SET_LOADING", payload: false });
@@ -348,11 +350,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Cargar carrito al montar el componente o cuando cambie el restaurante
   useEffect(() => {
-    if (restaurantId) {
+    if (restaurantId && !isLoading) {
       refreshCart();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restaurantId]);
+  }, [restaurantId, isLoading]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
