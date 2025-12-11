@@ -8,7 +8,7 @@ import React, {
   ReactNode,
 } from "react";
 import { MenuItemData } from "../interfaces/menuItemData";
-import { cartApi, CartItem as ApiCartItem } from "../services/cartApi";
+import { cartApi, CartItem as ApiCartItem } from "../services/cart.service";
 import { useAuth } from "./AuthContext";
 import { useRestaurant } from "./RestaurantContext";
 
@@ -132,8 +132,8 @@ const CartContext = createContext<CartContextType | null>(null);
 // Provider del carrito
 export function CartProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, initialState);
-  const { user, isAuthenticated, isLoading } = useAuth();
-  const { restaurantId } = useRestaurant();
+  const { user, isLoading, isAuthenticated } = useAuth();
+  const { restaurantId, branchNumber } = useRestaurant();
 
   // Establecer user_id y restaurant_id en cartApi cuando cambien
   useEffect(() => {
@@ -146,18 +146,34 @@ export function CartProvider({ children }: { children: ReactNode }) {
     cartApi.setRestaurantId(restaurantId);
   }, [restaurantId]);
 
+  useEffect(() => {
+    cartApi.setBranchNumber(branchNumber);
+  }, [branchNumber]);
+
   // Migrar carrito cuando el usuario inicia sesión
   useEffect(() => {
     const migrateCartIfNeeded = async () => {
+      console.log("🔍 Migration useEffect triggered:", {
+        isLoading,
+        hasUser: !!user?.id,
+        userId: user?.id,
+        restaurantId,
+        isAuthenticated,
+      });
+
       if (!isLoading && user?.id && restaurantId) {
         const guestId = cartApi.getGuestIdForUser();
 
-        console.log("🔍 Migration check:", {
+        console.log("🔍 Migration check - detailed:", {
           isLoading: isLoading,
           userId: user.id,
           restaurantId,
           guestId,
           hasGuestId: !!guestId,
+          localStorageGuestId:
+            typeof window !== "undefined"
+              ? localStorage.getItem("xquisito-guest-id")
+              : null,
         });
 
         if (guestId) {
@@ -172,7 +188,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
             if (response.success && response.data) {
               console.log(
-                `✅ Cart migrated successfully: ${response.data.items_migrated} items`
+                `✅ Cart migrated successfully: ${response.data.items_migrated} items migrated`
               );
 
               // Limpiar el guest_id del localStorage después de la migración exitosa
@@ -185,24 +201,35 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
               // Refrescar el carrito después de la migración
               await refreshCart();
+              console.log("🔄 Cart refreshed after migration");
             } else {
               console.warn(
                 "⚠️ Migration completed but no data returned:",
                 response
               );
+              // Refrescar el carrito de todos modos
+              await refreshCart();
             }
           } catch (error) {
             console.error("❌ Error migrating cart:", error);
           }
         } else {
-          console.log("ℹ️ No guest_id found, skipping migration");
+          console.log(
+            "ℹ️ No guest_id found in localStorage, skipping migration"
+          );
         }
+      } else {
+        console.log("⏸️ Conditions not met for migration:", {
+          isLoadingCheck: !isLoading,
+          userCheck: !!user?.id,
+          restaurantIdCheck: !!restaurantId,
+        });
       }
     };
 
     migrateCartIfNeeded();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, isLoading, restaurantId]);
+  }, [user?.id, isLoading, restaurantId, isAuthenticated]);
 
   // Función para refrescar el carrito desde el backend
   const refreshCart = async () => {

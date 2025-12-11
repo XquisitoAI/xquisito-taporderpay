@@ -3,11 +3,11 @@
 import { useAuth } from "@/context/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
-import { QrCode } from "lucide-react";
 
-// Restaurant ID por defecto para testing
+// Restaurant ID y Branch por defecto para testing
 const DEFAULT_RESTAURANT_ID = 5;
-const DEFAULT_TABLE = 20;
+const DEFAULT_BRANCH_NUMBER = 1;
+const DEFAULT_TABLE = 2;
 
 export default function Home() {
   const router = useRouter();
@@ -49,7 +49,9 @@ export default function Home() {
       sessionStorage.removeItem("signupFromCart");
       sessionStorage.removeItem("pendingTableRedirect");
       sessionStorage.removeItem("pendingRestaurantId");
-      router.replace(`/${restaurantId}/card-selection?table=${storedTable}`);
+      router.replace(
+        `/${restaurantId}/${DEFAULT_BRANCH_NUMBER}/card-selection?table=${storedTable}`
+      );
       return;
     }
 
@@ -58,7 +60,9 @@ export default function Home() {
       sessionStorage.removeItem("signInFromMenu");
       sessionStorage.removeItem("pendingTableRedirect");
       sessionStorage.removeItem("pendingRestaurantId");
-      router.replace(`/${restaurantId}/dashboard?table=${storedTable}`);
+      router.replace(
+        `/${restaurantId}/${DEFAULT_BRANCH_NUMBER}/dashboard?table=${storedTable}`
+      );
       return;
     }
 
@@ -67,7 +71,9 @@ export default function Home() {
       sessionStorage.removeItem("pendingTableRedirect");
       sessionStorage.removeItem("signupFromPaymentFlow");
       sessionStorage.removeItem("pendingRestaurantId");
-      router.replace(`/${restaurantId}/card-selection?table=${storedTable}`);
+      router.replace(
+        `/${restaurantId}/${DEFAULT_BRANCH_NUMBER}/card-selection?table=${storedTable}`
+      );
       return;
     }
 
@@ -75,22 +81,26 @@ export default function Home() {
       // User signed up from payment-success, redirect to dashboard
       sessionStorage.removeItem("signupFromPaymentSuccess");
       sessionStorage.removeItem("pendingRestaurantId");
-      router.replace(`/${restaurantId}/dashboard`);
+      router.replace(`/${restaurantId}/${DEFAULT_BRANCH_NUMBER}/dashboard`);
       return;
     }
 
     // Check for table parameter in current URL
     const tableParam = searchParams.get("table");
     if (tableParam) {
-      router.replace(`/${restaurantId}/menu?table=${tableParam}`);
+      router.replace(
+        `/${restaurantId}/${DEFAULT_BRANCH_NUMBER}/menu?table=${tableParam}`
+      );
       return;
     }
 
     // Default redirect
     console.log(
-      `✅ Default redirect to /${DEFAULT_RESTAURANT_ID}/menu?table=${DEFAULT_TABLE}`
+      `✅ Default redirect to /${DEFAULT_RESTAURANT_ID}/${DEFAULT_BRANCH_NUMBER}/menu?table=${DEFAULT_TABLE}`
     );
-    router.replace(`/${DEFAULT_RESTAURANT_ID}/menu?table=${DEFAULT_TABLE}`);
+    router.replace(
+      `/${DEFAULT_RESTAURANT_ID}/${DEFAULT_BRANCH_NUMBER}/menu?table=${DEFAULT_TABLE}`
+    );
   }, [router, searchParams, isAuthenticated, isLoading]);
 
   return (

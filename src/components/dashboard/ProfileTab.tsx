@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { useRouter } from "next/navigation";
 import { User, Camera, Loader2, Phone, X, LogOut, LogIn } from "lucide-react";
+import { authService } from "@/services/auth.service";
+import { useTableNavigation } from "@/hooks/useTableNavigation";
 
 export default function ProfileTab() {
-  const { user, profile, isAuthenticated, isLoading, updateProfile, logout } =
-    useAuth();
-  const router = useRouter();
+  const { navigateWithTable } = useTableNavigation();
+  const { profile, isLoading, logout: contextLogout } = useAuth();
   const [isUpdating, setIsUpdating] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [firstName, setFirstName] = useState("");
@@ -18,6 +18,7 @@ export default function ProfileTab() {
   const [birthDate, setBirthDate] = useState("");
   const [gender, setGender] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Formatear número de teléfono
   const formatPhoneNumber = (phoneNumber: any) => {
@@ -44,17 +45,38 @@ export default function ProfileTab() {
   // Load profile data from AuthContext
   useEffect(() => {
     const loadUserData = async () => {
-      if (!profile || isLoading) return;
+      setIsLoadingData(true);
+
+      const currentUser = authService.getCurrentUser();
+
+      if (!currentUser) {
+        setIsAuthenticated(false);
+        setIsLoadingData(false);
+        return;
+      }
+
+      setIsAuthenticated(true);
 
       try {
-        setIsLoadingData(true);
+        const response = await authService.getMyProfile();
+        console.log("📊 getMyProfile response:", response);
 
-        // Load data from profile
-        setFirstName(profile.firstName || "");
-        setLastName(profile.lastName || "");
-        setPhone(profile.phone || "");
-        setBirthDate(profile.birthDate || "");
-        setGender(profile.gender || "");
+        // El backend puede devolver data.data.profile o data.profile
+        const responseData = (response as any).data;
+        const profileData =
+          responseData?.data?.profile || responseData?.profile;
+
+        if (response.success && profileData) {
+          console.log("✅ Profile data loaded:", profileData);
+          setFirstName(profileData.firstName || "");
+          setLastName(profileData.lastName || "");
+          setPhone(profileData.phone || "");
+          setBirthDate(profileData.birthDate || "");
+          setGender(profileData.gender || "");
+          setPhotoUrl(profileData.photoUrl || "");
+        } else {
+          console.warn("⚠️ No profile data in response:", response);
+        }
       } catch (error) {
         console.error("❌ Error loading user data:", error);
       } finally {
@@ -63,28 +85,24 @@ export default function ProfileTab() {
     };
 
     loadUserData();
-  }, [profile, isLoading]);
+  }, []);
 
   const handleUpdateProfile = async () => {
-    if (!profile) return;
+    if (!isAuthenticated) return;
 
     setIsUpdating(true);
     try {
-      const profileData = {
-        firstName: firstName,
-        lastName: lastName,
-        phone: phone,
+      const response = await authService.updateMyProfile({
+        firstName,
+        lastName,
+        birthDate: birthDate || undefined,
         gender: gender as "male" | "female" | "other" | undefined,
-        // Convert age to birth date
-        birthDate: birthDate,
-      };
-
-      const response = await updateProfile(profileData);
+      });
 
       if (response.success) {
         alert("Perfil actualizado correctamente");
       } else {
-        throw new Error("Error al actualizar el perfil");
+        throw new Error(response.error || "Error al actualizar");
       }
     } catch (error) {
       console.error("Error al actualizar el perfil:", error);
@@ -95,7 +113,7 @@ export default function ProfileTab() {
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!profile || !e.target.files || !e.target.files[0]) return;
+    if (!isAuthenticated || !e.target.files || !e.target.files[0]) return;
 
     const file = e.target.files[0];
 
@@ -114,14 +132,52 @@ export default function ProfileTab() {
     setIsUpdating(true);
 
     try {
-      // TODO: Implement photo upload with new backend
-      console.log("Photo upload not yet implemented with new auth system");
-      alert("Funcionalidad de foto no disponible aún");
+      const token = localStorage.getItem("xquisito_access_token");
+      if (!token) {
+        alert("No estás autenticado");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("photo", file);
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/profiles/upload-photo`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success && data.data?.photoUrl) {
+        setPhotoUrl(data.data.photoUrl);
+        alert("Foto de perfil actualizada correctamente");
+      } else {
+        throw new Error(data.error || "Error al subir la foto");
+      }
     } catch (error) {
       console.error("Error al actualizar la foto:", error);
       alert("Error al actualizar la foto");
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      // Use context logout which will update the auth state
+      await contextLogout();
+      setIsLogoutModalOpen(false);
+      // Redirect to menu with table navigation
+      navigateWithTable("/menu");
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+      alert("Error al cerrar sesión");
     }
   };
 
@@ -138,12 +194,22 @@ export default function ProfileTab() {
       {/* Profile Image */}
       <div className="flex flex-col items-center">
         <div className="relative group mb-4">
-          <div className="size-28 md:size-32 lg:size-36 rounded-full bg-gray-200 overflow-hidden border-2 md:border-4 border-teal-600">
-            <img
-              src={profile.photoUrl || "/default-avatar.png"}
-              alt="Profile"
-              className="w-full h-full object-cover"
-            />
+          <div className="size-28 md:size-32 lg:size-36 rounded-full bg-gray-200 overflow-hidden border-2 md:border-4 border-teal-600 flex items-center justify-center">
+            {isAuthenticated && photoUrl ? (
+              <img
+                src={photoUrl}
+                alt="Profile"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div>
+                <img
+                  src="https://t4.ftcdn.net/jpg/02/15/84/43/360_F_215844325_ttX9YiIIyeaR7Ne6EaLLjMAmy4GvPC69.jpg"
+                  alt="Profile Pic"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
           </div>
           {isAuthenticated && (
             <label
@@ -209,7 +275,7 @@ export default function ProfileTab() {
         </div>
       </div>
 
-      <div className="flex gap-3 md:gap-4 lg:gap-5 mb-6 md:mb-8 lg:mb-10">
+      <div className="flex gap-2 md:gap-4 lg:gap-5 mb-6 md:mb-8 lg:mb-10">
         {/* Fecha de nacimiento */}
         <div className="space-y-2 flex-1 min-w-0">
           <label className="gap-1.5 md:gap-2 flex items-center text-sm md:text-base lg:text-lg text-gray-700">
@@ -221,7 +287,11 @@ export default function ProfileTab() {
             onChange={(e) => setBirthDate(e.target.value)}
             max={new Date().toISOString().split("T")[0]}
             placeholder="dd/mm/aaaa"
-            className="cursor-pointer w-full px-2 md:px-5 lg:px-6 py-3 md:py-4 lg:py-5 border text-black text-base md:text-lg lg:text-xl border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+            className="cursor-pointer w-full px-2 md:px-5 lg:px-6 py-3 md:py-4 lg:py-5 border text-black text-base md:text-lg lg:text-xl border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed [&::-webkit-calendar-picker-indicator]:cursor-pointer appearance-none bg-white"
+            style={{
+              WebkitAppearance: "none",
+              MozAppearance: "textfield",
+            }}
             disabled={isUpdating || !isAuthenticated}
             lang="es-MX"
           />
@@ -232,16 +302,37 @@ export default function ProfileTab() {
           <label className="gap-1.5 md:gap-2 flex items-center text-sm md:text-base lg:text-lg text-gray-700">
             Género
           </label>
-          <select
-            value={gender}
-            onChange={(e) => setGender(e.target.value)}
-            className="cursor-pointer w-full px-2 md:px-5 lg:px-6 py-3 md:py-4 lg:py-5 border text-black text-base md:text-lg lg:text-xl border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
-            disabled={isUpdating || !isAuthenticated}
-          >
-            <option value="male">Masculino</option>
-            <option value="female">Femenino</option>
-            <option value="other">Otro</option>
-          </select>
+          <div className="relative">
+            <select
+              value={gender}
+              onChange={(e) => setGender(e.target.value)}
+              className="cursor-pointer w-full px-2 md:px-5 lg:px-6 py-3 md:py-4 lg:py-5 border text-black text-base md:text-lg lg:text-xl border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed appearance-none bg-white pr-10"
+              style={{
+                WebkitAppearance: "none",
+                MozAppearance: "none",
+              }}
+              disabled={isUpdating || !isAuthenticated}
+            >
+              <option value="male">Masculino</option>
+              <option value="female">Femenino</option>
+              <option value="other">Otro</option>
+            </select>
+            {/* Custom dropdown arrow */}
+            <div className="pointer-events-none absolute inset-y-0 right-2 md:right-5 lg:right-6 flex items-center">
+              <svg
+                className="h-5 w-5 text-gray-400"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -327,10 +418,7 @@ export default function ProfileTab() {
                 Cancelar
               </button>
               <button
-                onClick={async () => {
-                  await logout();
-                  router.push("/");
-                }}
+                onClick={handleLogout}
                 className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 md:py-3 text-base md:text-lg rounded-full cursor-pointer transition-colors"
               >
                 Cerrar sesión

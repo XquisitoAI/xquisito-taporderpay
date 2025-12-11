@@ -8,7 +8,7 @@ import React, {
 } from "react";
 
 // Importar tipos
-import { TapOrder } from "@/utils/api2";
+import { TapOrder } from "@/services/taporders.service";
 
 // Estado de la mesa con tap-orders (SIN carrito - ahora está en CartContext)
 interface TableState {

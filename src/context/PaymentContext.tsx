@@ -7,7 +7,7 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { apiService, PaymentMethod } from "../utils/api2";
+import { paymentService, PaymentMethod } from "../services/payment.service";
 import { useGuest } from "./GuestContext";
 import { useAuth } from "./AuthContext";
 
@@ -61,9 +61,9 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
       setIsLoading(true);
       try {
         // Set auth token from AuthContext (token is automatically managed)
-        // No need to manually get token since apiService handles it through AuthContext
+        // No need to manually get token since paymentService handles it through AuthContext
 
-        const response = await apiService.getPaymentMethods();
+        const response = await paymentService.getPaymentMethods();
         if (response.success && response.data?.paymentMethods) {
           setPaymentMethods(response.data.paymentMethods);
           console.log(
@@ -91,7 +91,7 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
       console.log("👥 Fetching payment methods for guest:", guestId);
       setIsLoading(true);
       try {
-        const response = await apiService.getPaymentMethods();
+        const response = await paymentService.getPaymentMethods();
         if (response.success && response.data?.paymentMethods) {
           setPaymentMethods(response.data.paymentMethods);
           console.log(
@@ -138,10 +138,10 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
       paymentMethodId
     );
     try {
-      // Auth token is automatically managed by AuthContext and apiService
+      // Auth token is automatically managed by AuthContext and paymentService
 
       const response =
-        await apiService.setDefaultPaymentMethod(paymentMethodId);
+        await paymentService.setDefaultPaymentMethod(paymentMethodId);
       if (response.success) {
         // Update local state to reflect the new default
         setPaymentMethods((prev) =>
@@ -181,9 +181,9 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
       "User ID:", user.id
     );
     try {
-      // Auth token is automatically managed by AuthContext and apiService
+      // Auth token is automatically managed by AuthContext and paymentService
 
-      const response = await apiService.deletePaymentMethod(paymentMethodId);
+      const response = await paymentService.deletePaymentMethod(paymentMethodId);
       console.log("🗑️ Delete response:", response);
 
       if (response.success) {

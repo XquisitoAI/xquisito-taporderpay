@@ -18,7 +18,7 @@ interface MenuViewProps {
 export default function MenuView({ tableNumber }: MenuViewProps) {
   const [filter, setFilter] = useState("Todo");
   const [searchQuery, setSearchQuery] = useState("");
-  const { user, profile, isAuthenticated, isLoading } = useAuth();
+  const { user, profile, isAuthenticated } = useAuth();
   const { signUpData } = useUserData();
   const { navigateWithTable } = useTableNavigation();
   const { state: cartState } = useCart();

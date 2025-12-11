@@ -1,5 +1,3 @@
-import { apiService } from "../utils/api2";
-
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface SendOTPResponse {
@@ -127,7 +125,7 @@ class AuthService {
   // Crear o actualizar perfil del usuario
   async createOrUpdateProfile(profileData: ProfileData): Promise<AuthResponse> {
     try {
-      const token = localStorage.getItem("xquisito_access_token");
+      const token = this.getAccessToken();
 
       if (!token) {
         return {
@@ -136,22 +134,29 @@ class AuthService {
         };
       }
 
-      // Use apiService which has automatic token refresh
-      const response = await apiService.request("/profiles", {
+      const response = await fetch(`${API_URL}/profiles`, {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(profileData),
       });
 
-      if (response.success) {
+      const data = await response.json();
+
+      if (response.ok) {
         return {
           success: true,
-          data: response.data,
+          data: data,
         };
       } else {
         return {
           success: false,
           error:
-            response.error?.message || "Error al crear/actualizar el perfil",
+            data.error?.message ||
+            data.message ||
+            "Error al crear/actualizar el perfil",
         };
       }
     } catch (error) {
@@ -166,7 +171,7 @@ class AuthService {
   // Obtener perfil del usuario autenticado
   async getMyProfile(): Promise<AuthResponse> {
     try {
-      const token = localStorage.getItem("xquisito_access_token");
+      const token = this.getAccessToken();
 
       if (!token) {
         return {
@@ -175,23 +180,26 @@ class AuthService {
         };
       }
 
-      // Use apiService which has automatic token refresh
-      const response = await apiService.request("/profiles/me", {
+      const response = await fetch(`${API_URL}/profiles/me`, {
         method: "GET",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       });
 
-      if (response.success) {
+      const data = await response.json();
+
+      if (response.ok) {
         return {
           success: true,
-          data: response.data,
+          data: data,
         };
       } else {
         return {
           success: false,
-          error: response.error?.message || "Error al obtener el perfil",
+          error:
+            data.error?.message || data.message || "Error al obtener el perfil",
         };
       }
     } catch (error) {
@@ -206,7 +214,7 @@ class AuthService {
   // Actualizar perfil del usuario autenticado
   async updateMyProfile(updates: Partial<ProfileData>): Promise<AuthResponse> {
     try {
-      const token = localStorage.getItem("xquisito_access_token");
+      const token = this.getAccessToken();
 
       if (!token) {
         return {
@@ -215,21 +223,29 @@ class AuthService {
         };
       }
 
-      // Use apiService which has automatic token refresh
-      const response = await apiService.request("/profiles/me", {
+      const response = await fetch(`${API_URL}/profiles/me`, {
         method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(updates),
       });
 
-      if (response.success) {
+      const data = await response.json();
+
+      if (response.ok) {
         return {
           success: true,
-          data: response.data,
+          data: data,
         };
       } else {
         return {
           success: false,
-          error: response.error?.message || "Error al actualizar el perfil",
+          error:
+            data.error?.message ||
+            data.message ||
+            "Error al actualizar el perfil",
         };
       }
     } catch (error) {
@@ -237,55 +253,6 @@ class AuthService {
       return {
         success: false,
         error: "Error al actualizar el perfil",
-      };
-    }
-  }
-
-  // Refrescar el access token
-  async refreshToken(): Promise<AuthResponse> {
-    try {
-      const refreshToken = localStorage.getItem("xquisito_refresh_token");
-
-      if (!refreshToken) {
-        return {
-          success: false,
-          error: "No hay refresh token",
-        };
-      }
-
-      const response = await fetch(`${API_URL}/auth/refresh`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ refresh_token: refreshToken }),
-      });
-
-      const data = await response.json();
-
-      if (data.success && data.data?.session?.access_token) {
-        localStorage.setItem(
-          "xquisito_access_token",
-          data.data.session.access_token
-        );
-        localStorage.setItem(
-          "xquisito_refresh_token",
-          data.data.session.refresh_token
-        );
-        if (data.data.session.expires_at) {
-          localStorage.setItem(
-            "xquisito_expires_at",
-            data.data.session.expires_at.toString()
-          );
-        }
-      }
-
-      return data;
-    } catch (error) {
-      console.error("Error refreshing token:", error);
-      return {
-        success: false,
-        error: "Error al refrescar el token",
       };
     }
   }
@@ -388,14 +355,16 @@ class AuthService {
     return null;
   }
 
-  /**
-   * Refresh access token
-   */
-  async refreshAccessToken(): Promise<any> {
+  // Refrescar el access token
+  async refreshToken(): Promise<AuthResponse> {
     try {
-      const refreshToken = this.getRefreshToken();
+      const refreshToken = localStorage.getItem("xquisito_refresh_token");
+
       if (!refreshToken) {
-        throw new Error("No refresh token found");
+        return {
+          success: false,
+          error: "No hay refresh token",
+        };
       }
 
       const response = await fetch(`${API_URL}/auth/refresh`, {
@@ -408,17 +377,30 @@ class AuthService {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || "Error refreshing token");
+      if (data.success && data.data?.session?.access_token) {
+        localStorage.setItem(
+          "xquisito_access_token",
+          data.data.session.access_token
+        );
+        localStorage.setItem(
+          "xquisito_refresh_token",
+          data.data.session.refresh_token
+        );
+        if (data.data.session.expires_at) {
+          localStorage.setItem(
+            "xquisito_expires_at",
+            data.data.session.expires_at.toString()
+          );
+        }
       }
-
-      // Store new tokens
-      this.storeSession(data.data.session);
 
       return data;
     } catch (error) {
-      console.error("❌ Error in refreshAccessToken:", error);
-      throw error;
+      console.error("Error refreshing token:", error);
+      return {
+        success: false,
+        error: "Error al refrescar el token",
+      };
     }
   }
 
@@ -464,6 +446,34 @@ class AuthService {
     localStorage.removeItem("xquisito_access_token");
     localStorage.removeItem("xquisito_refresh_token");
     localStorage.removeItem("xquisito_expires_at");
+  }
+
+  // Set authentication token (used by AuthContext)
+  setAuthToken(token: string): void {
+    localStorage.setItem("xquisito_access_token", token);
+  }
+
+  // Clear authentication token
+  clearAuthToken(): void {
+    localStorage.removeItem("xquisito_access_token");
+  }
+
+  // Clear all session data including table context
+  clearAllSessionData(): void {
+    this.clearSession();
+    // Clear session storage
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("pendingTableRedirect");
+      sessionStorage.removeItem("signupFromPaymentFlow");
+      sessionStorage.removeItem("signupFromPaymentSuccess");
+      sessionStorage.removeItem("signInFromMenu");
+      sessionStorage.removeItem("signupFromOrder");
+      sessionStorage.removeItem("pendingRestaurantId");
+      // Clear localStorage guest data
+      localStorage.removeItem("xquisito-guest-id");
+      localStorage.removeItem("xquisito-table-number");
+      localStorage.removeItem("xquisito-restaurant-id");
+    }
   }
 }
 

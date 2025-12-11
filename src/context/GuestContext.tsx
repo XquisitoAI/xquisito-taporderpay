@@ -8,7 +8,6 @@ import React, {
   ReactNode,
   Suspense,
 } from "react";
-import { apiService } from "../utils/api2";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "./AuthContext";
 
@@ -34,46 +33,12 @@ function GuestProviderInternal({ children }: GuestProviderProps) {
   const [guestId, setGuestId] = useState<string | null>(null);
   const [tableNumber, setTableNumber] = useState<string | null>(null);
   const [guestName, setGuestName] = useState<string | null>(null);
-  const [hasLinkedOrders, setHasLinkedOrders] = useState<boolean>(false);
   const searchParams = useSearchParams();
   const { user, isAuthenticated, isLoading } = useAuth();
 
-  // Link guest orders when user authenticates
-  useEffect(() => {
-    if (isLoading || !user || hasLinkedOrders) return;
-
-    const storedGuestId = localStorage.getItem("xquisito-guest-id");
-    const storedTableNumber = localStorage.getItem("xquisito-table-number");
-    const storedRestaurantId = localStorage.getItem("xquisito-restaurant-id");
-
-    if (storedGuestId && user.id) {
-      console.log("🔗 Linking guest orders to authenticated user:", {
-        guestId: storedGuestId,
-        userId: user.id,
-        tableNumber: storedTableNumber,
-        restaurantId: storedRestaurantId,
-      });
-
-      apiService
-        .linkGuestOrdersToUser(
-          storedGuestId,
-          user.id,
-          storedTableNumber || undefined,
-          storedRestaurantId || undefined
-        )
-        .then((response) => {
-          if (response.success) {
-            console.log("✅ Guest orders linked successfully:", response.data);
-            setHasLinkedOrders(true);
-          } else {
-            console.error("❌ Failed to link guest orders:", response.error);
-          }
-        })
-        .catch((error) => {
-          console.error("❌ Error linking guest orders:", error);
-        });
-    }
-  }, [isLoading, user, hasLinkedOrders]);
+  // Note: Guest orders/cart migration is handled by CartContext
+  // using cartApi.migrateGuestCart() which properly migrates the cart
+  // when user authenticates
 
   // Smart initialization: Auto-detect guest vs registered user context
   useEffect(() => {
@@ -111,7 +76,6 @@ function GuestProviderInternal({ children }: GuestProviderProps) {
         setIsGuest(true);
         setGuestId(guestIdToUse);
         setTableNumber(tableParam);
-        apiService.setTableNumber(tableParam);
         console.log("👤 Guest session configured:", {
           guestId: guestIdToUse,
           tableNumber: tableParam,
@@ -154,7 +118,6 @@ function GuestProviderInternal({ children }: GuestProviderProps) {
 
     if (newTableNumber) {
       localStorage.setItem("xquisito-table-number", newTableNumber);
-      apiService.setTableNumber(newTableNumber);
       setTableNumber(newTableNumber);
     }
 
@@ -171,14 +134,15 @@ function GuestProviderInternal({ children }: GuestProviderProps) {
   };
 
   const clearGuestSession = () => {
-    apiService.clearGuestSession();
+    // NO llamar a apiService.clearGuestSession() porque elimina el guest_id
+    // El guest_id debe preservarse para la migración del carrito en CartContext
     setIsGuest(false);
     setGuestId(null);
     setTableNumber(null);
     setGuestName(null);
     localStorage.removeItem("xquisito-guest-name");
     // NO eliminar xquisito-guest-id aquí - lo necesitamos para migrar el carrito
-    // El guest_id se mantendrá en localStorage para la migración del carrito
+    // El CartContext lo eliminará después de la migración exitosa
     console.log("🗑️ Guest session cleared (guest_id preserved for cart migration)");
   };
 

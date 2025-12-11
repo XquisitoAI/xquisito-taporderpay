@@ -1,0 +1,37 @@
+"use client";
+
+import MenuView from "@/components/menu/MenuView";
+import Loader from "@/components/UI/Loader";
+import { useRestaurant } from "@/context/RestaurantContext";
+import { useValidateAccess } from "@/hooks/useValidateAccess";
+import ValidationError from "@/components/ValidationError";
+import React from "react";
+
+const MenuPage = () => {
+  const { validationError, isValidating, tableNumber } = useValidateAccess();
+  const { restaurant, loading, error } = useRestaurant();
+
+  // Mostrar loader mientras carga
+  if (loading) {
+    return <Loader />;
+  }
+
+  // Mostrar error de validación
+  if (validationError) {
+    return <ValidationError errorType={validationError as any} />;
+  }
+
+  // Mostrar error si falla la carga del restaurante
+  if (error) {
+    return <ValidationError errorType="VALIDATION_ERROR" />;
+  }
+
+  // Verificar que tenemos los datos necesarios
+  if (!restaurant || !tableNumber) {
+    return <Loader />;
+  }
+
+  return <MenuView tableNumber={tableNumber} />;
+};
+
+export default MenuPage;

@@ -12,7 +12,6 @@ import {
   type AuthResponse,
   type ProfileData,
 } from "../services/auth.service";
-import { apiService } from "../utils/api2";
 
 interface User {
   id: string;
@@ -61,10 +60,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const currentUser = authService.getCurrentUser();
       if (currentUser) {
         setUser(currentUser);
-        // Set auth token in ApiService
+        // Set auth token in AuthService
         if (currentUser.token) {
-          apiService.setAuthToken(currentUser.token);
-          console.log("🔑 Auth token restored in ApiService from localStorage");
+          authService.setAuthToken(currentUser.token);
+          console.log(
+            "🔑 Auth token restored in AuthService from localStorage"
+          );
         }
         // Cargar perfil y esperar a que termine
         await loadProfile();
@@ -93,11 +94,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.warn("⚠️ No profile data found in response");
         }
       } else if (response.error?.includes("401")) {
-        // Token expired or invalid - let apiService handle refresh
+        // Token expired or invalid - let authService handle refresh
         console.log(
-          "🔄 Token expired in loadProfile, apiService will handle refresh"
+          "🔄 Token expired in loadProfile, authService will handle refresh"
         );
-        // Don't logout here, let the refresh logic in apiService handle it
+        // Don't logout here, let the refresh logic in authService handle it
       } else {
         console.warn("⚠️ Error loading profile:", response.error);
       }
@@ -129,9 +130,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(response.data.profile);
       }
 
-      // Set auth token in ApiService immediately
-      apiService.setAuthToken(response.data.session.access_token);
-      console.log("🔑 Auth token set in ApiService after OTP verification");
+      // Set auth token in AuthService immediately
+      authService.setAuthToken(response.data.session.access_token);
+      console.log("🔑 Auth token set in AuthService after OTP verification");
     }
 
     return response;
@@ -163,10 +164,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     await authService.logout();
-    // Clear auth token from ApiService
-    apiService.clearAuthToken();
+    // Clear auth token from AuthService
+    authService.clearAuthToken();
     // Clear all session data including table context
-    apiService.clearAllSessionData();
+    authService.clearAllSessionData();
     console.log("🔐 Complete logout: auth token and session data cleared");
     setUser(null);
     setProfile(null);
