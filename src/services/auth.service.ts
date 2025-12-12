@@ -237,7 +237,7 @@ class AuthService {
   // Obtener perfil del usuario autenticado
   async getMyProfile(): Promise<AuthResponse> {
     try {
-      let token = this.getAccessToken();
+      const token = this.getAccessToken();
 
       if (!token) {
         return {

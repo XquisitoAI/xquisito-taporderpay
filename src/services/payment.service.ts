@@ -16,7 +16,12 @@ export interface PaymentMethod {
   lastFourDigits: string;
   cardBrand: string;
   cardType: string;
+  expiryMonth?: number;
+  expiryYear?: number;
+  cardholderName?: string;
   isDefault: boolean;
+  isSystemCard?: boolean;
+  createdAt?: string;
 }
 
 export interface AddPaymentMethodRequest {
