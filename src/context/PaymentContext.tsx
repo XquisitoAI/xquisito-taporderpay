@@ -64,11 +64,27 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
         // No need to manually get token since paymentService handles it through AuthContext
 
         const response = await paymentService.getPaymentMethods();
-        if (response.success && response.data?.paymentMethods) {
-          setPaymentMethods(response.data.paymentMethods);
+        console.log("🔍 Full API response:", response);
+        console.log("🔍 Response.data:", response.data);
+
+        if (response.success) {
+          // Handle different possible response structures
+          let methods: PaymentMethod[] = [];
+
+          // Check if paymentMethods is directly in response (not in data)
+          if ((response as any).paymentMethods) {
+            methods = (response as any).paymentMethods;
+          } else if (response.data?.paymentMethods) {
+            methods = response.data.paymentMethods;
+          } else if (Array.isArray(response.data)) {
+            methods = response.data;
+          }
+
+          setPaymentMethods(methods);
           console.log(
             "💳 Loaded payment methods for registered user:",
-            response.data.paymentMethods.length
+            methods.length,
+            methods
           );
         } else {
           setPaymentMethods([]);
@@ -92,11 +108,27 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
       setIsLoading(true);
       try {
         const response = await paymentService.getPaymentMethods();
-        if (response.success && response.data?.paymentMethods) {
-          setPaymentMethods(response.data.paymentMethods);
+        console.log("🔍 Full API response (guest):", response);
+        console.log("🔍 Response.data (guest):", response.data);
+
+        if (response.success) {
+          // Handle different possible response structures
+          let methods: PaymentMethod[] = [];
+
+          // Check if paymentMethods is directly in response (not in data)
+          if ((response as any).paymentMethods) {
+            methods = (response as any).paymentMethods;
+          } else if (response.data?.paymentMethods) {
+            methods = response.data.paymentMethods;
+          } else if (Array.isArray(response.data)) {
+            methods = response.data;
+          }
+
+          setPaymentMethods(methods);
           console.log(
             "💳 Loaded payment methods for guest:",
-            response.data.paymentMethods.length
+            methods.length,
+            methods
           );
         } else {
           setPaymentMethods([]);
