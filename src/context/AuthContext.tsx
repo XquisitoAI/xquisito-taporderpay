@@ -93,12 +93,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
           console.warn("⚠️ No profile data found in response");
         }
-      } else if (response.error?.includes("401")) {
-        // Token expired or invalid - let authService handle refresh
-        console.log(
-          "🔄 Token expired in loadProfile, authService will handle refresh"
-        );
-        // Don't logout here, let the refresh logic in authService handle it
+      } else if (response.error?.includes("Sesión expirada")) {
+        // Token refresh failed - user was logged out by authService
+        console.log("🔐 Session expired, user logged out");
+        setUser(null);
+        setProfile(null);
       } else {
         console.warn("⚠️ Error loading profile:", response.error);
       }

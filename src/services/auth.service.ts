@@ -58,6 +58,72 @@ export interface ProfileData {
 }
 
 class AuthService {
+  private isRefreshing = false;
+  private refreshSubscribers: ((token: string) => void)[] = [];
+
+  // Suscribir callbacks que se ejecutarán cuando el token se refresque
+  private subscribeTokenRefresh(callback: (token: string) => void): void {
+    this.refreshSubscribers.push(callback);
+  }
+
+  // Notificar a todos los suscriptores que el token fue refrescado
+  private onRefreshed(token: string): void {
+    this.refreshSubscribers.forEach((callback) => callback(token));
+    this.refreshSubscribers = [];
+  }
+
+  // Manejar refresh del token cuando expira (llamado por servicios cuando reciben 401)
+  async handleTokenRefresh(): Promise<string | null> {
+    // Si ya hay un refresh en proceso, esperar a que termine
+    if (this.isRefreshing) {
+      return new Promise((resolve) => {
+        this.subscribeTokenRefresh((token: string) => {
+          resolve(token);
+        });
+      });
+    }
+
+    this.isRefreshing = true;
+
+    try {
+      const result = await this.refreshToken();
+
+      if (result.success && result.data?.session?.access_token) {
+        const newToken = result.data.session.access_token;
+        this.onRefreshed(newToken);
+        this.isRefreshing = false;
+        return newToken;
+      } else {
+        // Refresh falló, hacer logout
+        this.isRefreshing = false;
+        await this.logout();
+        this.clearAuthToken();
+        this.clearAllSessionData();
+
+        // Redirigir a login si estamos en el navegador
+        if (typeof window !== "undefined") {
+          window.location.href = "/";
+        }
+
+        return null;
+      }
+    } catch (error) {
+      console.error("Error in handleTokenRefresh:", error);
+      this.isRefreshing = false;
+
+      // Hacer logout en caso de error
+      await this.logout();
+      this.clearAuthToken();
+      this.clearAllSessionData();
+
+      if (typeof window !== "undefined") {
+        window.location.href = "/";
+      }
+
+      return null;
+    }
+  }
+
   // Enviar código OTP al teléfono
   async sendPhoneOTP(phone: string): Promise<AuthResponse> {
     try {
@@ -171,7 +237,7 @@ class AuthService {
   // Obtener perfil del usuario autenticado
   async getMyProfile(): Promise<AuthResponse> {
     try {
-      const token = this.getAccessToken();
+      let token = this.getAccessToken();
 
       if (!token) {
         return {
@@ -180,13 +246,35 @@ class AuthService {
         };
       }
 
-      const response = await fetch(`${API_URL}/profiles/me`, {
+      let response = await fetch(`${API_URL}/profiles/me`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       });
+
+      // Si recibimos 401, intentar refrescar el token
+      if (response.status === 401) {
+        console.log("🔄 Token expired in getMyProfile, refreshing...");
+        const newToken = await this.handleTokenRefresh();
+
+        if (newToken) {
+          // Reintentar con el nuevo token
+          response = await fetch(`${API_URL}/profiles/me`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${newToken}`,
+            },
+          });
+        } else {
+          return {
+            success: false,
+            error: "Sesión expirada",
+          };
+        }
+      }
 
       const data = await response.json();
 

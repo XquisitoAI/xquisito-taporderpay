@@ -1,11 +1,6 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+import { requestWithAuth, type ApiResponse } from "./request-helper";
 
-export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  message?: string;
-  error?: string;
-}
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export interface Review {
   id: number;
@@ -38,52 +33,8 @@ class ReviewsService {
     endpoint: string,
     options?: RequestInit
   ): Promise<ApiResponse<T>> {
-    try {
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-        ...(options?.headers as Record<string, string>),
-      };
-
-      const authToken = this.getAuthToken();
-      if (authToken) {
-        headers["Authorization"] = `Bearer ${authToken}`;
-      } else {
-        const guestId = this.getGuestId();
-        if (guestId) {
-          headers["x-guest-id"] = guestId;
-        }
-      }
-
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        ...options,
-        headers,
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || data.error || "API request failed");
-      }
-
-      return data;
-    } catch (error) {
-      console.error("Reviews API Error:", error);
-      return {
-        success: false,
-        error:
-          error instanceof Error ? error.message : "Unknown error occurred",
-      };
-    }
-  }
-
-  private getAuthToken(): string | null {
-    if (typeof window === "undefined") return null;
-    return localStorage.getItem("xquisito_access_token");
-  }
-
-  private getGuestId(): string {
-    if (typeof window === "undefined") return "";
-    return localStorage.getItem("xquisito-guest-id") || "";
+    // Usar el helper con refresh automático
+    return requestWithAuth<T>(endpoint, options);
   }
 
   // Crear una review

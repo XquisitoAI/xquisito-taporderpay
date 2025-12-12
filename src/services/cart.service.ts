@@ -1,11 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-
-export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  message?: string;
-  error?: string;
-}
+import { requestWithAuth, type ApiResponse } from "./request-helper";
 
 export interface CartItem {
   id: string; // cart_item_id
@@ -67,79 +60,17 @@ class CartApiService {
     endpoint: string,
     options?: RequestInit
   ): Promise<ApiResponse<T>> {
-    try {
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-        ...(options?.headers as Record<string, string>),
-      };
-
-      // Add authentication headers (similar to main apiService)
-      const authToken = this.getAuthToken();
-      if (authToken) {
-        // For authenticated users, use Bearer token
-        headers["Authorization"] = `Bearer ${authToken}`;
-        console.log(
-          "🔑 CartAPI - Adding Authorization header for authenticated user"
-        );
-      } else {
-        // For guests, add guest identification headers
-        const guestId = this.getGuestId();
-        if (guestId) {
-          headers["x-guest-id"] = guestId;
-          console.log("🔑 CartAPI - Adding x-guest-id header:", guestId);
-        }
-
-        // Add table number if available
-        const tableNumber = this.getTableNumber();
-        if (tableNumber) {
-          headers["x-table-number"] = tableNumber;
-        }
-      }
-
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        ...options,
-        headers,
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || data.error || "API request failed");
-      }
-
-      return data;
-    } catch (error) {
-      console.error("Cart API Error:", error);
-      return {
-        success: false,
-        error:
-          error instanceof Error ? error.message : "Unknown error occurred",
-      };
-    }
+    // Usar el helper con refresh automático
+    return requestWithAuth<T>(endpoint, options);
   }
 
   /**
-   * Obtener guest_id desde GuestContext/localStorage
+   * Obtener guest_id desde localStorage
    * Solo lee el guest_id existente - NO genera uno nuevo
-   * La generación se maneja exclusivamente en GuestContext después de que auth cargue
    */
   private getGuestId(): string {
     if (typeof window === "undefined") return "";
-
-    // Solo leer del localStorage - NO generar nuevo ID
     return localStorage.getItem("xquisito-guest-id") || "";
-  }
-
-  // Obtener el token de autenticación desde localStorage
-  private getAuthToken(): string | null {
-    if (typeof window === "undefined") return null;
-    return localStorage.getItem("xquisito_access_token");
-  }
-
-  // Obtener número de mesa desde localStorage
-  private getTableNumber(): string | null {
-    if (typeof window === "undefined") return null;
-    return localStorage.getItem("xquisito-table-number");
   }
 
   // Obtener identificador de usuario (user_id o guest_id)

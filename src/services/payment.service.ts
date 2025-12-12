@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+import { requestWithAuth } from "./request-helper";
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -48,81 +48,21 @@ class PaymentService {
     endpoint: string,
     options?: RequestInit
   ): Promise<ApiResponse<T>> {
-    try {
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-        ...(options?.headers as Record<string, string>),
-      };
+    // Usar el helper con refresh automático
+    const result = await requestWithAuth<T>(endpoint, options);
 
-      // Add authentication headers
-      const authToken = this.getAuthToken();
-      if (authToken) {
-        headers["Authorization"] = `Bearer ${authToken}`;
-      } else {
-        // For guests, add guest identification headers
-        const guestId = this.getGuestId();
-        if (guestId) {
-          headers["x-guest-id"] = guestId;
-        }
-
-        const tableNumber = this.getTableNumber();
-        if (tableNumber) {
-          headers["x-table-number"] = tableNumber;
-        }
-      }
-
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        ...options,
-        headers,
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        return {
-          success: false,
-          error: {
-            type: "http_error",
-            message:
-              data.error?.message || data.message || "API request failed",
-            details: data,
-          },
-        };
-      }
-
-      return {
-        success: true,
-        data: data,
-      };
-    } catch (error) {
-      console.error("Payment API Error:", error);
+    // Adaptar el formato de error al esperado por PaymentService
+    if (!result.success && result.error && typeof result.error === 'string') {
       return {
         success: false,
         error: {
-          type: "network_error",
-          message:
-            error instanceof Error ? error.message : "Unknown error occurred",
+          type: "api_error",
+          message: result.error,
         },
       };
     }
-  }
 
-  // Obtener el token de autenticación desde localStorage
-  private getAuthToken(): string | null {
-    if (typeof window === "undefined") return null;
-    return localStorage.getItem("xquisito_access_token");
-  }
-
-  // Obtener guest_id desde localStorage
-  private getGuestId(): string {
-    if (typeof window === "undefined") return "";
-    return localStorage.getItem("xquisito-guest-id") || "";
-  }
-
-  // Obtener número de mesa desde localStorage
-  private getTableNumber(): string | null {
-    if (typeof window === "undefined") return null;
-    return localStorage.getItem("xquisito-table-number");
+    return result as ApiResponse<T>;
   }
 
   // Añadir método de pago

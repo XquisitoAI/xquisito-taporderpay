@@ -289,8 +289,9 @@ export default function DishDetailPage() {
     try {
       const response = await reviewsApi.getMenuItemStats(dishId);
       if (response.success && response.data) {
-        const stats = response.data.data || response.data;
-        setDishStats(stats);
+        // El backend puede retornar { data: ReviewStats } o { data: { data: ReviewStats } }
+        const stats = (response.data as any).data || response.data;
+        setDishStats(stats as ReviewStats);
       }
     } catch (error) {
       console.error("Error loading dish stats:", error);
@@ -312,11 +313,12 @@ export default function DishDetailPage() {
 
       const response = await reviewsApi.getMyReview(dishId, userId, guestId);
 
-      if (response.success) {
-        const reviewData = response.data?.data || response.data;
-        if (reviewData) {
+      if (response.success && response.data) {
+        // El backend puede retornar { data: Review } o { data: { data: Review } }
+        const reviewData = (response.data as any).data || response.data;
+        if (reviewData && typeof reviewData === 'object' && 'rating' in reviewData) {
           // Usuario tiene una review existente
-          setMyReview(reviewData);
+          setMyReview(reviewData as Review);
           setReviewRating(reviewData.rating);
         } else {
           // Usuario no tiene review aún (esto es normal)
@@ -324,6 +326,9 @@ export default function DishDetailPage() {
           setMyReview(null);
           setReviewRating(0);
         }
+      } else {
+        setMyReview(null);
+        setReviewRating(0);
       }
     } catch (error) {
       console.error("Error loading my review:", error);
