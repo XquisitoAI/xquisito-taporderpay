@@ -7,9 +7,9 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { apiService, PaymentMethod } from "../utils/api2";
+import { paymentService, PaymentMethod } from "../services/payment.service";
 import { useGuest } from "./GuestContext";
-import { useUser, useAuth } from "@clerk/nextjs";
+import { useAuth } from "./AuthContext";
 
 interface PaymentContextType {
   paymentMethods: PaymentMethod[];
@@ -32,17 +32,12 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { isGuest, guestId, setAsAuthenticated } = useGuest();
-  const { user, isLoaded } = useUser();
-  const { getToken } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   const hasPaymentMethods = paymentMethods.length > 0;
 
   const refreshPaymentMethods = async () => {
-    // Only fetch if user is authenticated (either registered user or guest)
-    if (!isLoaded) {
-      setPaymentMethods([]);
-      return;
-    }
+    // Fetch payment methods for both authenticated users and guests
 
     // For registered users - prioritize user over guest session
     if (user) {
@@ -65,15 +60,10 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
       console.log("  isGuest state:", isGuest);
       setIsLoading(true);
       try {
-        // Get Clerk auth token
-        const token = await getToken();
-        if (token) {
-          apiService.setAuthToken(token);
-        } else {
-          console.warn("  ⚠️ No Clerk token available!");
-        }
+        // Set auth token from AuthContext (token is automatically managed)
+        // No need to manually get token since paymentService handles it through AuthContext
 
-        const response = await apiService.getPaymentMethods();
+        const response = await paymentService.getPaymentMethods();
         if (response.success && response.data?.paymentMethods) {
           setPaymentMethods(response.data.paymentMethods);
           console.log(
@@ -101,7 +91,7 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
       console.log("👥 Fetching payment methods for guest:", guestId);
       setIsLoading(true);
       try {
-        const response = await apiService.getPaymentMethods();
+        const response = await paymentService.getPaymentMethods();
         if (response.success && response.data?.paymentMethods) {
           setPaymentMethods(response.data.paymentMethods);
           console.log(
@@ -148,14 +138,10 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
       paymentMethodId
     );
     try {
-      // Get Clerk auth token
-      const token = await getToken();
-      if (token) {
-        apiService.setAuthToken(token);
-      }
+      // Auth token is automatically managed by AuthContext and paymentService
 
       const response =
-        await apiService.setDefaultPaymentMethod(paymentMethodId);
+        await paymentService.setDefaultPaymentMethod(paymentMethodId);
       if (response.success) {
         // Update local state to reflect the new default
         setPaymentMethods((prev) =>
@@ -185,27 +171,28 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
       console.log(
         "⚠️ deletePaymentMethod: Only registered users can delete saved payment methods"
       );
-      throw new Error("Only registered users can delete saved payment methods");
+      console.log("🔍 Current auth state:", { user, isAuthenticated, isLoading });
+      throw new Error("Debes estar autenticado para eliminar tarjetas");
     }
 
     console.log(
       "🗑️ Deleting payment method for registered user:",
-      paymentMethodId
+      paymentMethodId,
+      "User ID:", user.id
     );
     try {
-      // Get Clerk auth token
-      const token = await getToken();
-      if (token) {
-        apiService.setAuthToken(token);
-      }
+      // Auth token is automatically managed by AuthContext and paymentService
 
-      const response = await apiService.deletePaymentMethod(paymentMethodId);
+      const response = await paymentService.deletePaymentMethod(paymentMethodId);
+      console.log("🗑️ Delete response:", response);
+
       if (response.success) {
         removePaymentMethod(paymentMethodId);
         console.log("✅ Payment method deleted successfully:", paymentMethodId);
       } else {
+        console.error("❌ Delete payment method failed:", response.error);
         throw new Error(
-          response.error?.message || "Failed to delete payment method"
+          response.error?.message || "No se pudo eliminar la tarjeta"
         );
       }
     } catch (error) {
@@ -216,23 +203,21 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
 
   // Load payment methods when user context changes
   useEffect(() => {
-    if (isLoaded) {
-      // If user is authenticated, clear any guest session
-      if (user && isGuest) {
-        console.log("🔐 User authenticated - clearing guest session");
-        setAsAuthenticated(user.id);
-      }
-
-      console.log("🔄 PaymentContext - Context changed:", {
-        isLoaded,
-        hasUser: !!user,
-        userId: user?.id,
-        isGuest,
-        guestId,
-      });
-      refreshPaymentMethods();
+    // If user is authenticated, clear any guest session
+    if (user && isGuest) {
+      console.log("🔐 User authenticated - clearing guest session");
+      setAsAuthenticated(user.id);
     }
-  }, [isLoaded, user?.id, isGuest, guestId, setAsAuthenticated]);
+
+    console.log("🔄 PaymentContext - Context changed:", {
+      isAuthenticated,
+      hasUser: !!user,
+      userId: user?.id,
+      isGuest,
+      guestId,
+    });
+    refreshPaymentMethods();
+  }, [isAuthenticated, user?.id, isGuest, guestId, setAsAuthenticated]);
 
   const value: PaymentContextType = {
     paymentMethods,

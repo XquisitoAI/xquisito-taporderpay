@@ -8,8 +8,8 @@ import React, {
   ReactNode,
 } from "react";
 import { MenuItemData } from "../interfaces/menuItemData";
-import { cartApi, CartItem as ApiCartItem } from "../services/cartApi";
-import { useUser } from "@clerk/nextjs";
+import { cartApi, CartItem as ApiCartItem } from "../services/cart.service";
+import { useAuth } from "./AuthContext";
 import { useRestaurant } from "./RestaurantContext";
 
 // Interfaz para un item del carrito (frontend)
@@ -132,32 +132,48 @@ const CartContext = createContext<CartContextType | null>(null);
 // Provider del carrito
 export function CartProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, initialState);
-  const { user, isLoaded } = useUser();
-  const { restaurantId } = useRestaurant();
+  const { user, isLoading, isAuthenticated } = useAuth();
+  const { restaurantId, branchNumber } = useRestaurant();
 
-  // Establecer clerk_user_id y restaurant_id en cartApi cuando cambien
+  // Establecer user_id y restaurant_id en cartApi cuando cambien
   useEffect(() => {
-    if (isLoaded) {
-      cartApi.setClerkUserId(user?.id || null);
+    if (!isLoading) {
+      cartApi.setSupabaseUserId(user?.id || null);
     }
-  }, [user, isLoaded]);
+  }, [user, isLoading]);
 
   useEffect(() => {
     cartApi.setRestaurantId(restaurantId);
   }, [restaurantId]);
 
+  useEffect(() => {
+    cartApi.setBranchNumber(branchNumber);
+  }, [branchNumber]);
+
   // Migrar carrito cuando el usuario inicia sesión
   useEffect(() => {
     const migrateCartIfNeeded = async () => {
-      if (isLoaded && user?.id && restaurantId) {
+      console.log("🔍 Migration useEffect triggered:", {
+        isLoading,
+        hasUser: !!user?.id,
+        userId: user?.id,
+        restaurantId,
+        isAuthenticated,
+      });
+
+      if (!isLoading && user?.id && restaurantId) {
         const guestId = cartApi.getGuestIdForUser();
 
-        console.log("🔍 Migration check:", {
-          isLoaded,
+        console.log("🔍 Migration check - detailed:", {
+          isLoading: isLoading,
           userId: user.id,
           restaurantId,
           guestId,
           hasGuestId: !!guestId,
+          localStorageGuestId:
+            typeof window !== "undefined"
+              ? localStorage.getItem("xquisito-guest-id")
+              : null,
         });
 
         if (guestId) {
@@ -171,31 +187,49 @@ export function CartProvider({ children }: { children: ReactNode }) {
             console.log("📦 Migration response:", response);
 
             if (response.success && response.data) {
-              console.log(`✅ Cart migrated successfully: ${response.data.items_migrated} items`);
+              console.log(
+                `✅ Cart migrated successfully: ${response.data.items_migrated} items migrated`
+              );
 
               // Limpiar el guest_id del localStorage después de la migración exitosa
               if (typeof window !== "undefined") {
                 localStorage.removeItem("xquisito-guest-id");
-                console.log("🗑️ Guest ID removed from localStorage after successful migration");
+                console.log(
+                  "🗑️ Guest ID removed from localStorage after successful migration"
+                );
               }
 
               // Refrescar el carrito después de la migración
               await refreshCart();
+              console.log("🔄 Cart refreshed after migration");
             } else {
-              console.warn("⚠️ Migration completed but no data returned:", response);
+              console.warn(
+                "⚠️ Migration completed but no data returned:",
+                response
+              );
+              // Refrescar el carrito de todos modos
+              await refreshCart();
             }
           } catch (error) {
             console.error("❌ Error migrating cart:", error);
           }
         } else {
-          console.log("ℹ️ No guest_id found, skipping migration");
+          console.log(
+            "ℹ️ No guest_id found in localStorage, skipping migration"
+          );
         }
+      } else {
+        console.log("⏸️ Conditions not met for migration:", {
+          isLoadingCheck: !isLoading,
+          userCheck: !!user?.id,
+          restaurantIdCheck: !!restaurantId,
+        });
       }
     };
 
     migrateCartIfNeeded();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, isLoaded, restaurantId]);
+  }, [user?.id, isLoading, restaurantId, isAuthenticated]);
 
   // Función para refrescar el carrito desde el backend
   const refreshCart = async () => {
@@ -314,6 +348,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
       if (response.success) {
         dispatch({ type: "CLEAR_CART" });
+        // Refrescar desde el backend para asegurar sincronización
+        await refreshCart();
       } else {
         console.error("Error clearing cart:", response.error);
         dispatch({ type: "SET_LOADING", payload: false });
@@ -341,11 +377,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Cargar carrito al montar el componente o cuando cambie el restaurante
   useEffect(() => {
-    if (restaurantId) {
+    if (restaurantId && !isLoading) {
       refreshCart();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restaurantId]);
+  }, [restaurantId, isLoading]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

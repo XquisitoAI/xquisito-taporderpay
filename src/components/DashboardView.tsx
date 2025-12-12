@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import Loader from "./UI/Loader";
 import ProfileTab from "./dashboard/ProfileTab";
@@ -16,19 +16,25 @@ export default function DashboardView() {
     "profile" | "cards" | "history" | "support"
   >("profile");
 
-  const { user, isLoaded } = useUser();
+  const { user, isAuthenticated, isLoading, profile } = useAuth();
   const router = useRouter();
   const { navigateWithTable } = useTableNavigation();
 
+  // States for Support Tab (Pepper chat)
+  const [supportMessages, setSupportMessages] = useState<
+    Array<{ role: "user" | "pepper"; content: string }>
+  >([]);
+  const [supportSessionId, setSupportSessionId] = useState<string | null>(null);
+
   // Loading state
-  if (!isLoaded) {
+  if (isLoading) {
     return <Loader />;
   }
 
   // Not authenticated (shouldn't happen but good fallback)
-  if (!user) {
+  if (!isAuthenticated || !user) {
     return (
-      <div className="h-[100dvh] bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">
+      <div className="min-h-[100dvh] bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">
         <div className="flex-1 flex flex-col items-center justify-center px-5 md:px-8 lg:px-10 pb-12 md:py-10 lg:py-12">
           <div className="w-full max-w-md">
             {/* Logo */}
@@ -50,7 +56,7 @@ export default function DashboardView() {
             <div className="space-y-3 md:space-y-4 lg:space-y-5">
               {/* Sign In Option */}
               <button
-                onClick={() => navigateWithTable("/sign-in")}
+                onClick={() => navigateWithTable("/auth")}
                 className="w-full bg-white hover:bg-gray-50 text-black py-4 md:py-5 lg:py-6 px-4 md:px-5 lg:px-6 rounded-xl md:rounded-2xl transition-all duration-200 flex items-center gap-3 md:gap-4 lg:gap-5 active:scale-95"
               >
                 <div className="bg-gradient-to-r from-[#34808C] to-[#173E44] p-2 md:p-2.5 lg:p-3 rounded-full group-hover:scale-110 transition-transform">
@@ -84,7 +90,7 @@ export default function DashboardView() {
               <p className="text-white/70 text-xs md:text-sm lg:text-base">
                 ¿No tienes cuenta?{" "}
                 <button
-                  onClick={() => navigateWithTable("/sign-up")}
+                  onClick={() => navigateWithTable("/auth")}
                   className="underline font-medium hover:text-white transition-colors"
                 >
                   Regístrate aquí
@@ -98,7 +104,7 @@ export default function DashboardView() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">
+    <div className="min-h-[100dvh] bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">
       <DashboardHeader />
 
       <div className="px-4 md:px-6 lg:px-8 w-full flex-1 flex flex-col">
@@ -106,7 +112,7 @@ export default function DashboardView() {
         <div className="left-4 right-4 bg-gradient-to-tl from-[#0a8b9b] to-[#1d727e] rounded-t-4xl translate-y-7 z-0">
           <div className="py-6 md:py-8 lg:py-10 px-8 md:px-10 lg:px-12 flex flex-col justify-center pb-12 md:pb-14 lg:pb-16">
             <h1 className="text-white text-2xl md:text-3xl lg:text-4xl font-medium">
-              ¡Bienvenido{user?.firstName ? ` ${user.firstName}` : ""}!
+              ¡Bienvenido{profile?.firstName ? ` ${profile.firstName}` : ""}!
             </h1>
           </div>
         </div>
@@ -175,11 +181,20 @@ export default function DashboardView() {
             </div>
 
             {/* Tab Content */}
-            <div className="flex-1 flex flex-col overflow-y-auto pb-6">
+            <div
+              className={`flex-1 flex flex-col pb-6 ${activeTab === "support" ? "relative" : ""}`}
+            >
               {activeTab === "profile" && <ProfileTab />}
               {activeTab === "cards" && <CardsTab />}
               {activeTab === "history" && <HistoryTab />}
-              {activeTab === "support" && <SupportTab />}
+              {activeTab === "support" && (
+                <SupportTab
+                  messages={supportMessages}
+                  setMessages={setSupportMessages}
+                  sessionId={supportSessionId}
+                  setSessionId={setSupportSessionId}
+                />
+              )}
             </div>
           </div>
         </div>

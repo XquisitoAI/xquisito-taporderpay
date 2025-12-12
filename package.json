@@ -9,13 +9,12 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@clerk/elements": "^0.23.73",
-    "@clerk/nextjs": "^6.33.7",
     "lucide-react": "^0.546.0",
     "next": "15.5.7",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "react-payment-logos": "^1.1.0"
+    "react-payment-logos": "^1.1.0",
+    "react-world-flags": "^1.6.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -23,6 +22,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/react-world-flags": "^1.6.0",
     "eslint": "^9",
     "eslint-config-next": "15.5.7",
     "tailwindcss": "^4",

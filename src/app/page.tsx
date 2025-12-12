@@ -1,21 +1,21 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/context/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
-import { QrCode } from "lucide-react";
 
-// Restaurant ID por defecto para testing
+// Restaurant ID y Branch por defecto para testing
 const DEFAULT_RESTAURANT_ID = 5;
-const DEFAULT_TABLE = 20;
+const DEFAULT_BRANCH_NUMBER = 1;
+const DEFAULT_TABLE = 2;
 
 export default function Home() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isSignedIn, isLoaded } = useUser();
+  const { isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (isLoading) return;
 
     // Check if user just signed in/up and has context
     const storedTable = sessionStorage.getItem("pendingTableRedirect");
@@ -28,8 +28,8 @@ export default function Home() {
     const isFromCart = sessionStorage.getItem("signupFromCart");
 
     console.log("🔍 Root page debugging:", {
-      isLoaded,
-      isSignedIn,
+      isLoading,
+      isAuthenticated,
       storedTable,
       storedRestaurant,
       isFromPaymentFlow,
@@ -44,54 +44,64 @@ export default function Home() {
     const restaurantId =
       restaurantParam || storedRestaurant || DEFAULT_RESTAURANT_ID;
 
-    if (isSignedIn && storedTable && isFromCart) {
+    if (isAuthenticated && storedTable && isFromCart) {
       // User signed in/up from cart (CartView), redirect to card-selection
       sessionStorage.removeItem("signupFromCart");
       sessionStorage.removeItem("pendingTableRedirect");
       sessionStorage.removeItem("pendingRestaurantId");
-      router.replace(`/${restaurantId}/card-selection?table=${storedTable}`);
+      router.replace(
+        `/${restaurantId}/${DEFAULT_BRANCH_NUMBER}/card-selection?table=${storedTable}`
+      );
       return;
     }
 
-    if (isSignedIn && storedTable && isFromMenu) {
+    if (isAuthenticated && storedTable && isFromMenu) {
       // User signed in from MenuView settings, redirect to dashboard with table
       sessionStorage.removeItem("signInFromMenu");
       sessionStorage.removeItem("pendingTableRedirect");
       sessionStorage.removeItem("pendingRestaurantId");
-      router.replace(`/${restaurantId}/dashboard?table=${storedTable}`);
+      router.replace(
+        `/${restaurantId}/${DEFAULT_BRANCH_NUMBER}/dashboard?table=${storedTable}`
+      );
       return;
     }
 
-    if (isSignedIn && storedTable && isFromPaymentFlow) {
+    if (isAuthenticated && storedTable && isFromPaymentFlow) {
       // User signed up during payment flow, redirect to card-selection
       sessionStorage.removeItem("pendingTableRedirect");
       sessionStorage.removeItem("signupFromPaymentFlow");
       sessionStorage.removeItem("pendingRestaurantId");
-      router.replace(`/${restaurantId}/card-selection?table=${storedTable}`);
+      router.replace(
+        `/${restaurantId}/${DEFAULT_BRANCH_NUMBER}/card-selection?table=${storedTable}`
+      );
       return;
     }
 
-    if (isSignedIn && isFromPaymentSuccess) {
+    if (isAuthenticated && isFromPaymentSuccess) {
       // User signed up from payment-success, redirect to dashboard
       sessionStorage.removeItem("signupFromPaymentSuccess");
       sessionStorage.removeItem("pendingRestaurantId");
-      router.replace(`/${restaurantId}/dashboard`);
+      router.replace(`/${restaurantId}/${DEFAULT_BRANCH_NUMBER}/dashboard`);
       return;
     }
 
     // Check for table parameter in current URL
     const tableParam = searchParams.get("table");
     if (tableParam) {
-      router.replace(`/${restaurantId}/menu?table=${tableParam}`);
+      router.replace(
+        `/${restaurantId}/${DEFAULT_BRANCH_NUMBER}/menu?table=${tableParam}`
+      );
       return;
     }
 
     // Default redirect
     console.log(
-      `✅ Default redirect to /${DEFAULT_RESTAURANT_ID}/menu?table=${DEFAULT_TABLE}`
+      `✅ Default redirect to /${DEFAULT_RESTAURANT_ID}/${DEFAULT_BRANCH_NUMBER}/menu?table=${DEFAULT_TABLE}`
     );
-    router.replace(`/${DEFAULT_RESTAURANT_ID}/menu?table=${DEFAULT_TABLE}`);
-  }, [router, searchParams, isSignedIn, isLoaded]);
+    router.replace(
+      `/${DEFAULT_RESTAURANT_ID}/${DEFAULT_BRANCH_NUMBER}/menu?table=${DEFAULT_TABLE}`
+    );
+  }, [router, searchParams, isAuthenticated, isLoading]);
 
   return (
     <div className="h-[100dvh] bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">

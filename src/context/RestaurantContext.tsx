@@ -10,17 +10,19 @@ import React, {
 } from "react";
 import { Restaurant } from "../interfaces/restaurant";
 import { MenuSection } from "../interfaces/category";
-import { apiService } from "../utils/api2";
+import { restaurantService } from "../services/restaurant.service";
 import { isRestaurantOpen } from "../utils/restaurantHours";
 
 interface RestaurantContextValue {
   restaurantId: number | null;
+  branchNumber: number | null;
   restaurant: Restaurant | null;
   menu: MenuSection[];
   loading: boolean;
   error: string | null;
   isOpen: boolean;
   setRestaurantId: (id: number) => void;
+  setBranchNumber: (num: number) => void;
   refetchMenu: () => Promise<void>;
 }
 
@@ -34,6 +36,7 @@ interface RestaurantProviderProps {
 
 export function RestaurantProvider({ children }: RestaurantProviderProps) {
   const [restaurantId, setRestaurantIdState] = useState<number | null>(null);
+  const [branchNumber, setBranchNumberState] = useState<number | null>(null);
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [menu, setMenu] = useState<MenuSection[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -43,6 +46,12 @@ export function RestaurantProvider({ children }: RestaurantProviderProps) {
   const setRestaurantId = (id: number) => {
     console.log("🍽️ Setting restaurant ID:", id);
     setRestaurantIdState(id);
+  };
+
+  // Función para establecer el branchNumber
+  const setBranchNumber = (num: number) => {
+    console.log("🏢 Setting branch number:", num);
+    setBranchNumberState(num);
   };
 
   // Función para recargar el menú
@@ -62,25 +71,16 @@ export function RestaurantProvider({ children }: RestaurantProviderProps) {
       console.log("📡 Fetching restaurant data for ID:", id);
 
       // Obtener restaurante y menú en una sola petición
-      const response = await apiService.getRestaurantWithMenu(id);
+      const data = await restaurantService.getRestaurantWithMenu(id);
 
-      console.log("📦 API Response:", response);
-
-      if (!response.success || !response.data) {
-        throw new Error(response.error?.message || "Failed to load restaurant data");
-      }
-
-      // El backend puede devolver response.data directamente o response.data.data
-      const data = response.data.data || response.data;
-
-      console.log("📦 Processed data:", data);
+      console.log("📦 Restaurant data loaded:", data);
 
       if (!data.restaurant || !data.menu) {
         throw new Error("Invalid response structure from API");
       }
 
-      console.log("✅ Restaurant data loaded:", data.restaurant.name);
-      console.log("✅ Menu loaded with", data.menu.length, "sections");
+      console.log("✅ Restaurant:", data.restaurant.name);
+      console.log("✅ Menu sections:", data.menu.length);
 
       setRestaurant(data.restaurant);
       setMenu(data.menu);
@@ -125,12 +125,14 @@ export function RestaurantProvider({ children }: RestaurantProviderProps) {
 
   const value: RestaurantContextValue = {
     restaurantId,
+    branchNumber,
     restaurant,
     menu,
     loading,
     error,
     isOpen,
     setRestaurantId,
+    setBranchNumber,
     refetchMenu,
   };
 

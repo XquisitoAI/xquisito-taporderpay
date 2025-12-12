@@ -8,14 +8,15 @@ export function useTableNavigation() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const params = useParams();
-  const { restaurantId } = useRestaurant();
+  const { restaurantId, branchNumber } = useRestaurant();
 
   const tableNumber = searchParams?.get("table");
 
-  // Obtener restaurantId de params o del contexto
+  // Obtener restaurantId y branchNumber de params o del contexto
   const currentRestaurantId = params?.restaurantId || restaurantId;
+  const currentBranchNumber = params?.branchNumber || branchNumber;
 
-  // Función para navegar manteniendo el parámetro table y restaurantId
+  // Función para navegar manteniendo el parámetro table, restaurantId y branchNumber
   const navigateWithTable = useCallback(
     (path: string, replace: boolean = false) => {
       if (!tableNumber) {
@@ -30,9 +31,9 @@ export function useTableNavigation() {
         return;
       }
 
-      if (!currentRestaurantId) {
+      if (!currentRestaurantId || !currentBranchNumber) {
         console.warn(
-          "No restaurant ID found, navigating without restaurant context"
+          "No restaurant ID or branch number found, navigating without full context"
         );
         const separator = path.includes("?") ? "&" : "?";
         const newUrl = `${path}${separator}table=${tableNumber}`;
@@ -45,13 +46,13 @@ export function useTableNavigation() {
         return;
       }
 
-      // Construir la URL con restaurantId y table
-      // Si el path ya incluye el restaurantId (empieza con /), no agregarlo
+      // Construir la URL con restaurantId, branchNumber y table
+      // Si el path ya incluye la estructura completa, no agregarlo
       let fullPath = path;
-      if (!path.startsWith(`/${currentRestaurantId}/`)) {
+      if (!path.startsWith(`/${currentRestaurantId}/${currentBranchNumber}/`)) {
         // Remover el primer slash si existe
         const cleanPath = path.startsWith("/") ? path.slice(1) : path;
-        fullPath = `/${currentRestaurantId}/${cleanPath}`;
+        fullPath = `/${currentRestaurantId}/${currentBranchNumber}/${cleanPath}`;
       }
 
       // Verificar si ya existe un query string en el path
@@ -64,46 +65,48 @@ export function useTableNavigation() {
         router.push(newUrl);
       }
     },
-    [router, tableNumber, currentRestaurantId]
+    [router, tableNumber, currentRestaurantId, currentBranchNumber]
   );
 
   // Función para ir hacia atrás manteniendo el contexto de mesa
   const goBack = useCallback(() => {
-    if (!tableNumber || !currentRestaurantId) {
+    if (!tableNumber || !currentRestaurantId || !currentBranchNumber) {
       router.back();
       return;
     }
 
     // En lugar de router.back(), navegar a la página principal del menú
     navigateWithTable("/menu");
-  }, [router, tableNumber, currentRestaurantId, navigateWithTable]);
+  }, [router, tableNumber, currentRestaurantId, currentBranchNumber, navigateWithTable]);
 
-  // Función para obtener URL completa con restaurantId y table parameter
+  // Función para obtener URL completa con restaurantId, branchNumber y table parameter
   const getUrlWithTable = useCallback(
     (path: string) => {
-      if (!tableNumber || !currentRestaurantId) {
+      if (!tableNumber || !currentRestaurantId || !currentBranchNumber) {
         return path;
       }
 
-      // Construir la URL con restaurantId
+      // Construir la URL con restaurantId y branchNumber
       let fullPath = path;
-      if (!path.startsWith(`/${currentRestaurantId}/`)) {
+      if (!path.startsWith(`/${currentRestaurantId}/${currentBranchNumber}/`)) {
         const cleanPath = path.startsWith("/") ? path.slice(1) : path;
-        fullPath = `/${currentRestaurantId}/${cleanPath}`;
+        fullPath = `/${currentRestaurantId}/${currentBranchNumber}/${cleanPath}`;
       }
 
       return `${fullPath}?table=${tableNumber}`;
     },
-    [tableNumber, currentRestaurantId]
+    [tableNumber, currentRestaurantId, currentBranchNumber]
   );
 
   return {
     tableNumber,
     restaurantId: currentRestaurantId,
+    branchNumber: currentBranchNumber,
     navigateWithTable,
     goBack,
     getUrlWithTable,
     hasTable: !!tableNumber,
     hasRestaurant: !!currentRestaurantId,
+    hasBranch: !!currentBranchNumber,
   };
 }

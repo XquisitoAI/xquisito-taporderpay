@@ -1,23 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus, X } from "lucide-react";
 import { useTable } from "../context/TableContext";
 import { useCart } from "../context/CartContext";
 import { useTableNavigation } from "../hooks/useTableNavigation";
 import MenuHeaderBack from "./headers/MenuHeaderBack";
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "../context/AuthContext";
 
 export default function CartView() {
   const { state: tableState } = useTable();
   const { state: cartState, updateQuantity } = useCart();
   const { navigateWithTable } = useTableNavigation();
-  const { isLoaded, isSignedIn, user } = useUser();
+  const { isAuthenticated, isLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const MINIMUM_AMOUNT = 20; // Mínimo de compra requerido
+  const isUnderMinimum = cartState.totalPrice < MINIMUM_AMOUNT;
 
   const handleOrder = async () => {
     // Si el usuario está loggeado, ir directamente a card-selection
-    if (isLoaded && isSignedIn && user) {
+    if (!isLoading && isAuthenticated) {
       setIsSubmitting(true);
       try {
         navigateWithTable("/card-selection");
@@ -33,7 +36,7 @@ export default function CartView() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">
+    <div className="min-h-[100dvh] bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">
       <MenuHeaderBack />
 
       <div className="px-4 md:px-6 lg:px-8 w-full flex-1 flex flex-col">
@@ -63,7 +66,7 @@ export default function CartView() {
           {/* Cart Items */}
           <div className="bg-white rounded-t-4xl flex-1 z-5 flex flex-col px-6 md:px-8 lg:px-10 overflow-hidden">
             {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto flex flex-col pb-[120px] md:pb-[140px] lg:pb-[160px]">
+            <div className="flex-1 overflow-y-auto flex flex-col pb-[160px] md:pb-[180px] lg:pb-[200px]">
               <div className="pt-6 md:pt-8">
                 <h2 className="bg-[#f9f9f9] border border-[#8e8e8e] rounded-full px-3 md:px-4 lg:px-5 py-1 md:py-1.5 text-base md:text-lg lg:text-xl font-medium text-black w-fit mx-auto">
                   Mi carrito
@@ -186,11 +189,23 @@ export default function CartView() {
             {/* Fixed bottom section */}
             {cartState.items.length > 0 && (
               <div
-                className="fixed bottom-0 left-0 bg-white right-0 mx-4 md:mx-6 lg:mx-8 px-6 md:px-8 lg:px-10 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]"
+                className="fixed bottom-0 left-0 bg-white right-0 mx-4 md:mx-6 lg:mx-8 px-6 md:px-8 lg:px-10 z-10 "
                 style={{
                   paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))",
                 }}
               >
+                {/* Alerta de mínimo de compra */}
+                {isUnderMinimum && cartState.totalPrice > 0 && (
+                  <div className="bg-gradient-to-br from-red-50 to-red-100 px-6 py-2 -mx-6 md:-mx-8 lg:-mx-10 mb-4">
+                    <div className="flex justify-center items-center gap-3">
+                      <X className="size-6 text-red-500 flex-shrink-0" />
+                      <p className="text-red-700 font-medium text-base md:text-lg lg:text-xl">
+                        ¡El mínimo de compra es de ${MINIMUM_AMOUNT.toFixed(2)}!
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 <div className="w-full flex gap-3 md:gap-4 lg:gap-5 mt-6 md:mt-7 lg:mt-8 justify-between">
                   <div className="flex flex-col justify-center">
                     <span className="text-gray-600 text-sm md:text-base lg:text-lg">
@@ -202,12 +217,20 @@ export default function CartView() {
                   </div>
                   <button
                     onClick={handleOrder}
-                    disabled={isSubmitting || cartState.isLoading}
-                    className="bg-gradient-to-r from-[#34808C] to-[#173E44] py-3 md:py-4 lg:py-5 text-white px-20 md:px-24 lg:px-28 rounded-full cursor-pointer font-normal h-fit flex items-center justify-center disabled:opacity-50 text-base md:text-lg lg:text-xl animate-pulse-button active:scale-95 transition-transform"
+                    disabled={
+                      isSubmitting || cartState.isLoading || isUnderMinimum
+                    }
+                    className={`py-3 md:py-4 lg:py-5 text-white rounded-full cursor-pointer font-normal h-fit flex items-center justify-center text-base md:text-lg lg:text-xl active:scale-95 transition-transform ${
+                      isSubmitting || cartState.isLoading || isUnderMinimum
+                        ? "bg-gradient-to-r from-[#34808C] to-[#173E44] opacity-50 cursor-not-allowed px-10 md:px-12 lg:px-14"
+                        : "bg-gradient-to-r from-[#34808C] to-[#173E44] px-20 md:px-24 lg:px-28 animate-pulse-button"
+                    }`}
                   >
                     {isSubmitting || cartState.isLoading
                       ? "Cargando..."
-                      : "Ordenar"}
+                      : isUnderMinimum
+                        ? "Mínimo no alcanzado"
+                        : "Ordenar"}
                   </button>
                 </div>
               </div>
