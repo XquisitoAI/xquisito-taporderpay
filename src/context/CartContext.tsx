@@ -266,7 +266,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         item.id,
         1,
         item.customFields || [],
-        item.extraPrice || 0
+        item.extraPrice || 0,
+        item.price // Pasar el precio base (ya con descuento aplicado si lo hay)
       );
 
       if (response.success) {

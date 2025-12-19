@@ -89,21 +89,29 @@ class CartApiService {
     menuItemId: number,
     quantity: number = 1,
     customFields: CartItem["customFields"] = [],
-    extraPrice: number = 0
+    extraPrice: number = 0,
+    price?: number
   ): Promise<ApiResponse<{ cart_item_id: string }>> {
     const userId = this.getUserIdentifier();
 
+    const body: any = {
+      ...userId,
+      menu_item_id: menuItemId,
+      quantity,
+      custom_fields: customFields,
+      extra_price: extraPrice,
+      restaurant_id: this.restaurantId,
+      branch_number: this.branchNumber,
+    };
+
+    // Si se proporciona un precio específico, incluirlo en el request
+    if (price !== undefined) {
+      body.price = price;
+    }
+
     return this.request<{ cart_item_id: string }>("/cart", {
       method: "POST",
-      body: JSON.stringify({
-        ...userId,
-        menu_item_id: menuItemId,
-        quantity,
-        custom_fields: customFields,
-        extra_price: extraPrice,
-        restaurant_id: this.restaurantId,
-        branch_number: this.branchNumber,
-      }),
+      body: JSON.stringify(body),
     });
   }
 
