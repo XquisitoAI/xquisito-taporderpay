@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Minus, Plus, X } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 import { useTable } from "../context/TableContext";
 import { useCart } from "../context/CartContext";
 import { useTableNavigation } from "../hooks/useTableNavigation";
@@ -14,9 +14,6 @@ export default function CartView() {
   const { navigateWithTable } = useTableNavigation();
   const { isAuthenticated, isLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const MINIMUM_AMOUNT = 20; // Mínimo de compra requerido
-  const isUnderMinimum = cartState.totalPrice < MINIMUM_AMOUNT;
 
   const handleOrder = async () => {
     // Si el usuario está loggeado, ir directamente a card-selection
@@ -194,18 +191,6 @@ export default function CartView() {
                   paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))",
                 }}
               >
-                {/* Alerta de mínimo de compra */}
-                {isUnderMinimum && cartState.totalPrice > 0 && (
-                  <div className="bg-gradient-to-br from-red-50 to-red-100 px-6 py-2 -mx-6 md:-mx-8 lg:-mx-10 mb-4">
-                    <div className="flex justify-center items-center gap-3">
-                      <X className="size-6 text-red-500 flex-shrink-0" />
-                      <p className="text-red-700 font-medium text-base md:text-lg lg:text-xl">
-                        ¡El mínimo de compra es de ${MINIMUM_AMOUNT.toFixed(2)}!
-                      </p>
-                    </div>
-                  </div>
-                )}
-
                 <div className="w-full flex gap-3 md:gap-4 lg:gap-5 mt-6 md:mt-7 lg:mt-8 justify-between">
                   <div className="flex flex-col justify-center">
                     <span className="text-gray-600 text-sm md:text-base lg:text-lg">
@@ -217,20 +202,16 @@ export default function CartView() {
                   </div>
                   <button
                     onClick={handleOrder}
-                    disabled={
-                      isSubmitting || cartState.isLoading || isUnderMinimum
-                    }
+                    disabled={isSubmitting || cartState.isLoading}
                     className={`py-3 md:py-4 lg:py-5 text-white rounded-full cursor-pointer font-normal h-fit flex items-center justify-center text-base md:text-lg lg:text-xl active:scale-95 transition-transform ${
-                      isSubmitting || cartState.isLoading || isUnderMinimum
+                      isSubmitting || cartState.isLoading
                         ? "bg-gradient-to-r from-[#34808C] to-[#173E44] opacity-50 cursor-not-allowed px-10 md:px-12 lg:px-14"
                         : "bg-gradient-to-r from-[#34808C] to-[#173E44] px-20 md:px-24 lg:px-28 animate-pulse-button"
                     }`}
                   >
                     {isSubmitting || cartState.isLoading
                       ? "Cargando..."
-                      : isUnderMinimum
-                        ? "Mínimo no alcanzado"
-                        : "Ordenar"}
+                      : "Ordenar"}
                   </button>
                 </div>
               </div>

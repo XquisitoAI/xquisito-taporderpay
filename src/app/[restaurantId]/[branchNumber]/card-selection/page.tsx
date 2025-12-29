@@ -47,6 +47,9 @@ export default function CardSelectionPage() {
   // Obtener monto base del carrito desde el contexto
   const baseAmount = cartState.totalPrice;
 
+  // Validación de compra mínima
+  const MINIMUM_AMOUNT = 20; // Mínimo de compra requerido
+
   // Estados para propina
   const [tipPercentage, setTipPercentage] = useState(0);
   const [customTip, setCustomTip] = useState("");
@@ -859,6 +862,9 @@ export default function CardSelectionPage() {
 
   const displayTotal = getDisplayTotal();
 
+  // Calcular si está bajo el mínimo usando el total con propina, comisiones, etc.
+  const isUnderMinimum = totalAmount < MINIMUM_AMOUNT;
+
   // Mostrar loader mientras valida o carga
   if (isLoadingInitial) {
     return <Loader />;
@@ -873,17 +879,18 @@ export default function CardSelectionPage() {
     <div className="min-h-[100dvh] bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">
       <MenuHeaderBack />
 
-      <div className="flex-1 w-full overflow-y-auto">
-        <div className="flex flex-col relative px-4 md:px-6 lg:px-8 pt-4 md:pt-6 h-full">
-          <div className="bg-gradient-to-tl from-[#0a8b9b] to-[#1d727e] rounded-t-4xl mb-[-28px] z-0">
-            <div className="py-6 md:py-8 lg:py-10 px-8 md:px-10 lg:px-12 flex flex-col justify-center">
-              <h1 className="font-medium text-white text-3xl md:text-4xl lg:text-5xl leading-7 md:leading-9 lg:leading-tight mt-2 md:mt-3 mb-6 md:mb-8">
-                Selecciona tu método de pago
-              </h1>
+      <div className="flex-1 flex flex-col justify-end overflow-y-auto">
+        <div className="px-4 w-full">
+          <div className="flex flex-col relative">
+            <div className="left-4 right-4 bg-gradient-to-tl from-[#0a8b9b] to-[#1d727e] rounded-t-4xl translate-y-7 z-0">
+              <div className="py-6 px-8 flex flex-col justify-center">
+                <h1 className="font-medium text-white text-3xl leading-7 mt-2 mb-6">
+                  Selecciona tu método de pago
+                </h1>
+              </div>
             </div>
-          </div>
 
-          <div className="bg-white rounded-t-4xl relative z-10 flex flex-col px-6 md:px-8 lg:px-10 py-8 md:py-10 lg:py-12 flex-1 pb-8">
+            <div className="bg-white rounded-t-4xl relative z-10 flex flex-col px-8 py-8">
             {/* Resumen del pedido */}
             <div className="space-y-2 mb-6">
               <div className="flex justify-between items-center">
@@ -967,6 +974,18 @@ export default function CardSelectionPage() {
                 </div>
               )}
             </div>
+
+            {/* Alerta de mínimo de compra */}
+            {isUnderMinimum && totalAmount > 0 && (
+              <div className="bg-gradient-to-br from-red-50 to-red-100 px-6 py-3 -mx-8 rounded-lg">
+                <div className="flex justify-center items-center gap-3">
+                  <X className="size-6 text-red-500 flex-shrink-0" />
+                  <p className="text-red-700 font-medium text-base md:text-lg">
+                    ¡El mínimo de compra es de ${MINIMUM_AMOUNT.toFixed(2)}!
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Comisión e IVA */}
             <div className="space-y-2 mb-4">
@@ -1102,9 +1121,9 @@ export default function CardSelectionPage() {
             {/* Botón de pago */}
             <button
               onClick={handleInitiatePayment}
-              disabled={isProcessing || !selectedPaymentMethodId}
+              disabled={isProcessing || !selectedPaymentMethodId || isUnderMinimum}
               className={`w-full text-white py-3  rounded-full cursor-pointer transition-colors text-base md:text-lg lg:text-xl ${
-                isProcessing || !selectedPaymentMethodId
+                isProcessing || !selectedPaymentMethodId || isUnderMinimum
                   ? "bg-gradient-to-r from-[#34808C] to-[#173E44] opacity-50 cursor-not-allowed"
                   : "bg-gradient-to-r from-[#34808C] to-[#173E44]"
               }`}
@@ -1116,12 +1135,15 @@ export default function CardSelectionPage() {
                 </div>
               ) : !selectedPaymentMethodId ? (
                 "Selecciona una tarjeta"
+              ) : isUnderMinimum ? (
+                "Mínimo no alcanzado"
               ) : (
                 "Pagar y ordenar"
               )}
             </button>
           </div>
         </div>
+      </div>
       </div>
 
       {/* Modal de resumen del total */}
