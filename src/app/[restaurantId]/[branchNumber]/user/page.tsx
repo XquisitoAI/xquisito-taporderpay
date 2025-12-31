@@ -136,8 +136,8 @@ export default function UserPage() {
         <div className="mx-4 md:mx-6 lg:mx-8 w-full max-w-full px-4 md:px-6 lg:px-8">
           <button
             onClick={handleProceedToOrder}
-            disabled={!userName.trim() || isSubmitting}
-            className={`w-full py-3 md:py-4 lg:py-5 rounded-full transition-colors text-white cursor-pointer text-base md:text-lg lg:text-xl ${
+            disabled={!userName.trim()}
+            className={`w-full py-3 md:py-4 lg:py-5 rounded-full transition-all text-white cursor-pointer text-base md:text-lg lg:text-xl active:scale-90 ${
               userName.trim() && !isSubmitting
                 ? "bg-gradient-to-r from-[#34808C] to-[#173E44]"
                 : "bg-gradient-to-r from-[#34808C] to-[#173E44] opacity-50 cursor-not-allowed"

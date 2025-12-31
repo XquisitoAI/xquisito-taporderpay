@@ -444,8 +444,13 @@ export default function CardSelectionPage() {
         console.log("🧹 Cart cleared after successful order");
 
         // Redirigir directamente a payment-success
-        console.log("🔀 Redirecting to payment-success with orderId:", firstTapOrderId);
-        router.push(`/${restaurantId}/${branchNumber}/payment-success?orderId=${firstTapOrderId}&success=true&table=${tableNumber}`);
+        console.log(
+          "🔀 Redirecting to payment-success with orderId:",
+          firstTapOrderId
+        );
+        router.push(
+          `/${restaurantId}/${branchNumber}/payment-success?orderId=${firstTapOrderId}&success=true&table=${tableNumber}`
+        );
         return;
       }
 
@@ -891,259 +896,261 @@ export default function CardSelectionPage() {
             </div>
 
             <div className="bg-white rounded-t-4xl relative z-10 flex flex-col px-8 py-8">
-            {/* Resumen del pedido */}
-            <div className="space-y-2 mb-6">
-              <div className="flex justify-between items-center">
-                <span className="text-black font-medium text-base md:text-lg lg:text-xl">
-                  Subtotal
-                </span>
-                <span className="text-black font-medium text-base md:text-lg lg:text-xl">
-                  ${baseAmount.toFixed(2)} MXN
-                </span>
+              {/* Resumen del pedido */}
+              <div className="space-y-2 mb-6">
+                <div className="flex justify-between items-center">
+                  <span className="text-black font-medium text-base md:text-lg lg:text-xl">
+                    Subtotal
+                  </span>
+                  <span className="text-black font-medium text-base md:text-lg lg:text-xl">
+                    ${baseAmount.toFixed(2)} MXN
+                  </span>
+                </div>
               </div>
-            </div>
 
-            {/* Selección de propina */}
-            <div className="mb-4">
-              {/* Propina label y botones de porcentaje */}
-              <div className="flex items-center gap-4 mb-3">
-                <span className="text-black font-medium text-base md:text-lg lg:text-xl whitespace-nowrap">
-                  Propina
-                </span>
-                {/* Tip Percentage Buttons */}
-                <div className="grid grid-cols-5 gap-2 flex-1">
-                  {[0, 10, 15, 20].map((percentage) => (
+              {/* Selección de propina */}
+              <div className="mb-4">
+                {/* Propina label y botones de porcentaje */}
+                <div className="flex items-center gap-4 mb-3">
+                  <span className="text-black font-medium text-base md:text-lg lg:text-xl whitespace-nowrap">
+                    Propina
+                  </span>
+                  {/* Tip Percentage Buttons */}
+                  <div className="grid grid-cols-5 gap-2 flex-1">
+                    {[0, 10, 15, 20].map((percentage) => (
+                      <button
+                        key={percentage}
+                        onClick={() => {
+                          handleTipPercentage(percentage);
+                          setShowCustomTipInput(false);
+                        }}
+                        className={`py-1 md:py-1.5 lg:py-2 rounded-full border border-[#8e8e8e]/40 text-black transition-colors cursor-pointer ${
+                          tipPercentage === percentage && !showCustomTipInput
+                            ? "bg-[#eab3f4] text-white"
+                            : "bg-[#f9f9f9] hover:border-gray-400"
+                        }`}
+                      >
+                        {percentage === 0 ? "0%" : `${percentage}%`}
+                      </button>
+                    ))}
+                    {/* Custom Tip Button */}
                     <button
-                      key={percentage}
                       onClick={() => {
-                        handleTipPercentage(percentage);
-                        setShowCustomTipInput(false);
+                        setShowCustomTipInput(true);
+                        setTipPercentage(0);
                       }}
                       className={`py-1 md:py-1.5 lg:py-2 rounded-full border border-[#8e8e8e]/40 text-black transition-colors cursor-pointer ${
-                        tipPercentage === percentage && !showCustomTipInput
+                        showCustomTipInput
                           ? "bg-[#eab3f4] text-white"
                           : "bg-[#f9f9f9] hover:border-gray-400"
                       }`}
                     >
-                      {percentage === 0 ? "0%" : `${percentage}%`}
+                      $
                     </button>
-                  ))}
-                  {/* Custom Tip Button */}
-                  <button
-                    onClick={() => {
-                      setShowCustomTipInput(true);
-                      setTipPercentage(0);
-                    }}
-                    className={`py-1 md:py-1.5 lg:py-2 rounded-full border border-[#8e8e8e]/40 text-black transition-colors cursor-pointer ${
-                      showCustomTipInput
-                        ? "bg-[#eab3f4] text-white"
-                        : "bg-[#f9f9f9] hover:border-gray-400"
-                    }`}
-                  >
-                    $
-                  </button>
+                  </div>
                 </div>
+
+                {/* Custom Tip Input - Solo se muestra cuando showCustomTipInput es true */}
+                {showCustomTipInput && (
+                  <div className="flex flex-col gap-2 mb-3">
+                    <div className="relative w-full">
+                      <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-black text-sm">
+                        $
+                      </span>
+                      <input
+                        type="number"
+                        value={customTip}
+                        onChange={(e) => handleCustomTipChange(e.target.value)}
+                        placeholder="0.00"
+                        step="0.01"
+                        min="0"
+                        autoFocus
+                        className="w-full pl-8 pr-4 py-1 md:py-1.5 lg:py-2 border border-[#8e8e8e]/40 rounded-full focus:outline-none focus:ring focus:ring-gray-400 focus:border-transparent text-black text-center bg-[#f9f9f9] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {tipAmount > 0 && (
+                  <div className="flex justify-end items-center mt-2 text-sm">
+                    <span className="text-[#eab3f4] font-medium">
+                      +${tipAmount.toFixed(2)} MXN
+                    </span>
+                  </div>
+                )}
               </div>
 
-              {/* Custom Tip Input - Solo se muestra cuando showCustomTipInput es true */}
-              {showCustomTipInput && (
-                <div className="flex flex-col gap-2 mb-3">
-                  <div className="relative w-full">
-                    <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-black text-sm">
-                      $
-                    </span>
-                    <input
-                      type="number"
-                      value={customTip}
-                      onChange={(e) => handleCustomTipChange(e.target.value)}
-                      placeholder="0.00"
-                      step="0.01"
-                      min="0"
-                      autoFocus
-                      className="w-full pl-8 pr-4 py-1 md:py-1.5 lg:py-2 border border-[#8e8e8e]/40 rounded-full focus:outline-none focus:ring focus:ring-gray-400 focus:border-transparent text-black text-center bg-[#f9f9f9] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
-                    />
+              {/* Alerta de mínimo de compra */}
+              {isUnderMinimum && totalAmount > 0 && (
+                <div className="bg-gradient-to-br from-red-50 to-red-100 px-6 py-3 -mx-8 rounded-lg">
+                  <div className="flex justify-center items-center gap-3">
+                    <X className="size-6 text-red-500 flex-shrink-0" />
+                    <p className="text-red-700 font-medium text-base md:text-lg">
+                      ¡El mínimo de compra es de ${MINIMUM_AMOUNT.toFixed(2)}!
+                    </p>
                   </div>
                 </div>
               )}
 
-              {tipAmount > 0 && (
-                <div className="flex justify-end items-center mt-2 text-sm">
-                  <span className="text-[#eab3f4] font-medium">
-                    +${tipAmount.toFixed(2)} MXN
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Alerta de mínimo de compra */}
-            {isUnderMinimum && totalAmount > 0 && (
-              <div className="bg-gradient-to-br from-red-50 to-red-100 px-6 py-3 -mx-8 rounded-lg">
-                <div className="flex justify-center items-center gap-3">
-                  <X className="size-6 text-red-500 flex-shrink-0" />
-                  <p className="text-red-700 font-medium text-base md:text-lg">
-                    ¡El mínimo de compra es de ${MINIMUM_AMOUNT.toFixed(2)}!
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Comisión e IVA */}
-            <div className="space-y-2 mb-4">
-              <div className="flex justify-between items-center border-t pt-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-black font-medium text-base md:text-lg lg:text-xl">
-                    Total a pagar
-                  </span>
-                  <CircleAlert
-                    className="size-4 cursor-pointer text-gray-500"
-                    strokeWidth={2.3}
-                    onClick={() => setShowTotalModal(true)}
-                  />
-                </div>
-                <div className="text-right">
-                  {selectedMSI !== null ? (
-                    <>
-                      <span className="font-medium text-black text-base md:text-lg lg:text-xl">
-                        ${(displayTotal / selectedMSI).toFixed(2)} MXN x{" "}
-                        {selectedMSI} meses
-                      </span>
-                    </>
-                  ) : (
-                    <span className="font-medium text-black text-base md:text-lg lg:text-xl">
-                      ${displayTotal.toFixed(2)} MXN
+              {/* Comisión e IVA */}
+              <div className="space-y-2 mb-4">
+                <div className="flex justify-between items-center border-t pt-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-black font-medium text-base md:text-lg lg:text-xl">
+                      Total a pagar
                     </span>
-                  )}
+                    <CircleAlert
+                      className="size-4 cursor-pointer text-gray-500"
+                      strokeWidth={2.3}
+                      onClick={() => setShowTotalModal(true)}
+                    />
+                  </div>
+                  <div className="text-right">
+                    {selectedMSI !== null ? (
+                      <>
+                        <span className="font-medium text-black text-base md:text-lg lg:text-xl">
+                          ${(displayTotal / selectedMSI).toFixed(2)} MXN x{" "}
+                          {selectedMSI} meses
+                        </span>
+                      </>
+                    ) : (
+                      <span className="font-medium text-black text-base md:text-lg lg:text-xl">
+                        ${displayTotal.toFixed(2)} MXN
+                      </span>
+                    )}
+                  </div>
                 </div>
+
+                {/* Payment Options - Solo mostrar si es tarjeta de crédito */}
+                {(() => {
+                  const selectedMethod = allPaymentMethods.find(
+                    (pm) => pm.id === selectedPaymentMethodId
+                  );
+                  return selectedMethod?.cardType === "credit" ? (
+                    <div
+                      className="py-2 cursor-pointer"
+                      onClick={() => setShowPaymentOptionsModal(true)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-black text-base md:text-lg lg:text-xl">
+                          Pago a meses
+                        </span>
+                        <div
+                          className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                            selectedMSI !== null
+                              ? "border-[#eab3f4] bg-[#eab3f4]"
+                              : "border-gray-300"
+                          }`}
+                        >
+                          {selectedMSI !== null && (
+                            <div className="w-full h-full rounded-full bg-white scale-50"></div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ) : null;
+                })()}
               </div>
 
-              {/* Payment Options - Solo mostrar si es tarjeta de crédito */}
-              {(() => {
-                const selectedMethod = allPaymentMethods.find(
-                  (pm) => pm.id === selectedPaymentMethodId
-                );
-                return selectedMethod?.cardType === "credit" ? (
-                  <div
-                    className="py-2 cursor-pointer"
-                    onClick={() => setShowPaymentOptionsModal(true)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-black text-base md:text-lg lg:text-xl">
-                        Pago a meses
-                      </span>
+              {/* Métodos de pago guardados - Mostrar siempre (incluye tarjeta del sistema) */}
+              <div className="mb-4">
+                <h3 className="text-black font-medium mb-3 text-base md:text-lg lg:text-xl">
+                  Métodos de pago
+                </h3>
+                <div className="space-y-2.5">
+                  {allPaymentMethods.map((method) => (
+                    <div
+                      key={method.id}
+                      className={`flex items-center py-1.5 px-5 pl-10 border rounded-full transition-colors ${
+                        selectedPaymentMethodId === method.id
+                          ? "border-teal-500 bg-teal-50"
+                          : "border-black/50 bg-[#f9f9f9]"
+                      }`}
+                    >
                       <div
-                        className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                          selectedMSI !== null
-                            ? "border-[#eab3f4] bg-[#eab3f4]"
+                        onClick={() => setSelectedPaymentMethodId(method.id)}
+                        className="flex items-center justify-center gap-3 mx-auto cursor-pointer text-base md:text-lg lg:text-xl"
+                      >
+                        <div>{getCardTypeIcon(method.cardBrand)}</div>
+                        <div>
+                          <p className="text-black">
+                            **** **** **** {method.lastFourDigits}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div
+                        onClick={() => setSelectedPaymentMethodId(method.id)}
+                        className={`w-4 h-4 rounded-full border-2 cursor-pointer ${
+                          selectedPaymentMethodId === method.id
+                            ? "border-teal-500 bg-teal-500"
                             : "border-gray-300"
                         }`}
                       >
-                        {selectedMSI !== null && (
+                        {selectedPaymentMethodId === method.id && (
                           <div className="w-full h-full rounded-full bg-white scale-50"></div>
                         )}
                       </div>
-                    </div>
-                  </div>
-                ) : null;
-              })()}
-            </div>
 
-            {/* Métodos de pago guardados - Mostrar siempre (incluye tarjeta del sistema) */}
-            <div className="mb-4">
-              <h3 className="text-black font-medium mb-3 text-base md:text-lg lg:text-xl">
-                Métodos de pago
-              </h3>
-              <div className="space-y-2.5">
-                {allPaymentMethods.map((method) => (
-                  <div
-                    key={method.id}
-                    className={`flex items-center py-1.5 px-5 pl-10 border rounded-full transition-colors ${
-                      selectedPaymentMethodId === method.id
-                        ? "border-teal-500 bg-teal-50"
-                        : "border-black/50 bg-[#f9f9f9]"
-                    }`}
-                  >
-                    <div
-                      onClick={() => setSelectedPaymentMethodId(method.id)}
-                      className="flex items-center justify-center gap-3 mx-auto cursor-pointer text-base md:text-lg lg:text-xl"
-                    >
-                      <div>{getCardTypeIcon(method.cardBrand)}</div>
-                      <div>
-                        <p className="text-black">
-                          **** **** **** {method.lastFourDigits}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div
-                      onClick={() => setSelectedPaymentMethodId(method.id)}
-                      className={`w-4 h-4 rounded-full border-2 cursor-pointer ${
-                        selectedPaymentMethodId === method.id
-                          ? "border-teal-500 bg-teal-500"
-                          : "border-gray-300"
-                      }`}
-                    >
-                      {selectedPaymentMethodId === method.id && (
-                        <div className="w-full h-full rounded-full bg-white scale-50"></div>
+                      {/* Delete Button - No mostrar para tarjeta del sistema */}
+                      {method.id !== "system-default-card" && (
+                        <button
+                          onClick={() => handleDeleteCard(method.id)}
+                          disabled={deletingCardId === method.id}
+                          className="pl-2 text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50 cursor-pointer"
+                          title="Eliminar tarjeta"
+                        >
+                          {deletingCardId === method.id ? (
+                            <Loader2 className="size-5 animate-spin" />
+                          ) : (
+                            <Trash2 className="size-5" />
+                          )}
+                        </button>
                       )}
                     </div>
-
-                    {/* Delete Button - No mostrar para tarjeta del sistema */}
-                    {method.id !== "system-default-card" && (
-                      <button
-                        onClick={() => handleDeleteCard(method.id)}
-                        disabled={deletingCardId === method.id}
-                        className="pl-2 text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50 cursor-pointer"
-                        title="Eliminar tarjeta"
-                      >
-                        {deletingCardId === method.id ? (
-                          <Loader2 className="size-5 animate-spin" />
-                        ) : (
-                          <Trash2 className="size-5" />
-                        )}
-                      </button>
-                    )}
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Botón agregar tarjeta */}
-            <div className="mb-4">
+              {/* Botón agregar tarjeta */}
+              <div className="mb-4">
+                <button
+                  onClick={handleAddCard}
+                  className="border border-black/50 flex justify-center items-center gap-1 w-full text-black py-3 rounded-full cursor-pointer transition-colors bg-[#f9f9f9] hover:bg-gray-100 text-base md:text-lg lg:text-xl"
+                >
+                  <Plus className="size-5 md:size-6 lg:size-7" />
+                  Agregar método de pago
+                </button>
+              </div>
+
+              {/* Botón de pago */}
               <button
-                onClick={handleAddCard}
-                className="border border-black/50 flex justify-center items-center gap-1 w-full text-black py-3 rounded-full cursor-pointer transition-colors bg-[#f9f9f9] hover:bg-gray-100 text-base md:text-lg lg:text-xl"
+                onClick={handleInitiatePayment}
+                disabled={
+                  isProcessing || !selectedPaymentMethodId || isUnderMinimum
+                }
+                className={`w-full text-white py-3  rounded-full cursor-pointer transition-all active:scale-90 text-base md:text-lg lg:text-xl ${
+                  isProcessing || !selectedPaymentMethodId || isUnderMinimum
+                    ? "bg-gradient-to-r from-[#34808C] to-[#173E44] opacity-50 cursor-not-allowed"
+                    : "bg-gradient-to-r from-[#34808C] to-[#173E44]"
+                }`}
               >
-                <Plus className="size-5 md:size-6 lg:size-7" />
-                Agregar método de pago
+                {isProcessing ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <Loader2 className="h-5 w-5 md:h-6 md:w-6 lg:h-7 lg:w-7 animate-spin" />
+                    <span>Procesando pago...</span>
+                  </div>
+                ) : !selectedPaymentMethodId ? (
+                  "Selecciona una tarjeta"
+                ) : isUnderMinimum ? (
+                  "Mínimo no alcanzado"
+                ) : (
+                  "Pagar y ordenar"
+                )}
               </button>
             </div>
-
-            {/* Botón de pago */}
-            <button
-              onClick={handleInitiatePayment}
-              disabled={isProcessing || !selectedPaymentMethodId || isUnderMinimum}
-              className={`w-full text-white py-3  rounded-full cursor-pointer transition-colors text-base md:text-lg lg:text-xl ${
-                isProcessing || !selectedPaymentMethodId || isUnderMinimum
-                  ? "bg-gradient-to-r from-[#34808C] to-[#173E44] opacity-50 cursor-not-allowed"
-                  : "bg-gradient-to-r from-[#34808C] to-[#173E44]"
-              }`}
-            >
-              {isProcessing ? (
-                <div className="flex items-center justify-center gap-2">
-                  <Loader2 className="h-5 w-5 md:h-6 md:w-6 lg:h-7 lg:w-7 animate-spin" />
-                  <span>Procesando pago...</span>
-                </div>
-              ) : !selectedPaymentMethodId ? (
-                "Selecciona una tarjeta"
-              ) : isUnderMinimum ? (
-                "Mínimo no alcanzado"
-              ) : (
-                "Pagar y ordenar"
-              )}
-            </button>
           </div>
         </div>
-      </div>
       </div>
 
       {/* Modal de resumen del total */}

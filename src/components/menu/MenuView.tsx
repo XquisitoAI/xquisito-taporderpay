@@ -236,7 +236,7 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
         <div className="fixed bottom-6 md:bottom-8 lg:bottom-10 left-0 right-0 z-50 flex justify-center">
           <div
             onClick={() => navigateWithTable("/cart")}
-            className="bg-gradient-to-r from-[#34808C] to-[#173E44] text-white rounded-full px-6 md:px-8 lg:px-10 py-3 md:py-4 lg:py-5 shadow-lg flex items-center gap-3 md:gap-4 cursor-pointer transition-transform hover:scale-105 animate-bounce-in active:scale-95"
+            className="bg-gradient-to-r from-[#34808C] to-[#173E44] text-white rounded-full px-6 md:px-8 lg:px-10 py-4 md:py-5 lg:py-6 shadow-lg flex items-center gap-3 md:gap-4 cursor-pointer transition-all hover:scale-105 animate-bounce-in active:scale-90"
           >
             <ShoppingCart className="size-5 md:size-6 lg:size-7" />
             <span className="text-base md:text-lg lg:text-xl font-medium">

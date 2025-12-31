@@ -59,31 +59,50 @@ export function RestaurantProvider({ children }: RestaurantProviderProps) {
     if (!restaurantId) return;
 
     console.log("🔄 Refetching menu for restaurant:", restaurantId);
-    await fetchRestaurantData(restaurantId);
+    await fetchRestaurantData(restaurantId, branchNumber || undefined);
   };
 
   // Función para cargar datos del restaurante y menú
-  const fetchRestaurantData = async (id: number) => {
+  const fetchRestaurantData = async (id: number, branch?: number) => {
     try {
       setLoading(true);
       setError(null);
 
-      console.log("📡 Fetching restaurant data for ID:", id);
+      if (branch) {
+        console.log(
+          "📡 Fetching restaurant data for ID:",
+          id,
+          "branch:",
+          branch
+        );
+        // Obtener restaurante y menú filtrado por sucursal
+        const data = await restaurantService.getRestaurantWithMenuByBranch(
+          id,
+          branch
+        );
 
-      // Obtener restaurante y menú en una sola petición
-      const data = await restaurantService.getRestaurantWithMenu(id);
+        console.log("✅ Restaurant data loaded:", data.restaurant.name);
+        console.log(
+          "✅ Menu loaded with",
+          data.menu.length,
+          "sections (filtered by branch",
+          branch,
+          ")"
+        );
 
-      console.log("📦 Restaurant data loaded:", data);
+        setRestaurant(data.restaurant);
+        setMenu(data.menu);
+      } else {
+        console.log("📡 Fetching restaurant data for ID:", id);
+        // Obtener restaurante y menú completo (sin filtrar por sucursal)
+        const data = await restaurantService.getRestaurantWithMenu(id);
 
-      if (!data.restaurant || !data.menu) {
-        throw new Error("Invalid response structure from API");
+        console.log("✅ Restaurant data loaded:", data.restaurant.name);
+        console.log("✅ Menu loaded with", data.menu.length, "sections");
+
+        setRestaurant(data.restaurant);
+        setMenu(data.menu);
       }
-
-      console.log("✅ Restaurant:", data.restaurant.name);
-      console.log("✅ Menu sections:", data.menu.length);
-
-      setRestaurant(data.restaurant);
-      setMenu(data.menu);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to load restaurant data";
@@ -99,7 +118,7 @@ export function RestaurantProvider({ children }: RestaurantProviderProps) {
   // Effect para cargar datos cuando cambia el restaurantId
   useEffect(() => {
     if (restaurantId) {
-      fetchRestaurantData(restaurantId);
+      fetchRestaurantData(restaurantId, branchNumber || undefined);
     } else {
       // Reset state cuando no hay restaurantId
       setRestaurant(null);

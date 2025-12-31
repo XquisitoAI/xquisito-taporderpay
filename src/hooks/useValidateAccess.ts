@@ -45,13 +45,14 @@ export function useValidateAccess() {
       setBranchNumber(parseInt(branchNumber));
       dispatch({ type: "SET_TABLE_NUMBER", payload: tableNumber });
 
-      // Validar que el restaurante, sucursal y mesa existen
+      // Validar que el restaurante, sucursal y mesa existen y que el servicio "tap-order-and-pay" esté disponible
       try {
         const validation =
           await restaurantService.validateRestaurantBranchTable(
             parseInt(restaurantId),
             parseInt(branchNumber),
-            parseInt(tableNumber)
+            parseInt(tableNumber),
+            "tap-order-pay"
           );
 
         if (!validation.valid) {
