@@ -20,6 +20,7 @@ interface PaymentContextType {
   removePaymentMethod: (paymentMethodId: string) => void;
   setDefaultPaymentMethod: (paymentMethodId: string) => Promise<void>;
   deletePaymentMethod: (paymentMethodId: string) => Promise<void>;
+  migrateGuestPaymentMethods: () => Promise<void>;
 }
 
 const PaymentContext = createContext<PaymentContextType | undefined>(undefined);
@@ -233,6 +234,59 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
     }
   };
 
+  const migrateGuestPaymentMethods = async () => {
+    // Get guest ID from localStorage
+    const guestIdToMigrate = localStorage.getItem("xquisito-guest-id");
+
+    if (!guestIdToMigrate) {
+      console.log("ℹ️ No guest ID found - skipping payment methods migration");
+      return;
+    }
+
+    if (!user) {
+      console.log("⚠️ User not authenticated - cannot migrate payment methods");
+      return;
+    }
+
+    console.log(
+      "🔄 Migrating payment methods from guest:",
+      guestIdToMigrate,
+      "to user:",
+      user.id
+    );
+
+    try {
+      const response =
+        await paymentService.migrateGuestPaymentMethods(guestIdToMigrate);
+
+      if (response.success) {
+        console.log(
+          "✅ Payment methods migrated successfully:",
+          response.data?.migratedCount || 0,
+          "methods"
+        );
+
+        // Refresh payment methods to show the migrated ones
+        await refreshPaymentMethods();
+
+        // IMPORTANTE: Solo eliminar el guest-id después de que TODAS las migraciones se completen
+        // Esto incluye: cart migration (ejecutada en CartContext) + payment methods migration
+        console.log(
+          "🗑️ All migrations completed - removing guest ID from localStorage"
+        );
+        localStorage.removeItem("xquisito-guest-id");
+        console.log("✅ Guest ID successfully removed");
+      } else {
+        console.error(
+          "❌ Failed to migrate payment methods:",
+          response.error?.message
+        );
+      }
+    } catch (error) {
+      console.error("❌ Error migrating payment methods:", error);
+    }
+  };
+
   // Load payment methods when user context changes
   useEffect(() => {
     // If user is authenticated, clear any guest session
@@ -251,6 +305,30 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
     refreshPaymentMethods();
   }, [isAuthenticated, user?.id, isGuest, guestId, setAsAuthenticated]);
 
+  // Auto-migrate guest payment methods when user authenticates
+  useEffect(() => {
+    const autoMigrate = async () => {
+      // Solo ejecutar cuando:
+      // 1. El usuario está autenticado
+      // 2. Hay un guest-id en localStorage
+      const guestIdInStorage = localStorage.getItem("xquisito-guest-id");
+
+      if (user && guestIdInStorage) {
+        console.log(
+          "🔄 Auto-triggering payment methods migration after authentication"
+        );
+
+        // Esperar un poco para asegurarse de que el CartContext termine su migración primero
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+
+        await migrateGuestPaymentMethods();
+      }
+    };
+
+    autoMigrate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]); // Solo ejecutar cuando cambie el user ID (login/logout)
+
   const value: PaymentContextType = {
     paymentMethods,
     isLoading,
@@ -260,6 +338,7 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
     removePaymentMethod,
     setDefaultPaymentMethod,
     deletePaymentMethod,
+    migrateGuestPaymentMethods,
   };
 
   return (

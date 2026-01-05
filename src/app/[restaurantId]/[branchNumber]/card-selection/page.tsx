@@ -443,7 +443,7 @@ export default function CardSelectionPage() {
         await clearCart();
         console.log("🧹 Cart cleared after successful order");
 
-        // Redirigir directamente a payment-success
+        // Redirigir a payment-success
         console.log(
           "🔀 Redirecting to payment-success with orderId:",
           firstTapOrderId
@@ -881,7 +881,7 @@ export default function CardSelectionPage() {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">
+    <div className="min-h-new bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">
       <MenuHeaderBack />
 
       <div className="flex-1 flex flex-col justify-end overflow-y-auto">
@@ -1428,6 +1428,7 @@ export default function CardSelectionPage() {
               }
             }
 
+            // Redirigir a payment-success
             navigateWithTable(
               `/payment-success?orderId=${orderId || "unknown"}&success=true`
             );

@@ -737,7 +737,7 @@ export default function DishDetailPage() {
   // Si hubo error cargando el platillo
   if (dishError === "error") {
     return (
-      <div className="h-[100dvh] bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">
+      <div className="min-h-new bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">
         <div className="flex-1 flex flex-col items-center justify-center px-5 md:px-8 lg:px-10 pb-12 md:py-10 lg:py-12">
           <div className="w-full max-w-md">
             {/* Logo */}
@@ -794,7 +794,7 @@ export default function DishDetailPage() {
   // Si el platillo no fue encontrado o no hay datos
   if (dishError === "not_found" || !dishData) {
     return (
-      <div className="h-[100dvh] bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">
+      <div className="min-h-new bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">
         <div className="flex-1 flex flex-col items-center justify-center px-5 md:px-8 lg:px-10 pb-12 md:py-10 lg:py-12">
           <div className="w-full max-w-md">
             {/* Logo */}
@@ -848,7 +848,7 @@ export default function DishDetailPage() {
   const { dish, section } = dishData;
 
   return (
-    <div className="min-h-screen bg-white relative">
+    <div className="min-h-new bg-white relative">
       <RestaurantClosedModal
         isOpen={showClosedModal}
         onClose={() => setShowClosedModal(false)}
@@ -1353,9 +1353,9 @@ export default function DishDetailPage() {
               <button
                 onClick={handleAddToCartAndReturn}
                 disabled={!isFormValid()}
-                className={`w-full text-white py-4 md:py-5 lg:py-6 rounded-full transition-colors flex items-center justify-center gap-2 ${
+                className={`w-full text-white py-4 md:py-5 lg:py-6 rounded-full transition-all flex items-center justify-center gap-2 ${
                   isFormValid()
-                    ? "bg-gradient-to-r from-[#34808C] to-[#173E44] cursor-pointer animate-pulse-button active:scale-95 transition-transform"
+                    ? "bg-gradient-to-r from-[#34808C] to-[#173E44] cursor-pointer animate-pulse-button active:scale-95"
                     : "bg-gray-400 cursor-not-allowed opacity-60"
                 }`}
               >

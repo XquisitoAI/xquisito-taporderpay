@@ -19,6 +19,11 @@
   }
 }
 
+html {
+  height: 100%;
+  height: -webkit-fill-available;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -27,6 +32,8 @@ body {
     -apple-system,
     BlinkMacSystemFont,
     sans-serif;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
 }
 
 /* Ocultar scrollbar pero mantener funcionalidad de scroll */
@@ -337,4 +344,22 @@ body {
 
 .animate-pulse-button {
   animation: pulse-button 1.5s ease-out infinite;
+}
+
+.min-h-new {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  position: relative;
+  overflow-x: hidden;
+}
+
+@supports (min-height: 100dvh) {
+  .min-h-new {
+    min-height: 100dvh;
+  }
+}
+
+.min-h-new {
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
 }

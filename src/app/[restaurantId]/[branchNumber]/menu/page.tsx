@@ -8,7 +8,7 @@ import ValidationError from "@/components/ValidationError";
 import React from "react";
 
 const MenuPage = () => {
-  const { validationError, isValidating, tableNumber } = useValidateAccess();
+  const { validationError, tableNumber } = useValidateAccess();
   const { restaurant, loading, error } = useRestaurant();
 
   // Mostrar loader mientras carga

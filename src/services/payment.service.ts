@@ -74,9 +74,29 @@ class PaymentService {
   async addPaymentMethod(
     paymentData: AddPaymentMethodRequest
   ): Promise<ApiResponse<{ paymentMethod: PaymentMethod }>> {
+    // Obtener email del usuario autenticado o usar un email temporal para guests
+    let userEmail = "guest@xquisito.com"; // Fallback
+
+    if (typeof window !== "undefined") {
+      // Intentar obtener email del localStorage (si está disponible)
+      const storedEmail = localStorage.getItem("xquisito_user_email");
+      if (storedEmail) {
+        userEmail = storedEmail;
+      }
+    }
+
+    // Mapear los campos al formato esperado por el backend
+    const backendPayload = {
+      fullName: paymentData.cardholderName,
+      email: userEmail,
+      cardNumber: paymentData.cardNumber,
+      expDate: paymentData.expiryDate,
+      cvv: paymentData.cvv,
+    };
+
     return this.request("/payment-methods", {
       method: "POST",
-      body: JSON.stringify(paymentData),
+      body: JSON.stringify(backendPayload),
     });
   }
 
@@ -121,6 +141,16 @@ class PaymentService {
   async getPaymentHistory(): Promise<ApiResponse<PaymentHistory[]>> {
     return this.request("/payments/history", {
       method: "GET",
+    });
+  }
+
+  // Migrar métodos de pago de guest a usuario autenticado
+  async migrateGuestPaymentMethods(
+    guestId: string
+  ): Promise<ApiResponse<{ migratedCount: number }>> {
+    return this.request("/payment-methods/migrate-from-guest", {
+      method: "POST",
+      body: JSON.stringify({ guestId }),
     });
   }
 }

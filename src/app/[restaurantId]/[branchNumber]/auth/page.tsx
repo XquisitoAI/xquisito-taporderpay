@@ -117,7 +117,6 @@ export default function AuthPage() {
   useEffect(() => {
     if (tableNumber) {
       sessionStorage.setItem("pendingTableRedirect", tableNumber);
-      sessionStorage.setItem("signupFromPaymentFlow", "true");
     }
     if (restaurantId) {
       sessionStorage.setItem("pendingRestaurantId", restaurantId);
@@ -126,7 +125,13 @@ export default function AuthPage() {
     if (branchNumber) {
       setBranchNumber(parseInt(branchNumber));
     }
-  }, [tableNumber, restaurantId, branchNumber, setRestaurantId, setBranchNumber]);
+  }, [
+    tableNumber,
+    restaurantId,
+    branchNumber,
+    setRestaurantId,
+    setBranchNumber,
+  ]);
 
   // Countdown timer
   useEffect(() => {
@@ -138,6 +143,17 @@ export default function AuthPage() {
 
   // Helper function to handle post-auth redirects
   const handleAuthRedirect = () => {
+    const postAuthRedirect = sessionStorage.getItem(
+      "xquisito-post-auth-redirect"
+    );
+
+    if (postAuthRedirect) {
+      sessionStorage.removeItem("xquisito-post-auth-redirect");
+      // Navigate directly to the saved URL
+      router.push(postAuthRedirect);
+      return;
+    }
+
     const isFromPaymentFlow = sessionStorage.getItem("signupFromPaymentFlow");
     const isFromPaymentSuccess = sessionStorage.getItem(
       "signupFromPaymentSuccess"
@@ -298,7 +314,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col justify-center items-center px-4">
+    <div className="min-h-new bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col justify-center items-center px-4">
       {/* Back Button */}
       <button
         onClick={() => {
@@ -314,7 +330,7 @@ export default function AuthPage() {
           }
         }}
         disabled={step === "profile"}
-        className={`absolute top-4 md:top-6 lg:top-8 left-4 md:left-6 lg:left-8 p-2 md:p-3 text-white rounded-full transition-colors z-20 ${
+        className={`absolute top-4 md:top-6 lg:top-8 left-4 md:left-6 lg:left-8 p-2 md:p-3 text-white rounded-full transition-all active:bg-white/10 z-20 ${
           step === "profile"
             ? "opacity-50 cursor-not-allowed"
             : "hover:bg-white/10"
@@ -428,9 +444,9 @@ export default function AuthPage() {
               <p className="text-gray-300 text-xs">
                 Ejemplo:{" "}
                 {countryCode === "+52"
-                  ? "551 234 5678"
+                  ? "500 555 0006"
                   : countryCode === "+1"
-                    ? "212 555 1234"
+                    ? "500 555 0006"
                     : "123 456 789"}
               </p>
             </div>

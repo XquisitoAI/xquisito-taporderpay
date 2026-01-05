@@ -85,7 +85,7 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
   // Mostrar error si falla
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex items-center justify-center">
+      <div className="min-h-new bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex items-center justify-center">
         <div className="text-center px-6">
           <h1 className="text-2xl font-bold text-white mb-2">Error</h1>
           <p className="text-white">{error}</p>
@@ -97,7 +97,7 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
   // Mostrar mensaje si no hay restaurante
   if (!restaurant) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex items-center justify-center">
+      <div className="min-h-new bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex items-center justify-center">
         <div className="text-center px-6">
           <h1 className="text-2xl font-bold text-white mb-2">
             Restaurante no encontrado
@@ -108,7 +108,7 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
   }
 
   return (
-    <div className="min-h-screen bg-white relative">
+    <div className="min-h-new bg-white relative">
       <img
         src={
           restaurant.banner_url ||
@@ -133,7 +133,7 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
                   navigateWithTable("/auth");
                 }
               }}
-              className="bg-white rounded-full p-1.5 md:p-2 lg:p-2.5 border border-gray-400 shadow-sm cursor-pointer hover:bg-gray-50 transition-colors"
+              className="bg-white rounded-full p-1.5 md:p-2 lg:p-2.5 border border-gray-400 shadow-sm cursor-pointer hover:bg-gray-50 transition-all active:scale-90"
             >
               <Settings
                 className="size-5 md:size-6 lg:size-7 text-stone-800"
