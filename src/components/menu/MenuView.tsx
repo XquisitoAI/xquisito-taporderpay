@@ -217,7 +217,11 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
           {/* Items */}
           {filteredMenu.length > 0 ? (
             filteredMenu.map((section) => (
-              <MenuCategory key={section.id} section={section} />
+              <MenuCategory
+                key={section.id}
+                section={section}
+                showSectionName={filter === "Todo"}
+              />
             ))
           ) : (
             <div className="text-center py-10 md:py-16">
