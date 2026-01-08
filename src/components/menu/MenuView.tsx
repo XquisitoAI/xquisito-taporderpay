@@ -120,7 +120,7 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
 
       <MenuHeader restaurant={restaurant} tableNumber={tableNumber} />
 
-      <main className="mt-[11rem] md:mt-64 lg:mt-80 relative z-10">
+      <main className="mt-[9rem] md:mt-64 lg:mt-80 relative z-10">
         <div className="bg-white rounded-t-4xl flex flex-col items-center px-6 md:px-8 lg:px-10">
           <div className="mt-6 md:mt-8 flex items-start justify-between w-full">
             {/* Settings Icon */}
