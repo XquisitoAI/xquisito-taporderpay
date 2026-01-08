@@ -117,9 +117,9 @@ export default function UserPage() {
         </div>
 
         <div className="flex-1 h-full flex flex-col">
-          <div className="bg-white rounded-t-4xl flex-1 z-5 flex flex-col px-6 md:px-8 lg:px-10">
-            <div className="flex-1 flex flex-col items-center w-full h-full pb-[120px] md:pb-[140px] lg:pb-[160px]">
-              <div className="pt-48 md:pt-56 lg:pt-64 mb-6 md:mb-8">
+          <div className="bg-white rounded-t-4xl flex-1 z-5 flex flex-col px-6 md:px-8 lg:px-10 pb-32">
+            <div className="flex flex-col items-center w-full pt-32 md:pt-36 lg:pt-40">
+              <div className="mb-6 md:mb-8">
                 <h2 className="text-lg md:text-xl lg:text-2xl font-medium text-black">
                   Tu nombre
                 </h2>
