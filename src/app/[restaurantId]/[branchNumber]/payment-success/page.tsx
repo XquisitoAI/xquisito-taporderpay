@@ -69,7 +69,8 @@ export default function PaymentSuccessPage() {
   const [isLoadingOrder, setIsLoadingOrder] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
-  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(!isAuthenticated);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] =
+    useState(!isAuthenticated);
 
   // Bloquear scroll cuando los modales están abiertos
   useEffect(() => {
@@ -97,7 +98,7 @@ export default function PaymentSuccessPage() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       console.log(
-        "🔍 Payment success page - checking storage for payment data"
+        "🔍 Payment success page - checking storage for payment data",
       );
 
       // Get payment ID from URL to identify this specific payment
@@ -313,7 +314,7 @@ export default function PaymentSuccessPage() {
             restaurant_id: parseInt(restaurantId),
             rating: rating,
           }),
-        }
+        },
       );
 
       const data = await response.json();
@@ -461,7 +462,7 @@ export default function PaymentSuccessPage() {
           onClick={() => setIsTicketModalOpen(false)}
         >
           <div
-            className="bg-[#173E44]/80 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] w-full mx-4 md:mx-12 lg:mx-28 rounded-4xl z-999 max-h-[85vh] flex flex-col"
+            className="bg-[#173E44]/80 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] w-full mx-4 md:mx-12 lg:mx-28 rounded-4xl z-999 max-h-[77vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header - Fixed */}
@@ -501,9 +502,12 @@ export default function PaymentSuccessPage() {
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Order Info - Fixed */}
-              <div className="px-6 md:px-8 lg:px-10 border-t border-white/20 pt-4 md:pt-5 lg:pt-6 pb-4 md:pb-5 lg:pb-6">
+            {/* Scrollable Content - Detalles del pago + Items de la orden */}
+            <div className="flex-1 overflow-y-auto px-6 md:px-8 lg:px-10">
+              {/* Order Info */}
+              <div className="border-t border-white/20 py-4 md:py-5 lg:py-6">
                 <h3 className="font-medium text-xl md:text-2xl lg:text-3xl text-white mb-3 md:mb-4 lg:mb-5">
                   Detalles del pago
                 </h3>
@@ -540,7 +544,7 @@ export default function PaymentSuccessPage() {
                           paymentDetails.cardBrand || "unknown",
                           "small",
                           32,
-                          20
+                          20,
                         )}
                       </div>
                       <span className="text-sm md:text-base lg:text-lg">
@@ -550,64 +554,74 @@ export default function PaymentSuccessPage() {
                   )}
                 </div>
               </div>
-            </div>
 
-            {/* Order Items - Scrollable */}
-            {dishOrders.length > 0 && (
-              <div className="flex-1 overflow-y-auto px-6 md:px-8 lg:px-10 border-t border-white/20 pt-4 md:pt-5 lg:pt-6">
-                <h3 className="font-medium text-xl md:text-2xl lg:text-3xl text-white mb-3 md:mb-4 lg:mb-5">
-                  Items de la orden
-                </h3>
-                <div className="space-y-3 md:space-y-4 lg:space-y-5 pb-4 md:pb-5 lg:pb-6">
-                  {dishOrders.map((dish: any, index: number) => {
-                    // Calcular el precio total correcto: (precio base + extras) * cantidad
-                    const itemPrice = dish.price || 0;
-                    const extraPrice = dish.extra_price || 0;
-                    const quantity = dish.quantity || 1;
-                    const calculatedTotal = (itemPrice + extraPrice) * quantity;
+              {/* Order Items */}
+              {dishOrders.length > 0 && (
+                <div className="border-t border-white/20 py-4 md:py-5 lg:py-6 mt-4 md:mt-5 lg:mt-6">
+                  <h3 className="font-medium text-xl md:text-2xl lg:text-3xl text-white mb-3 md:mb-4 lg:mb-5">
+                    Items de la orden
+                  </h3>
+                  <div className="space-y-3 md:space-y-4 lg:space-y-5">
+                    {dishOrders.map((dish: any, index: number) => {
+                      // Calcular el precio total correcto: (precio base + extras) * cantidad
+                      const itemPrice = dish.price || 0;
+                      const extraPrice = dish.extra_price || 0;
+                      const quantity = dish.quantity || 1;
+                      const calculatedTotal =
+                        (itemPrice + extraPrice) * quantity;
 
-                    return (
-                      <div
-                        key={`${dish.dish_order_id || "dish"}-${index}-${dish.item}`}
-                        className="flex justify-between items-start gap-3 md:gap-4 lg:gap-5"
-                      >
+                      return (
+                        <div
+                          key={`${dish.dish_order_id || "dish"}-${index}-${dish.item}`}
+                          className="flex justify-between items-center gap-3 md:gap-4 lg:gap-5"
+                        >
+                          {dish.images &&
+                            dish.images.length > 0 &&
+                            dish.images[0] && (
+                              <img
+                                src={dish.images[0]}
+                                alt={dish.item}
+                                className="w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-lg object-cover"
+                              />
+                            )}
+                          <div className="flex-1">
+                            <p className="text-white font-medium text-base md:text-lg lg:text-xl">
+                              {quantity}x {dish.item}
+                            </p>
+                            {dish.guest_name && (
+                              <p className="text-xs md:text-sm lg:text-base text-white/60 uppercase">
+                                {dish.guest_name}
+                              </p>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <p className="text-white font-medium text-base md:text-lg lg:text-xl">
+                              ${calculatedTotal.toFixed(2)} MXN
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {/* Propina como item */}
+                    {paymentDetails?.tipAmount > 0 && (
+                      <div className="flex justify-between items-start gap-3 md:gap-4 lg:gap-5">
                         <div className="flex-1">
                           <p className="text-white font-medium text-base md:text-lg lg:text-xl">
-                            {quantity}x {dish.item}
+                            Propina
                           </p>
-                          {dish.guest_name && (
-                            <p className="text-xs md:text-sm lg:text-base text-white/60 uppercase">
-                              {dish.guest_name}
-                            </p>
-                          )}
                         </div>
                         <div className="text-right">
                           <p className="text-white font-medium text-base md:text-lg lg:text-xl">
-                            ${calculatedTotal.toFixed(2)} MXN
+                            ${paymentDetails.tipAmount.toFixed(2)} MXN
                           </p>
                         </div>
                       </div>
-                    );
-                  })}
-
-                  {/* Propina como item */}
-                  {paymentDetails?.tipAmount > 0 && (
-                    <div className="flex justify-between items-start gap-3 md:gap-4 lg:gap-5 pt-3 md:pt-4 lg:pt-5">
-                      <div className="flex-1">
-                        <p className="text-white font-medium text-base md:text-lg lg:text-xl">
-                          Propina
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-white font-medium text-base md:text-lg lg:text-xl">
-                          ${paymentDetails.tipAmount.toFixed(2)} MXN
-                        </p>
-                      </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Total Summary - Fixed */}
             <div className="flex-shrink-0 px-6 md:px-8 lg:px-10 flex justify-between items-center border-t border-white/20 pt-4 md:pt-5 lg:pt-6 pb-6 md:pb-8 lg:pb-10">
@@ -757,7 +771,7 @@ export default function PaymentSuccessPage() {
                                         </p>
                                       ))}
                                   </div>
-                                )
+                                ),
                               )}
                             </div>
                           )}

@@ -127,7 +127,7 @@ export default function CardSelectionPage() {
   const handleInitiatePayment = (): void => {
     if (!tableNumber) {
       alert(
-        "No se encontró el número de mesa. Por favor escanea el código QR nuevamente."
+        "No se encontró el número de mesa. Por favor escanea el código QR nuevamente.",
       );
       return;
     }
@@ -167,7 +167,7 @@ export default function CardSelectionPage() {
       // Si se seleccionó la tarjeta del sistema, omitir EcartPay y procesar directamente
       if (selectedPaymentMethodId === "system-default-card") {
         console.log(
-          "💳 Sistema: Procesando pago con tarjeta del sistema (sin EcartPay)"
+          "💳 Sistema: Procesando pago con tarjeta del sistema (sin EcartPay)",
         );
 
         // Continuar con la creación de dish orders directamente
@@ -182,7 +182,7 @@ export default function CardSelectionPage() {
                 headers: {
                   Authorization: `Bearer ${token}`,
                 },
-              }
+              },
             );
 
             if (userResponse.ok) {
@@ -256,19 +256,19 @@ export default function CardSelectionPage() {
             restaurantId,
             branchNumber.toString(),
             tableNumber,
-            dishOrderData
+            dishOrderData,
           );
 
           if (!dishOrderResult.success) {
             console.error("❌ Failed to create dish order:", dishOrderResult);
             throw new Error(
-              dishOrderResult.error || "Error al crear el dish order"
+              dishOrderResult.error || "Error al crear el dish order",
             );
           }
 
           console.log(
             "✅ Dish order created - Full response:",
-            dishOrderResult
+            dishOrderResult,
           );
 
           // Extraer y guardar el dish_order_id (estructura: dishOrderResult.data.dish_order_id)
@@ -281,7 +281,7 @@ export default function CardSelectionPage() {
 
           if (!firstTapOrderId) {
             console.log(
-              "📝 Attempting to extract tap_order_id from dishOrderResult..."
+              "📝 Attempting to extract tap_order_id from dishOrderResult...",
             );
 
             // La estructura de respuesta es: { success: true, data: { tap_order_id, dish_order_id, ... } }
@@ -306,13 +306,13 @@ export default function CardSelectionPage() {
         if (firstTapOrderId) {
           const paymentStatusResult = await tapOrderService.updatePaymentStatus(
             firstTapOrderId,
-            "paid"
+            "paid",
           );
 
           if (!paymentStatusResult.success) {
             console.warn(
               "⚠️ Failed to update payment status:",
-              paymentStatusResult.error
+              paymentStatusResult.error,
             );
           } else {
             console.log("✅ Payment status updated to 'paid'");
@@ -320,13 +320,13 @@ export default function CardSelectionPage() {
 
           const orderStatusResult = await tapOrderService.updateOrderStatus(
             firstTapOrderId,
-            "completed"
+            "completed",
           );
 
           if (!orderStatusResult.success) {
             console.warn(
               "⚠️ Failed to update order status:",
-              orderStatusResult.error
+              orderStatusResult.error,
             );
           } else {
             console.log("✅ Order status updated to 'completed'");
@@ -342,13 +342,13 @@ export default function CardSelectionPage() {
               } else {
                 console.warn(
                   `⚠️ Failed to mark dish order ${dishOrderId} as paid:`,
-                  markPaidResult.error
+                  markPaidResult.error,
                 );
               }
             } catch (error) {
               console.error(
                 `❌ Error marking dish order ${dishOrderId} as paid:`,
-                error
+                error,
               );
             }
           }
@@ -384,7 +384,7 @@ export default function CardSelectionPage() {
           } catch (transactionError) {
             console.error(
               "❌ Error recording payment transaction:",
-              transactionError
+              transactionError,
             );
           }
         }
@@ -420,6 +420,7 @@ export default function CardSelectionPage() {
             total_price: item.price * (item.quantity || 1),
             guest_name: customerName,
             custom_fields: item.customFields || null,
+            images: item.images,
           })),
           restaurantId: parseInt(restaurantId),
           paymentMethodId: null,
@@ -430,13 +431,13 @@ export default function CardSelectionPage() {
         // Guardar en localStorage y sessionStorage
         localStorage.setItem(
           "xquisito-completed-payment",
-          JSON.stringify(paymentDetailsForSuccess)
+          JSON.stringify(paymentDetailsForSuccess),
         );
 
         const uniqueKey = `xquisito-payment-success-${firstTapOrderId}`;
         sessionStorage.setItem(
           uniqueKey,
-          JSON.stringify(paymentDetailsForSuccess)
+          JSON.stringify(paymentDetailsForSuccess),
         );
 
         // Limpiar el carrito después de completar la orden
@@ -446,10 +447,10 @@ export default function CardSelectionPage() {
         // Redirigir a payment-success
         console.log(
           "🔀 Redirecting to payment-success with orderId:",
-          firstTapOrderId
+          firstTapOrderId,
         );
         router.push(
-          `/${restaurantId}/${branchNumber}/payment-success?orderId=${firstTapOrderId}&success=true&table=${tableNumber}`
+          `/${restaurantId}/${branchNumber}/payment-success?orderId=${firstTapOrderId}&success=true&table=${tableNumber}`,
         );
         return;
       }
@@ -457,7 +458,7 @@ export default function CardSelectionPage() {
       // Para tarjetas reales, continuar con el flujo normal de EcartPay
       console.log(
         "💳 Processing payment with EcartPay for user:",
-        user?.id || "guest"
+        user?.id || "guest",
       );
 
       // Paso 1: Procesar pago con endpoint existente
@@ -481,7 +482,7 @@ export default function CardSelectionPage() {
 
       if (!paymentResult.success) {
         throw new Error(
-          paymentResult.error?.message || "Error al procesar el pago"
+          paymentResult.error?.message || "Error al procesar el pago",
         );
       }
 
@@ -498,7 +499,7 @@ export default function CardSelectionPage() {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
-            }
+            },
           );
 
           if (userResponse.ok) {
@@ -577,13 +578,13 @@ export default function CardSelectionPage() {
           restaurantId,
           branchNumber.toString(),
           tableNumber,
-          dishOrderData
+          dishOrderData,
         );
 
         if (!dishOrderResult.success) {
           console.error("❌ Failed to create dish order:", dishOrderResult);
           throw new Error(
-            dishOrderResult.error || "Error al crear el dish order"
+            dishOrderResult.error || "Error al crear el dish order",
           );
         }
 
@@ -602,7 +603,7 @@ export default function CardSelectionPage() {
         // La estructura de respuesta es: { success: true, data: { tap_order_id, dish_order_id, ... } }
         if (!firstTapOrderId) {
           console.log(
-            "📝 Attempting to extract tap_order_id from dishOrderResult (saved card)..."
+            "📝 Attempting to extract tap_order_id from dishOrderResult (saved card)...",
           );
 
           firstTapOrderId = dishOrderResult.data?.tap_order_id || null;
@@ -610,7 +611,7 @@ export default function CardSelectionPage() {
           console.log("📝 Extracted tap_order_id:", firstTapOrderId);
           console.log(
             "📝 Available properties in dishOrderResult.data:",
-            Object.keys(dishOrderResult.data || {})
+            Object.keys(dishOrderResult.data || {}),
           );
 
           // Guardar inmediatamente en el estado
@@ -618,7 +619,7 @@ export default function CardSelectionPage() {
             setCompletedOrderId(firstTapOrderId);
           } else {
             console.error(
-              "❌ Could not extract tap_order_id from response (saved card)"
+              "❌ Could not extract tap_order_id from response (saved card)",
             );
             console.error("❌ dishOrderResult.data:", dishOrderResult.data);
           }
@@ -630,13 +631,13 @@ export default function CardSelectionPage() {
         // Actualizar payment status a 'paid'
         const paymentStatusResult = await tapOrderService.updatePaymentStatus(
           firstTapOrderId,
-          "paid"
+          "paid",
         );
 
         if (!paymentStatusResult.success) {
           console.warn(
             "⚠️ Failed to update payment status:",
-            paymentStatusResult.error
+            paymentStatusResult.error,
           );
         } else {
           console.log("✅ Payment status updated to 'paid'");
@@ -645,13 +646,13 @@ export default function CardSelectionPage() {
         // Actualizar order status a 'completed'
         const orderStatusResult = await tapOrderService.updateOrderStatus(
           firstTapOrderId,
-          "completed"
+          "completed",
         );
 
         if (!orderStatusResult.success) {
           console.warn(
             "⚠️ Failed to update order status:",
-            orderStatusResult.error
+            orderStatusResult.error,
           );
         } else {
           console.log("✅ Order status updated to 'completed'");
@@ -667,13 +668,13 @@ export default function CardSelectionPage() {
             } else {
               console.warn(
                 `⚠️ Failed to mark dish order ${dishOrderId} as paid:`,
-                markPaidResult.error
+                markPaidResult.error,
               );
             }
           } catch (error) {
             console.error(
               `❌ Error marking dish order ${dishOrderId} as paid:`,
-              error
+              error,
             );
           }
         }
@@ -710,7 +711,7 @@ export default function CardSelectionPage() {
           } catch (transactionError) {
             console.error(
               "❌ Error recording payment transaction:",
-              transactionError
+              transactionError,
             );
             // Don't throw - continue with payment flow even if transaction recording fails
           }
@@ -770,13 +771,13 @@ export default function CardSelectionPage() {
       // Guardar en localStorage y sessionStorage
       localStorage.setItem(
         "xquisito-completed-payment",
-        JSON.stringify(paymentDetailsForSuccess)
+        JSON.stringify(paymentDetailsForSuccess),
       );
 
       const uniqueKey = `xquisito-payment-success-${firstTapOrderId}`;
       sessionStorage.setItem(
         uniqueKey,
-        JSON.stringify(paymentDetailsForSuccess)
+        JSON.stringify(paymentDetailsForSuccess),
       );
 
       // Limpiar el carrito después de completar la orden
@@ -796,7 +797,7 @@ export default function CardSelectionPage() {
 
   const handleAddCard = (): void => {
     navigateWithTable(
-      `/add-card?amount=${totalAmount}&baseAmount=${baseAmount}&scan=true`
+      `/add-card?amount=${totalAmount}&baseAmount=${baseAmount}&scan=false`,
     );
   };
 
@@ -830,7 +831,7 @@ export default function CardSelectionPage() {
 
     // Obtener el tipo de tarjeta seleccionada
     const selectedMethod = allPaymentMethods.find(
-      (pm) => pm.id === selectedPaymentMethodId
+      (pm) => pm.id === selectedPaymentMethodId,
     );
     const cardBrand = selectedMethod?.cardBrand;
 
@@ -1024,7 +1025,7 @@ export default function CardSelectionPage() {
                 {/* Payment Options - Solo mostrar si es tarjeta de crédito */}
                 {(() => {
                   const selectedMethod = allPaymentMethods.find(
-                    (pm) => pm.id === selectedPaymentMethodId
+                    (pm) => pm.id === selectedPaymentMethodId,
                   );
                   return selectedMethod?.cardType === "credit" ? (
                     <div
@@ -1249,7 +1250,7 @@ export default function CardSelectionPage() {
             <div className="px-6 py-4">
               {(() => {
                 const selectedMethod = allPaymentMethods.find(
-                  (pm) => pm.id === selectedPaymentMethodId
+                  (pm) => pm.id === selectedPaymentMethodId,
                 );
                 const cardBrand = selectedMethod?.cardBrand;
 
@@ -1324,7 +1325,7 @@ export default function CardSelectionPage() {
                     {/* Opciones MSI */}
                     {(() => {
                       const availableOptions = msiOptions.filter(
-                        (option) => totalAmount >= option.minAmount
+                        (option) => totalAmount >= option.minAmount,
                       );
                       const hasUnavailableOptions =
                         availableOptions.length < msiOptions.length;
@@ -1415,7 +1416,7 @@ export default function CardSelectionPage() {
           onContinue={() => {
             // Obtener el orderId desde localStorage como respaldo
             const paymentData = localStorage.getItem(
-              "xquisito-completed-payment"
+              "xquisito-completed-payment",
             );
             let orderId = completedOrderId;
 
@@ -1430,7 +1431,7 @@ export default function CardSelectionPage() {
 
             // Redirigir a payment-success
             navigateWithTable(
-              `/payment-success?orderId=${orderId || "unknown"}&success=true`
+              `/payment-success?orderId=${orderId || "unknown"}&success=true`,
             );
           }}
           onCancel={handleCancelPayment}
