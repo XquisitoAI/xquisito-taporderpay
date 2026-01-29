@@ -146,7 +146,7 @@ const OrderAnimation = ({
     <>
       {/* White circle */}
       {animationState === "circle" && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none overflow-hidden">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none overflow-hidden bg-white">
           <div className="circle-animation"></div>
         </div>
       )}
@@ -154,7 +154,7 @@ const OrderAnimation = ({
       {/* Contenido */}
       {(animationState === "content" || animationState === "greenCircle") && (
         <div className="fixed inset-0 z-[9999] bg-white overflow-hidden">
-          <div className="min-h-new bg-white p-8 animate-fade-in flex flex-col overflow-y-auto">
+          <div className="min-h-dvh bg-white p-8 animate-fade-in flex flex-col overflow-y-auto">
             <div className="flex flex-col flex-1">
               {/* Logo animado */}
               <div className="mb-6 md:mb-8 lg:mb-10 mt-8 md:mt-12 lg:mt-14 w-fit relative">
