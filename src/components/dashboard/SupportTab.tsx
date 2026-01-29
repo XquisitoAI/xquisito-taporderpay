@@ -127,7 +127,7 @@ export default function SupportTab({
             : profile?.firstName || null;
         const tableNumber = state.tableNumber || null;
 
-        const contextualMessage = `[CONTEXT: support_dashboard, table_number=${tableNumber || "null"}, user_id=${userId || "null"}, user_name="${userName || "unknown"}"]
+        const contextualMessage = `[CONTEXT: service=support_dashboard, table_number=${tableNumber || "null"}, user_id=${userId || "null"}, user_name="${userName || "unknown"}"]
 [USER_MESSAGE: ${userMessage}]`;
 
         const result = await chatWithAgent(contextualMessage, sessionId);

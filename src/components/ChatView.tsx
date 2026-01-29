@@ -12,7 +12,18 @@ interface ChatViewProps {
 
 // Tipo para los eventos del stream (basado en la API real de AI Spine)
 interface StreamEvent {
-  type: "token" | "done" | "error" | "conversation_start" | "thinking_start" | "thinking_end" | "node_start" | "node_end" | "final_response" | "tool_start" | "tool_end";
+  type:
+    | "token"
+    | "done"
+    | "error"
+    | "conversation_start"
+    | "thinking_start"
+    | "thinking_end"
+    | "node_start"
+    | "node_end"
+    | "final_response"
+    | "tool_start"
+    | "tool_end";
   content?: string;
   session_id?: string;
   tool_name?: string;
@@ -29,7 +40,7 @@ async function streamFromAgent(
   onSessionId: (sessionId: string) => void,
   onToolStart: (toolName: string) => void,
   onToolEnd: () => void,
-  onFinalResponse?: (content: string) => void
+  onFinalResponse?: (content: string) => void,
 ): Promise<void> {
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/ai-agent/chat/stream`,
@@ -42,7 +53,7 @@ async function streamFromAgent(
         message,
         session_id: sessionId,
       }),
-    }
+    },
   );
 
   if (!response.ok) {
@@ -104,7 +115,6 @@ async function streamFromAgent(
 
 // Mapeo de nombres de herramientas a nombres amigables
 const toolDisplayNames: Record<string, string> = {
-  thinking: "Pensando...",
   extracts_image_urls: "Obteniendo imagen",
   retrieves_restaurant_information: "Obteniendo información del restaurante",
   extract_restaurant_dish: "Obteniendo estadísticas del platillo",
@@ -156,8 +166,12 @@ const Spinner = () => (
     />
     <style jsx>{`
       @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
       }
     `}</style>
   </svg>
@@ -186,12 +200,14 @@ const hasIncompleteImageUrl = (text: string): boolean => {
     return true;
   }
   // Detectar URL de imagen incompleta al final (empieza con http pero no termina con extensión de imagen completa)
-  if (/https?:\/\/[^\s]*$/.test(text)) {
-    const urlMatch = text.match(/https?:\/\/[^\s]*$/);
+  if (/https?:\/\/[^\s)]*$/.test(text)) {
+    const urlMatch = text.match(/https?:\/\/[^\s)]*$/);
     if (urlMatch) {
       const partialUrl = urlMatch[0];
       // Si parece que está escribiendo una URL de imagen pero no está completa
-      if (!/\.(jpg|jpeg|png|gif|webp|svg|avif)(\?[^\s]*)?$/i.test(partialUrl)) {
+      if (
+        !/\.(jpg|jpeg|png|gif|webp|svg|avif)(\?[^\s)]*)?$/i.test(partialUrl)
+      ) {
         return true;
       }
     }
@@ -200,117 +216,156 @@ const hasIncompleteImageUrl = (text: string): boolean => {
 };
 
 // Componente para renderizar mensajes con imágenes (memoizado para evitar re-renders innecesarios)
-const MessageContent = memo(({ content, isStreaming, activeTool }: { content: string; isStreaming?: boolean; activeTool?: string | null }) => {
-  // Si el contenido está vacío, mostrar herramienta o puntos de carga
-  if (!content) {
-    if (activeTool) {
-      return (
-        <div className="flex items-center gap-2">
-          <Spinner />
-          <span className="text-gray-500">{toolDisplayNames[activeTool] || activeTool}</span>
-        </div>
-      );
+const MessageContent = memo(
+  ({
+    content,
+    isStreaming,
+    activeTool,
+  }: {
+    content: string;
+    isStreaming?: boolean;
+    activeTool?: string | null;
+  }) => {
+    // Si el contenido está vacío, mostrar herramienta o puntos de carga
+    if (!content) {
+      if (activeTool) {
+        return (
+          <div className="flex items-center gap-2">
+            <Spinner />
+            <span className="text-gray-500">
+              {toolDisplayNames[activeTool] || activeTool}
+            </span>
+          </div>
+        );
+      }
+      return <LoadingDots />;
     }
-    return <LoadingDots />;
-  }
 
-  // Si está en streaming o hay una URL de imagen incompleta, mostrar texto plano
-  if (isStreaming || hasIncompleteImageUrl(content)) {
-    return <p className="whitespace-pre-wrap">{content}</p>;
-  }
+    // Si está en streaming, reemplazar URLs de imagen con LoadingDots inline
+    if (isStreaming) {
+      const IMAGE_PLACEHOLDER = '\u0000IMG\u0000';
+      // Reemplazar markdown de imagen completo e incompleto con placeholder
+      let processed = content
+        .replace(/!\[[^\]]*\]\(https?:\/\/[^\s)]+\.(?:jpg|jpeg|png|gif|webp|svg|avif)(?:\?[^\s)]*)?\)/gi, IMAGE_PLACEHOLDER)
+        .replace(/!\[[^\]]*\]?\(?https?:\/\/[^\s)]*$/, IMAGE_PLACEHOLDER)
+        .replace(/(?<![(\[])(https?:\/\/[^\s)]+\.(?:jpg|jpeg|png|gif|webp|svg|avif)(?:\?[^\s)]*)?)/gi, IMAGE_PLACEHOLDER);
+      if (hasIncompleteImageUrl(processed)) {
+        processed = processed.replace(/https?:\/\/[^\s)]*$/, IMAGE_PLACEHOLDER);
+      }
 
-  // Regex para detectar imágenes en formato Markdown: ![alt](url)
-  const markdownImageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
+      const parts = processed.split(IMAGE_PLACEHOLDER);
+      const elements: React.ReactNode[] = [];
+      parts.forEach((part, i) => {
+        if (part) {
+          elements.push(<span key={`t${i}`} className="whitespace-pre-wrap">{part}</span>);
+        }
+        if (i < parts.length - 1) {
+          elements.push(<LoadingDots key={`d${i}`} />);
+        }
+      });
 
-  // Regex para detectar URLs directas de imágenes
-  const directImageRegex =
-    /(?<![(\[])(https?:\/\/[^\s)]+\.(?:jpg|jpeg|png|gif|webp|svg|avif)(?:\?[^\s)]*)?)/gi;
+      return <div>{elements}</div>;
+    }
 
-  // Procesar el contenido
-  const elements: React.ReactNode[] = [];
-  let lastIndex = 0;
-  let key = 0;
+    // Regex para detectar imágenes en formato Markdown: ![alt](url)
+    const markdownImageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
 
-  // Primero, encontrar todas las imágenes Markdown
-  const matches: Array<{ index: number; length: number; type: 'markdown' | 'direct'; url: string; alt?: string }> = [];
+    // Regex para detectar URLs directas de imágenes
+    const directImageRegex =
+      /(?<![(\[])(https?:\/\/[^\s)]+\.(?:jpg|jpeg|png|gif|webp|svg|avif)(?:\?[^\s)]*)?)/gi;
 
-  let match;
-  while ((match = markdownImageRegex.exec(content)) !== null) {
-    matches.push({
-      index: match.index,
-      length: match[0].length,
-      type: 'markdown',
-      alt: match[1],
-      url: match[2]
-    });
-  }
+    // Procesar el contenido
+    const elements: React.ReactNode[] = [];
+    let lastIndex = 0;
+    let key = 0;
 
-  // Luego, encontrar URLs directas (que no estén dentro de Markdown)
-  while ((match = directImageRegex.exec(content)) !== null) {
-    // Verificar que no esté dentro de un match de Markdown
-    const isInsideMarkdown = matches.some(
-      m => match!.index >= m.index && match!.index < m.index + m.length
-    );
-    if (!isInsideMarkdown) {
+    // Primero, encontrar todas las imágenes Markdown
+    const matches: Array<{
+      index: number;
+      length: number;
+      type: "markdown" | "direct";
+      url: string;
+      alt?: string;
+    }> = [];
+
+    let match;
+    while ((match = markdownImageRegex.exec(content)) !== null) {
       matches.push({
         index: match.index,
         length: match[0].length,
-        type: 'direct',
-        url: match[0]
+        type: "markdown",
+        alt: match[1],
+        url: match[2],
       });
     }
-  }
 
-  // Ordenar por posición
-  matches.sort((a, b) => a.index - b.index);
+    // Luego, encontrar URLs directas (que no estén dentro de Markdown)
+    while ((match = directImageRegex.exec(content)) !== null) {
+      // Verificar que no esté dentro de un match de Markdown
+      const isInsideMarkdown = matches.some(
+        (m) => match!.index >= m.index && match!.index < m.index + m.length,
+      );
+      if (!isInsideMarkdown) {
+        matches.push({
+          index: match.index,
+          length: match[0].length,
+          type: "direct",
+          url: match[0],
+        });
+      }
+    }
 
-  // Construir los elementos
-  for (const m of matches) {
-    // Agregar texto antes de la imagen
-    if (m.index > lastIndex) {
-      const text = content.slice(lastIndex, m.index);
+    // Ordenar por posición
+    matches.sort((a, b) => a.index - b.index);
+
+    // Construir los elementos
+    for (const m of matches) {
+      // Agregar texto antes de la imagen
+      if (m.index > lastIndex) {
+        const text = content.slice(lastIndex, m.index);
+        if (text.trim()) {
+          elements.push(
+            <p key={key++} className="whitespace-pre-wrap">
+              {text}
+            </p>,
+          );
+        }
+      }
+
+      // Agregar la imagen
+      elements.push(
+        <img
+          key={key++}
+          src={m.url}
+          alt={m.alt || "Imagen del agente"}
+          className="rounded-lg max-w-full h-auto"
+          loading="lazy"
+        />,
+      );
+
+      lastIndex = m.index + m.length;
+    }
+
+    // Agregar texto restante
+    if (lastIndex < content.length) {
+      const text = content.slice(lastIndex);
       if (text.trim()) {
         elements.push(
           <p key={key++} className="whitespace-pre-wrap">
             {text}
-          </p>
+          </p>,
         );
       }
     }
 
-    // Agregar la imagen
-    elements.push(
-      <img
-        key={key++}
-        src={m.url}
-        alt={m.alt || "Imagen del agente"}
-        className="rounded-lg max-w-full h-auto"
-        loading="lazy"
-      />
-    );
-
-    lastIndex = m.index + m.length;
-  }
-
-  // Agregar texto restante
-  if (lastIndex < content.length) {
-    const text = content.slice(lastIndex);
-    if (text.trim()) {
-      elements.push(
-        <p key={key++} className="whitespace-pre-wrap">
-          {text}
-        </p>
-      );
+    // Si no hay elementos (solo espacios), mostrar el contenido original
+    if (elements.length === 0) {
+      return <p className="whitespace-pre-wrap">{content}</p>;
     }
-  }
 
-  // Si no hay elementos (solo espacios), mostrar el contenido original
-  if (elements.length === 0) {
-    return <p className="whitespace-pre-wrap">{content}</p>;
-  }
-
-  return <div className="space-y-2">{elements}</div>;
-});
+    return <div className="space-y-2">{elements}</div>;
+  },
+);
 
 MessageContent.displayName = "MessageContent";
 
@@ -361,7 +416,7 @@ export default function ChatView({ onBack }: ChatViewProps) {
         const currentGuestId = isGuest ? guestId : null;
 
         // Construir el mensaje con el contexto separado
-        const contextualMessage = `[CONTEXT: restaurant_id=${restaurantId || "null"}, user_id=${userId || "null"}, guest_id=${currentGuestId || "null"}, branch_number=${branchNumber || "null"}]
+        const contextualMessage = `[CONTEXT: service=tap_order_and_pay, restaurant_id=${restaurantId || "null"}, user_id=${userId || "null"}, guest_id=${currentGuestId || "null"}, branch_number=${branchNumber || "null"}]
 [USER_MESSAGE: ${userMessage}]`;
 
         // Agregar mensaje vacío de Pepper mientras se procesa
@@ -413,7 +468,7 @@ export default function ChatView({ onBack }: ChatViewProps) {
               }
               return prev;
             });
-          }
+          },
         );
 
         setIsStreaming(false);
@@ -517,7 +572,8 @@ export default function ChatView({ onBack }: ChatViewProps) {
           </div>
         )}
         {messages.map((msg, index) => {
-          const isLastPepperMessage = msg.role === "pepper" && index === messages.length - 1;
+          const isLastPepperMessage =
+            msg.role === "pepper" && index === messages.length - 1;
           return (
             <div
               key={index}
