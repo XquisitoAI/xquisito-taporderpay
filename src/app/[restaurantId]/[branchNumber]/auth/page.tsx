@@ -144,7 +144,7 @@ export default function AuthPage() {
   // Helper function to handle post-auth redirects
   const handleAuthRedirect = () => {
     const postAuthRedirect = sessionStorage.getItem(
-      "xquisito-post-auth-redirect"
+      "xquisito-post-auth-redirect",
     );
 
     if (postAuthRedirect) {
@@ -155,16 +155,12 @@ export default function AuthPage() {
     }
 
     const isFromPaymentFlow = sessionStorage.getItem("signupFromPaymentFlow");
-    const isFromPaymentSuccess = sessionStorage.getItem(
-      "signupFromPaymentSuccess"
-    );
     const isFromMenu = sessionStorage.getItem("signInFromMenu");
     const isFromOrder = sessionStorage.getItem("signupFromOrder");
 
     // Clear all session flags
     sessionStorage.removeItem("pendingTableRedirect");
     sessionStorage.removeItem("signupFromPaymentFlow");
-    sessionStorage.removeItem("signupFromPaymentSuccess");
     sessionStorage.removeItem("signInFromMenu");
     sessionStorage.removeItem("signupFromOrder");
 
@@ -177,9 +173,6 @@ export default function AuthPage() {
     } else if (isFromPaymentFlow && tableNumber) {
       // User signed up during payment flow, redirect to payment-options
       navigateWithTable("/card-selection");
-    } else if (isFromPaymentSuccess) {
-      // User signed up from payment-success, redirect to dashboard
-      navigateWithTable("/dashboard");
     } else {
       // Default redirect to menu
       navigateWithTable("/menu");
