@@ -882,8 +882,40 @@ export default function CardSelectionPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">
-      <MenuHeaderBack />
+    <>
+      {/* Animación de orden completada - fuera del contenedor principal para Safari */}
+      {showAnimation && (
+        <OrderAnimation
+          userName={completedUserName}
+          orderedItems={completedOrderItems}
+          onContinue={() => {
+            // Obtener el orderId desde localStorage como respaldo
+            const paymentData = localStorage.getItem(
+              "xquisito-completed-payment",
+            );
+            let orderId = completedOrderId;
+
+            if (!orderId && paymentData) {
+              try {
+                const parsed = JSON.parse(paymentData);
+                orderId = parsed.orderId;
+              } catch (e) {
+                console.error("Error parsing payment data:", e);
+              }
+            }
+
+            // Redirigir a payment-success
+            navigateWithTable(
+              `/payment-success?orderId=${orderId || "unknown"}&success=true`,
+            );
+          }}
+          onCancel={handleCancelPayment}
+          onConfirm={handleConfirmPayment}
+        />
+      )}
+
+      <div className="min-h-dvh bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">
+        <MenuHeaderBack />
 
       <div className="flex-1 flex flex-col justify-end overflow-y-auto">
         <div className="px-4 w-full">
@@ -1407,37 +1439,7 @@ export default function CardSelectionPage() {
           </div>
         </div>
       )}
-
-      {/* Animación de orden completada */}
-      {showAnimation && (
-        <OrderAnimation
-          userName={completedUserName}
-          orderedItems={completedOrderItems}
-          onContinue={() => {
-            // Obtener el orderId desde localStorage como respaldo
-            const paymentData = localStorage.getItem(
-              "xquisito-completed-payment",
-            );
-            let orderId = completedOrderId;
-
-            if (!orderId && paymentData) {
-              try {
-                const parsed = JSON.parse(paymentData);
-                orderId = parsed.orderId;
-              } catch (e) {
-                console.error("Error parsing payment data:", e);
-              }
-            }
-
-            // Redirigir a payment-success
-            navigateWithTable(
-              `/payment-success?orderId=${orderId || "unknown"}&success=true`,
-            );
-          }}
-          onCancel={handleCancelPayment}
-          onConfirm={handleConfirmPayment}
-        />
-      )}
     </div>
+    </>
   );
 }
