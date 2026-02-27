@@ -67,7 +67,7 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
           items: section.items.filter(
             (item) =>
               item.name.toLowerCase().includes(query) ||
-              item.description?.toLowerCase().includes(query)
+              item.description?.toLowerCase().includes(query),
           ),
         }))
         .filter((section) => section.items.length > 0);
@@ -129,6 +129,8 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
                 if (isAuthenticated) {
                   navigateWithTable("/dashboard");
                 } else {
+                  sessionStorage.removeItem("signupFromOrder");
+                  sessionStorage.removeItem("signupFromPaymentFlow");
                   sessionStorage.setItem("signInFromMenu", "true");
                   navigateWithTable("/auth");
                 }

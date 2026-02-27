@@ -319,6 +319,9 @@ export default function AuthPage() {
             // Can't go back from profile, user is already authenticated
             return;
           } else {
+            sessionStorage.removeItem("signupFromPaymentFlow");
+            sessionStorage.removeItem("signInFromMenu");
+            sessionStorage.removeItem("signupFromOrder");
             router.back();
           }
         }}
@@ -581,7 +584,9 @@ export default function AuthPage() {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading || !firstName || !lastName || !birthDate || !gender}
+              disabled={
+                loading || !firstName || !lastName || !birthDate || !gender
+              }
               className="w-full bg-black hover:bg-stone-950 text-white py-3 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-6"
             >
               {loading ? "Guardando..." : "Continuar"}
