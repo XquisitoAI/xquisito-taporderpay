@@ -108,7 +108,7 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
   }
 
   return (
-    <div className="min-h-new bg-white relative">
+    <div className="h-dvh bg-white relative overflow-y-auto">
       <img
         src={
           restaurant.banner_url ||

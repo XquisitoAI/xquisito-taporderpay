@@ -30,7 +30,7 @@ export default function DishDetailPage() {
   const [localQuantity, setLocalQuantity] = useState(0);
   const [isPulsing, setIsPulsing] = useState(false);
   const [openSections, setOpenSections] = useState<{ [key: string]: boolean }>(
-    {}
+    {},
   );
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [touchStart, setTouchStart] = useState(0);
@@ -235,7 +235,7 @@ export default function DishDetailPage() {
   const handleCheckboxChange = (
     fieldId: string,
     optionId: string,
-    field?: CustomField
+    field?: CustomField,
   ) => {
     setCustomFieldSelections((prev) => {
       const current = (prev[fieldId] as string[]) || [];
@@ -254,7 +254,7 @@ export default function DishDetailPage() {
       if (current.length >= maxSelections) {
         // Mostrar feedback visual o sonoro si se excede el límite
         console.log(
-          `Máximo ${maxSelections} opción${maxSelections > 1 ? "es" : ""} permitida${maxSelections > 1 ? "s" : ""}`
+          `Máximo ${maxSelections} opción${maxSelections > 1 ? "es" : ""} permitida${maxSelections > 1 ? "s" : ""}`,
         );
         return prev; // No agregar la nueva selección
       }
@@ -270,7 +270,7 @@ export default function DishDetailPage() {
   const handleQuantityChange = (
     fieldId: string,
     optionId: string,
-    quantity: number
+    quantity: number,
   ) => {
     setCustomFieldSelections((prev) => {
       const current = (prev[fieldId] as Record<string, number>) || {};
@@ -308,7 +308,7 @@ export default function DishDetailPage() {
     if (distance > 0) {
       // Swipe left - siguiente imagen
       setCurrentImageIndex((prev) =>
-        prev < dishData.dish.images.length - 1 ? prev + 1 : prev
+        prev < dishData.dish.images.length - 1 ? prev + 1 : prev,
       );
     } else {
       // Swipe right - imagen anterior
@@ -409,7 +409,7 @@ export default function DishDetailPage() {
           myReview.id,
           reviewRating,
           userId,
-          guestId
+          guestId,
         );
       } else {
         response = await reviewsApi.createReview({
@@ -589,9 +589,9 @@ export default function DishDetailPage() {
           sum +
           field.selectedOptions.reduce(
             (s, opt) => s + opt.price * (opt.quantity || 1),
-            0
+            0,
           ),
-        0
+        0,
       ) || 0;
 
     setLocalQuantity((prev) => prev + 1);
@@ -696,9 +696,9 @@ export default function DishDetailPage() {
           sum +
           field.selectedOptions.reduce(
             (s, opt) => s + opt.price * (opt.quantity || 1),
-            0
+            0,
           ),
-        0
+        0,
       ) || 0;
 
     setLocalQuantity((prev) => prev + 1);
@@ -729,7 +729,7 @@ export default function DishDetailPage() {
     setLocalQuantity((prev) => Math.max(0, prev - 1));
 
     const cartItem = cartState.items.find(
-      (cartItem) => cartItem.id === dishData.dish.id
+      (cartItem) => cartItem.id === dishData.dish.id,
     );
     if (cartItem) {
       await updateQuantity(dishData.dish.id, cartItem.quantity - 1);
@@ -874,7 +874,7 @@ export default function DishDetailPage() {
   const { dish, section } = dishData;
 
   return (
-    <div className="min-h-new bg-white relative">
+    <div className="h-dvh bg-white relative overflow-y-auto">
       <RestaurantClosedModal
         isOpen={showClosedModal}
         onClose={() => setShowClosedModal(false)}
@@ -1075,7 +1075,7 @@ export default function DishDetailPage() {
                                 ] as string[] | undefined;
                                 if (selection && selection.length > 0) {
                                   const selectedOption = field.options?.find(
-                                    (opt) => opt.id === selection[0]
+                                    (opt) => opt.id === selection[0],
                                   );
                                   return (
                                     <span className="text-black text-sm md:text-base mt-1">
@@ -1109,7 +1109,7 @@ export default function DishDetailPage() {
 
                               if (isValidQuantitySelection) {
                                 const totalQuantity = Object.values(
-                                  quantitySelection as Record<string, number>
+                                  quantitySelection as Record<string, number>,
                                 ).reduce((sum, qty) => sum + qty, 0);
                                 if (totalQuantity > 0) {
                                   return (
@@ -1132,7 +1132,7 @@ export default function DishDetailPage() {
                                   Array.isArray(quantitySelection) ||
                                   typeof quantitySelection !== "object" ||
                                   Object.keys(
-                                    quantitySelection as Record<string, number>
+                                    quantitySelection as Record<string, number>,
                                   ).length === 0);
 
                               if (shouldShowPlaceholder) {
@@ -1261,7 +1261,7 @@ export default function DishDetailPage() {
                                           handleQuantityChange(
                                             field.id,
                                             option.id,
-                                            Math.max(0, currentQuantity - 1)
+                                            Math.max(0, currentQuantity - 1),
                                           )
                                         }
                                         className="w-8 h-8 md:w-9 md:h-9 bg-[#f9f9f9] hover:bg-[#eab3f4]/20 rounded-full flex items-center justify-center border border-[#8e8e8e]/50 transition-colors duration-200"
@@ -1279,7 +1279,7 @@ export default function DishDetailPage() {
                                           handleQuantityChange(
                                             field.id,
                                             option.id,
-                                            currentQuantity + 1
+                                            currentQuantity + 1,
                                           )
                                         }
                                         className="w-8 h-8 md:w-9 md:h-9 bg-[#f9f9f9] hover:bg-[#eab3f4]/20 rounded-full flex items-center justify-center border border-[#8e8e8e]/50 transition-colors duration-200"
@@ -1304,7 +1304,7 @@ export default function DishDetailPage() {
                                   ] as string[]) || [];
                                 const maxSelections = field.maxSelections || 1;
                                 const isSelected = currentSelections.includes(
-                                  option.id
+                                  option.id,
                                 );
                                 const isDisabled =
                                   !isSelected &&
@@ -1337,7 +1337,7 @@ export default function DishDetailPage() {
                                         handleCheckboxChange(
                                           field.id,
                                           option.id,
-                                          field
+                                          field,
                                         )
                                       }
                                       className="mycheckbox md:scale-125 lg:scale-150"
