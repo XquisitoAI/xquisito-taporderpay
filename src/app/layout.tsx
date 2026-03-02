@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { headers } from "next/headers";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { RestaurantProvider } from "@/context/RestaurantContext";
@@ -102,11 +103,18 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Read nonce from middleware for CSP compliance (PCI DSS)
+  // Use this nonce in any <Script nonce={nonce}> components
+  const headersList = await headers();
+  const nonce = headersList.get("x-nonce") ?? undefined;
+  // Suppress unused variable warning - nonce available for future Script components
+  void nonce;
+
   return (
     <html lang="es">
       <body
