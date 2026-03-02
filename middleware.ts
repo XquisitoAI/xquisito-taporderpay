@@ -19,7 +19,7 @@ export function middleware(request: NextRequest) {
     default-src 'self';
     script-src 'self' 'nonce-${nonce}';
     style-src 'self' 'unsafe-inline';
-    img-src 'self' data: blob:;
+    img-src 'self' data: blob: ${backendUrl};
     font-src 'self';
     connect-src 'self' ${backendUrl} wss://${backendUrl.replace("https://", "")}${devUrls};
     frame-src 'none';
