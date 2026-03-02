@@ -19,7 +19,7 @@ export function middleware(request: NextRequest) {
     default-src 'self';
     script-src 'self' 'nonce-${nonce}';
     style-src 'self' 'unsafe-inline';
-    img-src 'self' data: blob: ${backendUrl};
+    img-src 'self' data: blob: ${backendUrl} https://*.supabase.co;
     font-src 'self';
     connect-src 'self' ${backendUrl} wss://${backendUrl.replace("https://", "")}${devUrls};
     frame-src 'none';
