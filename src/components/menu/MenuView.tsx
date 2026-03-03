@@ -267,21 +267,25 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
                 ¡{welcomeMessage}
                 {profile?.firstName ? ` ${profile.firstName}` : ""}!
               </h1>
-              <h3 className="mt-1 text-black/70 text-xl md:text-2xl lg:text-3xl">
+              <h3 className="mt-1 mb-3 text-black/70 text-xl md:text-2xl lg:text-3xl">
                 Mesa {tableNumber}
               </h3>
             </div>
+            {/* Link to active order status */}
+            {activeOrder && (
+              <div
+                onClick={() => {
+                  Promise.resolve();
+                  setTimeout(() => {
+                    setIsStatusModalOpen(true);
+                  }, 400);
+                }}
+                className="bg-[#f9f9f9] border border-[#8e8e8e] rounded-full px-3 md:px-4 lg:px-5 py-1 md:py-1.5 text-sm md:text-lg lg:text-xl font-medium text-black w-fit mx-auto active:scale-90 transition-all"
+              >
+                Estatus de pedido
+              </div>
+            )}
           </div>
-
-          {/* Link to active order status */}
-          {activeOrder && (
-            <div
-              onClick={() => setIsStatusModalOpen(true)}
-              className="text-[#0a8b9b] hover:text-[#087585] underline text-sm md:text-base mb-2 transition-colors"
-            >
-              Ver estatus de pedido
-            </div>
-          )}
 
           {/* Search Input */}
           <div className="w-full">
