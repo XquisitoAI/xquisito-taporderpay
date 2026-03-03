@@ -53,6 +53,16 @@ export interface TapOrderResponse {
   data: TapOrder;
 }
 
+export interface ActiveOrderResponse {
+  hasActiveOrder: boolean;
+  data: {
+    tap_order: TapOrderInfo;
+    table: TableInfo;
+    dishes: Dish[];
+    pending_dishes_count: number;
+  } | null;
+}
+
 export interface DishOrderData {
   user_id: string | null;
   guest_id: string | null;
@@ -94,7 +104,7 @@ export interface PaymentTransactionData {
 class TapOrderService {
   private async request<T>(
     endpoint: string,
-    options?: RequestInit
+    options?: RequestInit,
   ): Promise<ApiResponse<T>> {
     // Usar el helper con refresh automático
     return requestWithAuth<T>(endpoint, options);
@@ -105,21 +115,21 @@ class TapOrderService {
     restaurantId: string,
     branchNumber: string,
     tableNumber: string,
-    dishOrderData: DishOrderData
+    dishOrderData: DishOrderData,
   ): Promise<ApiResponse<any>> {
     return this.request(
       `/tap-orders/restaurant/${restaurantId}/branch/${branchNumber}/table/${tableNumber}/dishes`,
       {
         method: "POST",
         body: JSON.stringify(dishOrderData),
-      }
+      },
     );
   }
 
   // Actualizar el estado de pago de una orden tap
   async updatePaymentStatus(
     tapOrderId: string,
-    paymentStatus: "pending" | "paid" | "failed"
+    paymentStatus: "pending" | "paid" | "failed",
   ): Promise<ApiResponse<any>> {
     return this.request(`/tap-orders/${tapOrderId}/payment-status`, {
       method: "PATCH",
@@ -130,7 +140,7 @@ class TapOrderService {
   // Actualizar el estado de una orden tap
   async updateOrderStatus(
     tapOrderId: string,
-    orderStatus: "pending" | "completed"
+    orderStatus: "pending" | "completed",
   ): Promise<ApiResponse<any>> {
     return this.request(`/tap-orders/${tapOrderId}/status`, {
       method: "PATCH",
@@ -140,7 +150,7 @@ class TapOrderService {
 
   // Registrar transacción de pago para trazabilidad
   async recordPaymentTransaction(
-    transactionData: PaymentTransactionData
+    transactionData: PaymentTransactionData,
   ): Promise<ApiResponse<any>> {
     return this.request("/payment-transactions", {
       method: "POST",
@@ -160,6 +170,19 @@ class TapOrderService {
     return this.request(`/tap-orders/${orderId}`, {
       method: "GET",
     });
+  }
+
+  // Obtener orden activa por clerk_user_id (user_id o guest_id) y restaurantId
+  async getActiveOrderByUser(
+    clientId: string,
+    restaurantId: number,
+  ): Promise<ApiResponse<ActiveOrderResponse>> {
+    return this.request(
+      `/tap-orders/restaurant/${restaurantId}/active/user/${clientId}`,
+      {
+        method: "GET",
+      },
+    );
   }
 }
 

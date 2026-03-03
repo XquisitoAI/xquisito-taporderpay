@@ -46,6 +46,32 @@ export default function HistoryTab() {
   const [selectedOrderDetails, setSelectedOrderDetails] = useState<any>(null);
   const [displayCount, setDisplayCount] = useState(5);
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "pending":
+        return "bg-yellow-100 text-yellow-800 border-yellow-300";
+      case "cooking":
+        return "bg-orange-100 text-orange-800 border-orange-300";
+      case "delivered":
+        return "bg-green-100 text-green-800 border-green-300";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-300";
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case "pending":
+        return "Pendiente";
+      case "cooking":
+        return "Preparando";
+      case "delivered":
+        return "Entregado";
+      default:
+        return status;
+    }
+  };
+
   // Bloquear scroll cuando el modal está abierto
   useEffect(() => {
     if (selectedOrderDetails) {
@@ -76,7 +102,7 @@ export default function HistoryTab() {
       try {
         setIsLoading(true);
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/users/${user.id}/order-history`
+          `${process.env.NEXT_PUBLIC_API_URL}/users/${user.id}/order-history`,
         );
 
         if (!response.ok) {
@@ -129,7 +155,7 @@ export default function HistoryTab() {
   // Las órdenes ya vienen agrupadas por transacción desde el backend
   // Cada orden tiene sus platillos en el array "dishes"
   const groupedOrders = orders.sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
 
   // Órdenes visibles según displayCount
@@ -190,7 +216,7 @@ export default function HistoryTab() {
                           day: "numeric",
                           month: "numeric",
                           year: "numeric",
-                        }
+                        },
                       )}{" "}
                     </p>
                   </div>
@@ -342,7 +368,7 @@ export default function HistoryTab() {
                           selectedOrderDetails.paymentCardBrand,
                           "small",
                           32,
-                          20
+                          20,
                         )}
                       </div>
                       <span className="text-sm md:text-base lg:text-lg">
@@ -385,6 +411,14 @@ export default function HistoryTab() {
                         <p className="text-xs md:text-sm lg:text-base text-white/60">
                           + Extras: ${dish.extraPrice?.toFixed(2)} MXN
                         </p>
+                      )}
+                      {/* Status Badge */}
+                      {dish.status && (
+                        <span
+                          className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(dish.status)}`}
+                        >
+                          {getStatusText(dish.status)}
+                        </span>
                       )}
                     </div>
 
