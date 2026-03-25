@@ -50,7 +50,7 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
       if (guestIdBefore) {
         console.log(
           "  ℹ️ Guest-id found (will be used for cart migration):",
-          guestIdBefore
+          guestIdBefore,
         );
         // Solo limpiar table/restaurant/name, NO el guest_id
         localStorage.removeItem("xquisito-table-number");
@@ -85,7 +85,7 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
           console.log(
             "💳 Loaded payment methods for registered user:",
             methods.length,
-            methods
+            methods,
           );
         } else {
           setPaymentMethods([]);
@@ -94,7 +94,7 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
       } catch (error) {
         console.error(
           "❌ Error fetching payment methods for registered user:",
-          error
+          error,
         );
         setPaymentMethods([]);
       } finally {
@@ -129,7 +129,7 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
           console.log(
             "💳 Loaded payment methods for guest:",
             methods.length,
-            methods
+            methods,
           );
         } else {
           setPaymentMethods([]);
@@ -161,14 +161,14 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
     // Only registered users can set default payment methods
     if (!user) {
       console.log(
-        "⚠️ setDefaultPaymentMethod: Only registered users can set default payment methods"
+        "⚠️ setDefaultPaymentMethod: Only registered users can set default payment methods",
       );
       throw new Error("Only registered users can set default payment methods");
     }
 
     console.log(
       "🔧 Setting default payment method for registered user:",
-      paymentMethodId
+      paymentMethodId,
     );
     try {
       // Auth token is automatically managed by AuthContext and paymentService
@@ -181,15 +181,15 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
           prev.map((pm) => ({
             ...pm,
             isDefault: pm.id === paymentMethodId,
-          }))
+          })),
         );
         console.log(
           "✅ Default payment method set successfully:",
-          paymentMethodId
+          paymentMethodId,
         );
       } else {
         throw new Error(
-          response.error?.message || "Failed to set default payment method"
+          response.error?.message || "Failed to set default payment method",
         );
       }
     } catch (error) {
@@ -202,21 +202,27 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
     // Only registered users can delete saved payment methods
     if (!user) {
       console.log(
-        "⚠️ deletePaymentMethod: Only registered users can delete saved payment methods"
+        "⚠️ deletePaymentMethod: Only registered users can delete saved payment methods",
       );
-      console.log("🔍 Current auth state:", { user, isAuthenticated, isLoading });
+      console.log("🔍 Current auth state:", {
+        user,
+        isAuthenticated,
+        isLoading,
+      });
       throw new Error("Debes estar autenticado para eliminar tarjetas");
     }
 
     console.log(
       "🗑️ Deleting payment method for registered user:",
       paymentMethodId,
-      "User ID:", user.id
+      "User ID:",
+      user.id,
     );
     try {
       // Auth token is automatically managed by AuthContext and paymentService
 
-      const response = await paymentService.deletePaymentMethod(paymentMethodId);
+      const response =
+        await paymentService.deletePaymentMethod(paymentMethodId);
       console.log("🗑️ Delete response:", response);
 
       if (response.success) {
@@ -225,7 +231,7 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
       } else {
         console.error("❌ Delete payment method failed:", response.error);
         throw new Error(
-          response.error?.message || "No se pudo eliminar la tarjeta"
+          response.error?.message || "No se pudo eliminar la tarjeta",
         );
       }
     } catch (error) {
@@ -252,7 +258,7 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
       "🔄 Migrating payment methods from guest:",
       guestIdToMigrate,
       "to user:",
-      user.id
+      user.id,
     );
 
     try {
@@ -263,7 +269,7 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
         console.log(
           "✅ Payment methods migrated successfully:",
           response.data?.migratedCount || 0,
-          "methods"
+          "methods",
         );
 
         // Refresh payment methods to show the migrated ones
@@ -272,14 +278,14 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
         // IMPORTANTE: Solo eliminar el guest-id después de que TODAS las migraciones se completen
         // Esto incluye: cart migration (ejecutada en CartContext) + payment methods migration
         console.log(
-          "🗑️ All migrations completed - removing guest ID from localStorage"
+          "🗑️ All migrations completed - removing guest ID from localStorage",
         );
         localStorage.removeItem("xquisito-guest-id");
         console.log("✅ Guest ID successfully removed");
       } else {
         console.error(
           "❌ Failed to migrate payment methods:",
-          response.error?.message
+          response.error?.message,
         );
       }
     } catch (error) {
@@ -315,7 +321,7 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
 
       if (user && guestIdInStorage) {
         console.log(
-          "🔄 Auto-triggering payment methods migration after authentication"
+          "🔄 Auto-triggering payment methods migration after authentication",
         );
 
         // Esperar un poco para asegurarse de que el CartContext termine su migración primero

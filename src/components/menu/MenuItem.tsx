@@ -112,7 +112,7 @@ export default function MenuItem({ item }: MenuItemProps) {
             isAddingRef.current = false;
           }
         } catch (error) {
-          console.error('Error parsing last item:', error);
+          console.error("Error parsing last item:", error);
           navigateWithTable(`/dish/${adaptedItem.id}`);
         }
       } else {
@@ -171,7 +171,7 @@ export default function MenuItem({ item }: MenuItemProps) {
 
     // Si hay múltiples variaciones, navegar al carrito
     const itemsWithSameId = cartState.items.filter(
-      (cartItem) => cartItem.id === adaptedItem.id
+      (cartItem) => cartItem.id === adaptedItem.id,
     );
     if (itemsWithSameId.length > 1) {
       navigateWithTable("/cart");
@@ -186,7 +186,7 @@ export default function MenuItem({ item }: MenuItemProps) {
 
     try {
       const cartItem = cartState.items.find(
-        (cartItem) => cartItem.id === adaptedItem.id
+        (cartItem) => cartItem.id === adaptedItem.id,
       );
       if (cartItem) {
         await removeItem(adaptedItem.id);
@@ -217,7 +217,7 @@ export default function MenuItem({ item }: MenuItemProps) {
         className="border-b border-gray-300 py-4 md:py-6 lg:py-7 relative"
         onClick={handleImageClick}
       >
-      <div className="flex items-center gap-4 md:gap-5 lg:gap-6">
+        <div className="flex items-center gap-4 md:gap-5 lg:gap-6">
           {/* Image */}
           <div className="flex-shrink-0 cursor-pointer">
             <div className="size-36 md:size-40 lg:size-44 bg-gray-300 rounded-xl md:rounded-2xl flex items-center justify-center hover:scale-105 transition-transform duration-200">
@@ -240,7 +240,7 @@ export default function MenuItem({ item }: MenuItemProps) {
           {/* Content */}
           <div className="flex-1 min-w-0">
             <div className="flex justify-between">
-              <h3 className="text-lg md:text-xl lg:text-2xl font-medium text-black leading-tight capitalize">
+              <h3 className="text-lg md:text-xl lg:text-2xl font-medium text-black leading-tight capitalize line-clamp-2 break-words">
                 {adaptedItem.name}
               </h3>
               <div
@@ -249,9 +249,13 @@ export default function MenuItem({ item }: MenuItemProps) {
               >
                 <Minus
                   className={`size-4 md:size-5 lg:size-6 ${displayQuantity > 0 ? "cursor-pointer" : "cursor-no-drop"}`}
-                  onClick={displayQuantity > 0 ? handleRemoveFromCart : undefined}
+                  onClick={
+                    displayQuantity > 0 ? handleRemoveFromCart : undefined
+                  }
                 />
-                <p className="font-normal text-base md:text-lg lg:text-xl">{displayQuantity}</p>
+                <p className="font-normal text-base md:text-lg lg:text-xl">
+                  {displayQuantity}
+                </p>
                 <div ref={plusButtonRef}>
                   <Plus
                     className="size-4 md:size-5 lg:size-6 cursor-pointer"
