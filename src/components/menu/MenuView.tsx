@@ -92,9 +92,9 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
   // Funciones de estado
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "pending":
+      case "preparing":
         return "bg-yellow-100 text-yellow-800 border-yellow-300";
-      case "cooking":
+      case "ready":
         return "bg-orange-100 text-orange-800 border-orange-300";
       case "delivered":
         return "bg-green-100 text-green-800 border-green-300";
@@ -105,9 +105,9 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case "pending":
+      case "preparing":
         return "Preparando";
-      case "cooking":
+      case "ready":
         return "Listo";
       case "delivered":
         return "Entregado";
