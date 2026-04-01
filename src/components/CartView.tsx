@@ -32,11 +32,11 @@ export default function CartView() {
   };
 
   return (
-    <div className="min-h-dvh bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">
+    <div className="min-h-dvh bg-linear-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">
       <MenuHeaderBack />
 
       <div className="px-4 md:px-6 lg:px-8 w-full flex-1 flex flex-col">
-        <div className="left-4 right-4 bg-gradient-to-tl from-[#0a8b9b] to-[#1d727e] rounded-t-4xl translate-y-7 z-0">
+        <div className="left-4 right-4 bg-linear-to-tl from-[#0a8b9b] to-[#1d727e] rounded-t-4xl translate-y-7 z-0">
           {cartState.items.length === 0 ? (
             <div className="py-6 md:py-8 lg:py-10 px-8 md:px-10 lg:px-12 flex flex-col justify-center">
               <h1 className="text-[#e0e0e0] text-xl md:text-2xl lg:text-3xl font-medium">
@@ -94,7 +94,7 @@ export default function CartView() {
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3 md:gap-4 lg:gap-5">
-                            <div className="flex-shrink-0">
+                            <div className="shrink-0">
                               <div className="size-16 md:size-20 lg:size-24 bg-gray-300 rounded-sm md:rounded-md flex items-center justify-center hover:scale-105 transition-transform duration-200">
                                 {item.images[0] ? (
                                   <img
@@ -104,7 +104,7 @@ export default function CartView() {
                                   />
                                 ) : (
                                   <img
-                                    src={"/logo-short-green.webp"}
+                                    src={"/logos/logo-short-green.webp"}
                                     alt="Logo Xquisito"
                                     className="size-18 md:size-20 lg:size-22 object-contain"
                                   />
@@ -156,7 +156,7 @@ export default function CartView() {
                               <p className="text-base md:text-lg lg:text-xl text-black">
                                 $
                                 {(item.price + (item.extraPrice || 0)).toFixed(
-                                  2
+                                  2,
                                 )}
                               </p>
                             </div>
@@ -178,7 +178,10 @@ export default function CartView() {
                       placeholder="Alergias, instrucciones especiales, comentarios..."
                       onFocus={(e) => {
                         setTimeout(() => {
-                          e.target.scrollIntoView({ behavior: "smooth", block: "center" });
+                          e.target.scrollIntoView({
+                            behavior: "smooth",
+                            block: "center",
+                          });
                         }, 300);
                       }}
                     ></textarea>
@@ -209,8 +212,8 @@ export default function CartView() {
                     disabled={isSubmitting || cartState.isLoading}
                     className={`py-3 md:py-4 lg:py-5 text-white rounded-full cursor-pointer font-normal h-fit flex items-center justify-center text-base md:text-lg lg:text-xl active:scale-95 transition-transform ${
                       isSubmitting || cartState.isLoading
-                        ? "bg-gradient-to-r from-[#34808C] to-[#173E44] opacity-50 cursor-not-allowed px-10 md:px-12 lg:px-14"
-                        : "bg-gradient-to-r from-[#34808C] to-[#173E44] px-20 md:px-24 lg:px-28 animate-pulse-button"
+                        ? "bg-linear-to-r from-[#34808C] to-[#173E44] opacity-50 cursor-not-allowed px-10 md:px-12 lg:px-14"
+                        : "bg-linear-to-r from-[#34808C] to-[#173E44] px-20 md:px-24 lg:px-28 animate-pulse-button"
                     }`}
                   >
                     {isSubmitting || cartState.isLoading
