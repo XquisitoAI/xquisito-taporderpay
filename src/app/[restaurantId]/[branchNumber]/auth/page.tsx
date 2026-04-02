@@ -149,6 +149,8 @@ export default function AuthPage() {
         sessionStorage.removeItem("authFromPaymentFlow");
         sessionStorage.removeItem("authFromMenu");
         sessionStorage.removeItem("xquisito-post-auth-redirect");
+        sessionStorage.removeItem("pendingTableRedirect");
+        sessionStorage.removeItem("pendingRestaurantId");
       }
     };
 
@@ -204,7 +206,8 @@ export default function AuthPage() {
 
     // Clear all session flags
     sessionStorage.removeItem("pendingTableRedirect");
-    sessionStorage.removeItem("authPaymentFlow");
+    sessionStorage.removeItem("pendingRestaurantId");
+    sessionStorage.removeItem("authFromPaymentFlow");
     sessionStorage.removeItem("authFromMenu");
     sessionStorage.removeItem("xquisito-post-auth-redirect");
 
@@ -216,7 +219,7 @@ export default function AuthPage() {
       navigateWithTable("/card-selection");
     } else {
       // Default redirect to menu
-      navigateWithTable("/menu");
+      navigateWithTable("/order");
     }
   };
 
@@ -363,6 +366,8 @@ export default function AuthPage() {
             sessionStorage.removeItem("authFromPaymentFlow");
             sessionStorage.removeItem("authFromMenu");
             sessionStorage.removeItem("xquisito-post-auth-redirect");
+            sessionStorage.removeItem("pendingTableRedirect");
+            sessionStorage.removeItem("pendingRestaurantId");
             router.back();
           }
         }}
