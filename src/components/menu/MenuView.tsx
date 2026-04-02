@@ -168,9 +168,8 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
     if (isAuthenticated) {
       navigateWithTable("/dashboard");
     } else {
-      sessionStorage.removeItem("signupFromOrder");
-      sessionStorage.removeItem("signupFromPaymentFlow");
-      sessionStorage.setItem("signInFromMenu", "true");
+      sessionStorage.removeItem("authFromPaymentFlow");
+      sessionStorage.setItem("authFromMenu", "true");
       navigateWithTable("/auth");
     }
   };

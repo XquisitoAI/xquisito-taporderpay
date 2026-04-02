@@ -327,7 +327,7 @@ export default function PaymentSuccessPage() {
   };
 
   return (
-    <div className="min-h-new bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">
+    <div className="min-h-new bg-linear-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">
       {/* Success Icon */}
       <div className="flex-1 flex justify-center items-center">
         <img
@@ -339,7 +339,7 @@ export default function PaymentSuccessPage() {
 
       <div className="px-4 md:px-6 lg:px-8 w-full animate-slide-up">
         <div className="flex-1 flex flex-col">
-          <div className="left-4 right-4 bg-gradient-to-tl from-[#0a8b9b] to-[#1d727e] rounded-t-4xl translate-y-7 z-0">
+          <div className="left-4 right-4 bg-linear-to-tl from-[#0a8b9b] to-[#1d727e] rounded-t-4xl translate-y-7 z-0">
             <div className="py-6 md:py-8 lg:py-10 px-8 md:px-10 lg:px-12 flex flex-col justify-center items-center mb-6 md:mb-8 lg:mb-10 mt-2 md:mt-4 lg:mt-6 gap-2 md:gap-3 lg:gap-4">
               <h1 className="font-medium text-white text-3xl md:text-4xl lg:text-5xl leading-7 md:leading-9 lg:leading-tight">
                 ¡Gracias por tu pedido!
@@ -400,7 +400,7 @@ export default function PaymentSuccessPage() {
                 {rating > 0 && !hasRated && (
                   <button
                     onClick={handleSubmitRating}
-                    className="px-5 md:px-6 py-1.5 md:py-2 bg-gradient-to-r from-[#34808C] to-[#173E44] hover:from-[#2a6d77] hover:to-[#12323a] text-white text-sm md:text-base font-medium rounded-full transition-all duration-300 hover:scale-90 hover:shadow-lg animate-fade-in"
+                    className="px-5 md:px-6 py-1.5 md:py-2 bg-linear-to-r from-[#34808C] to-[#173E44] hover:from-[#2a6d77] hover:to-[#12323a] text-white text-sm md:text-base font-medium rounded-full transition-all duration-300 hover:scale-90 hover:shadow-lg animate-fade-in"
                     aria-label="Enviar calificación"
                   >
                     Enviar
@@ -418,7 +418,7 @@ export default function PaymentSuccessPage() {
             >
               <button
                 onClick={handleBackToMenu}
-                className="w-full text-white py-3 md:py-4 lg:py-5 rounded-full cursor-pointer transition-all active:scale-90 bg-gradient-to-r from-[#34808C] to-[#173E44] text-base md:text-lg lg:text-xl"
+                className="w-full text-white py-3 md:py-4 lg:py-5 rounded-full cursor-pointer transition-all active:scale-90 bg-linear-to-r from-[#34808C] to-[#173E44] text-base md:text-lg lg:text-xl"
               >
                 Ir al menú
               </button>
@@ -462,7 +462,7 @@ export default function PaymentSuccessPage() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header - Fixed */}
-            <div className="flex-shrink-0">
+            <div className="shrink-0">
               <div className="w-full flex justify-end">
                 <button
                   onClick={() => setIsTicketModalOpen(false)}
@@ -620,7 +620,7 @@ export default function PaymentSuccessPage() {
             </div>
 
             {/* Total Summary - Fixed */}
-            <div className="flex-shrink-0 px-6 md:px-8 lg:px-10 flex justify-between items-center border-t border-white/20 pt-4 md:pt-5 lg:pt-6 pb-6 md:pb-8 lg:pb-10">
+            <div className="shrink-0 px-6 md:px-8 lg:px-10 flex justify-between items-center border-t border-white/20 pt-4 md:pt-5 lg:pt-6 pb-6 md:pb-8 lg:pb-10">
               <div className="flex items-center gap-2 md:gap-3 lg:gap-4">
                 <span className="text-lg md:text-xl lg:text-2xl font-medium text-white">
                   Total
@@ -659,7 +659,7 @@ export default function PaymentSuccessPage() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header - Fixed */}
-            <div className="flex-shrink-0">
+            <div className="shrink-0">
               <div className="w-full flex justify-end">
                 <button
                   onClick={() => setIsStatusModalOpen(false)}
@@ -728,7 +728,7 @@ export default function PaymentSuccessPage() {
                       key={dish.id || index}
                       className="flex items-start gap-3 md:gap-4 lg:gap-5 bg-white/5 rounded-xl md:rounded-2xl p-3 md:p-4 lg:p-5 border border-white/10"
                     >
-                      <div className="flex-shrink-0">
+                      <div className="shrink-0">
                         <div className="size-16 md:size-20 lg:size-24 bg-gray-300 rounded-sm flex items-center justify-center overflow-hidden">
                           {dish.images &&
                           dish.images.length > 0 &&
@@ -930,7 +930,7 @@ export default function PaymentSuccessPage() {
                 onClick={handleSignUp}
                 className="w-full bg-white hover:bg-gray-50 text-black py-4 md:py-5 lg:py-6 px-4 md:px-5 lg:px-6 rounded-xl md:rounded-2xl transition-all duration-200 flex items-center gap-3 md:gap-4 lg:gap-5 active:scale-95"
               >
-                <div className="bg-gradient-to-r from-[#34808C] to-[#173E44] p-2 md:p-2.5 lg:p-3 rounded-full group-hover:scale-110 transition-transform">
+                <div className="bg-linear-to-r from-[#34808C] to-[#173E44] p-2 md:p-2.5 lg:p-3 rounded-full group-hover:scale-110 transition-transform">
                   <LogIn className="size-5 md:size-6 lg:size-7 text-white" />
                 </div>
                 <div className="flex-1 text-left">

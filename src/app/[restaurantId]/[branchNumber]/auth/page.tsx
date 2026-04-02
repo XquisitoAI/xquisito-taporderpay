@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { ArrowLeft, Phone, User, ChevronDown } from "lucide-react";
 import Flag from "react-world-flags";
@@ -56,6 +56,7 @@ export default function AuthPage() {
   const [error, setError] = useState("");
   const [countdown, setCountdown] = useState(0);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const authCompletedRef = useRef(false);
 
   // Formatear número de teléfono para mostrar
   const formatPhoneNumber = (phoneNumber: string) => {
@@ -141,8 +142,52 @@ export default function AuthPage() {
     }
   }, [countdown]);
 
+  // Clean up session storage when leaving page without completing auth
+  useEffect(() => {
+    const cleanup = () => {
+      if (!authCompletedRef.current) {
+        sessionStorage.removeItem("authFromPaymentFlow");
+        sessionStorage.removeItem("authFromMenu");
+        sessionStorage.removeItem("xquisito-post-auth-redirect");
+      }
+    };
+
+    // Push a state to intercept back navigation (only if not already added)
+    if (!window.history.state?.xquisitoAuth) {
+      window.history.pushState({ xquisitoAuth: true }, "");
+    }
+
+    const handlePopState = () => {
+      cleanup();
+      // Remove listener to prevent loop, then complete the back navigation
+      window.removeEventListener("popstate", handlePopState);
+      // Check if there's history to go back to, otherwise go to menu
+      if (window.history.length > 2) {
+        window.history.back();
+      } else {
+        // No previous history, navigate to menu
+        router.replace(
+          `/${restaurantId}/${branchNumber}/menu${tableNumber ? `?table=${tableNumber}` : ""}`,
+        );
+      }
+    };
+
+    // For browser back/forward navigation
+    window.addEventListener("popstate", handlePopState);
+    // For page unload (close tab, refresh)
+    window.addEventListener("beforeunload", cleanup);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      window.removeEventListener("beforeunload", cleanup);
+    };
+  }, []);
+
   // Helper function to handle post-auth redirects
   const handleAuthRedirect = () => {
+    // Mark auth as completed so cleanup doesn't remove session items
+    authCompletedRef.current = true;
+
     const postAuthRedirect = sessionStorage.getItem(
       "xquisito-post-auth-redirect",
     );
@@ -154,23 +199,19 @@ export default function AuthPage() {
       return;
     }
 
-    const isFromPaymentFlow = sessionStorage.getItem("signupFromPaymentFlow");
-    const isFromMenu = sessionStorage.getItem("signInFromMenu");
-    const isFromOrder = sessionStorage.getItem("signupFromOrder");
+    const authFromPaymentFlow = sessionStorage.getItem("authFromPaymentFlow");
+    const authFromMenu = sessionStorage.getItem("authFromMenu");
 
     // Clear all session flags
     sessionStorage.removeItem("pendingTableRedirect");
-    sessionStorage.removeItem("signupFromPaymentFlow");
-    sessionStorage.removeItem("signInFromMenu");
-    sessionStorage.removeItem("signupFromOrder");
+    sessionStorage.removeItem("authPaymentFlow");
+    sessionStorage.removeItem("authFromMenu");
+    sessionStorage.removeItem("xquisito-post-auth-redirect");
 
-    if (isFromOrder && tableNumber) {
-      // User signed in/up from order, redirect to payment-options
-      navigateWithTable("/card-selection");
-    } else if (isFromMenu && tableNumber) {
+    if (authFromMenu && tableNumber) {
       // User signed in from MenuView settings, redirect to dashboard
       navigateWithTable("/dashboard");
-    } else if (isFromPaymentFlow && tableNumber) {
+    } else if (authFromPaymentFlow && tableNumber) {
       // User signed up during payment flow, redirect to payment-options
       navigateWithTable("/card-selection");
     } else {
@@ -307,7 +348,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-new bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col justify-center items-center px-4">
+    <div className="min-h-new bg-linear-to-br from-[#0a8b9b] to-[#153f43] flex flex-col justify-center items-center px-4">
       {/* Back Button */}
       <button
         onClick={() => {
@@ -319,9 +360,9 @@ export default function AuthPage() {
             // Can't go back from profile, user is already authenticated
             return;
           } else {
-            sessionStorage.removeItem("signupFromPaymentFlow");
-            sessionStorage.removeItem("signInFromMenu");
-            sessionStorage.removeItem("signupFromOrder");
+            sessionStorage.removeItem("authFromPaymentFlow");
+            sessionStorage.removeItem("authFromMenu");
+            sessionStorage.removeItem("xquisito-post-auth-redirect");
             router.back();
           }
         }}
@@ -389,7 +430,7 @@ export default function AuthPage() {
                       />
                       <span className="text-sm">{countryCode}</span>
                     </div>
-                    <ChevronDown className="size-3 text-gray-500 flex-shrink-0" />
+                    <ChevronDown className="size-3 text-gray-500 shrink-0" />
                   </button>
 
                   {isDropdownOpen && (

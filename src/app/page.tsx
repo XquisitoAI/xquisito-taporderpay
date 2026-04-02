@@ -20,20 +20,16 @@ export default function Home() {
     // Check if user just signed in/up and has context
     const storedTable = sessionStorage.getItem("pendingTableRedirect");
     const storedRestaurant = sessionStorage.getItem("pendingRestaurantId");
-    const isFromPaymentFlow = sessionStorage.getItem("signupFromPaymentFlow");
-    const isFromPaymentSuccess = sessionStorage.getItem(
-      "signupFromPaymentSuccess"
-    );
-    const isFromMenu = sessionStorage.getItem("signInFromMenu");
+    const authFromPaymentFlow = sessionStorage.getItem("authFromPaymentFlow");
+    const authFromMenu = sessionStorage.getItem("authFromMenu");
 
     console.log("🔍 Root page debugging:", {
       isLoading,
       isAuthenticated,
       storedTable,
       storedRestaurant,
-      isFromPaymentFlow,
-      isFromPaymentSuccess,
-      isFromMenu,
+      authFromPaymentFlow,
+      authFromMenu,
       currentPath: window.location.pathname,
     });
 
@@ -47,38 +43,30 @@ export default function Home() {
       sessionStorage.removeItem("pendingTableRedirect");
       sessionStorage.removeItem("pendingRestaurantId");
       router.replace(
-        `/${restaurantId}/${DEFAULT_BRANCH_NUMBER}/card-selection?table=${storedTable}`
+        `/${restaurantId}/${DEFAULT_BRANCH_NUMBER}/card-selection?table=${storedTable}`,
       );
       return;
     }
 
-    if (isAuthenticated && storedTable && isFromMenu) {
+    if (isAuthenticated && storedTable && authFromMenu) {
       // User signed in from MenuView settings, redirect to dashboard with table
-      sessionStorage.removeItem("signInFromMenu");
+      sessionStorage.removeItem("authFromMenu");
       sessionStorage.removeItem("pendingTableRedirect");
       sessionStorage.removeItem("pendingRestaurantId");
       router.replace(
-        `/${restaurantId}/${DEFAULT_BRANCH_NUMBER}/dashboard?table=${storedTable}`
+        `/${restaurantId}/${DEFAULT_BRANCH_NUMBER}/dashboard?table=${storedTable}`,
       );
       return;
     }
 
-    if (isAuthenticated && storedTable && isFromPaymentFlow) {
+    if (isAuthenticated && storedTable && authFromPaymentFlow) {
       // User signed up during payment flow, redirect to card-selection
       sessionStorage.removeItem("pendingTableRedirect");
-      sessionStorage.removeItem("signupFromPaymentFlow");
+      sessionStorage.removeItem("authFromPaymentFlow");
       sessionStorage.removeItem("pendingRestaurantId");
       router.replace(
-        `/${restaurantId}/${DEFAULT_BRANCH_NUMBER}/card-selection?table=${storedTable}`
+        `/${restaurantId}/${DEFAULT_BRANCH_NUMBER}/card-selection?table=${storedTable}`,
       );
-      return;
-    }
-
-    if (isAuthenticated && isFromPaymentSuccess) {
-      // User signed up from payment-success, redirect to dashboard
-      sessionStorage.removeItem("signupFromPaymentSuccess");
-      sessionStorage.removeItem("pendingRestaurantId");
-      router.replace(`/${restaurantId}/${DEFAULT_BRANCH_NUMBER}/dashboard`);
       return;
     }
 
@@ -86,22 +74,22 @@ export default function Home() {
     const tableParam = searchParams.get("table");
     if (tableParam) {
       router.replace(
-        `/${restaurantId}/${DEFAULT_BRANCH_NUMBER}/menu?table=${tableParam}`
+        `/${restaurantId}/${DEFAULT_BRANCH_NUMBER}/menu?table=${tableParam}`,
       );
       return;
     }
 
     // Default redirect
     console.log(
-      `✅ Default redirect to /${DEFAULT_RESTAURANT_ID}/${DEFAULT_BRANCH_NUMBER}/menu?table=${DEFAULT_TABLE}`
+      `✅ Default redirect to /${DEFAULT_RESTAURANT_ID}/${DEFAULT_BRANCH_NUMBER}/menu?table=${DEFAULT_TABLE}`,
     );
     router.replace(
-      `/${DEFAULT_RESTAURANT_ID}/${DEFAULT_BRANCH_NUMBER}/menu?table=${DEFAULT_TABLE}`
+      `/${DEFAULT_RESTAURANT_ID}/${DEFAULT_BRANCH_NUMBER}/menu?table=${DEFAULT_TABLE}`,
     );
   }, [router, searchParams, isAuthenticated, isLoading]);
 
   return (
-    <div className="min-h-new bg-gradient-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">
+    <div className="min-h-new bg-linear-to-br from-[#0a8b9b] to-[#153f43] flex flex-col">
       <div className="flex-1 flex flex-col items-center justify-center px-5 md:px-8 lg:px-10 pb-12 md:py-10 lg:py-12">
         <div className="w-full max-w-md">
           {/* Logo and QR Code side by side */}
