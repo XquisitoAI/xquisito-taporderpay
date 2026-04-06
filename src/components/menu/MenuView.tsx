@@ -41,13 +41,14 @@ export default function MenuView({ tableNumber }: MenuViewProps) {
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { navigateWithTable } = useTableNavigation();
-  const { state: cartState } = useCart();
+  const { state: cartState, refreshCart } = useCart();
   const { restaurant, restaurantId, menu, loading, error } = useRestaurant();
   const [showPepperChat, setShowPepperChat] = useState(false);
   const [isPepperClosing, setIsPepperClosing] = useState(false);
 
   const closePepperChat = () => {
     setIsPepperClosing(true);
+    refreshCart();
     setTimeout(() => {
       setShowPepperChat(false);
       setIsPepperClosing(false);
