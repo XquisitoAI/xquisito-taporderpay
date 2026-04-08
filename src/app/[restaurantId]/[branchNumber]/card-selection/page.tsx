@@ -248,6 +248,7 @@ export default function CardSelectionPage() {
             images: images,
             custom_fields: customFields,
             extra_price: item.extraPrice || 0,
+            menu_item_id: item.id,
           };
 
           console.log("Creating dish order:", dishOrderData);
@@ -570,6 +571,7 @@ export default function CardSelectionPage() {
           images: images, // Array de strings
           custom_fields: customFields, // JSONB o null
           extra_price: item.extraPrice || 0,
+          menu_item_id: item.id,
         };
 
         console.log("Creating dish order:", dishOrderData);
